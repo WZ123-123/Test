@@ -14,15 +14,13 @@
   <!-- 头部 -->
   <div class="header-area">
     <div>
-      <h1 onclick="switchTheme()" style="cursor:pointer;" title="点击切换主题">王五导航</h1>
+      <h1 id="site-title" title="点击切换模式" style="cursor:pointer;">王五导航</h1>
       <p class="header-subtitle" id="daily-quote" style="opacity:0;transition:opacity 0.4s ease;">沉舟侧畔千帆过，病树前头万木春。</p>
     </div>
   </div>
   <!-- 搜索区域 -->
   <div class="search-wrapper">
-    <!-- 分类 Tab -->
     <div class="search-tabs" id="searchTabs"></div>
-    <!-- 搜索框 -->
     <div class="search-box">
       <button class="engine-trigger" id="engineTrigger" aria-label="切换搜索引擎">
         <img id="search-engine-icon" src="" alt="搜索引擎图标">
@@ -39,57 +37,10 @@
         </svg>
       </button>
     </div>
-    <!-- 内联引擎面板（展开时出现在搜索框正下方，撑开布局） -->
     <div class="engine-list" id="enginePanel" style="display:none;"></div>
   </div>
-  <!-- 链接分区（由 main.js 动态渲染） -->
   <div id="main-content"></div>
 </div>
 <script src="main.js"></script>
-<script>
-  const cursor = document.createElement('div');
-  cursor.style.cssText = `
-    position: fixed;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    background:
-      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.0) 45%),
-      radial-gradient(circle at 70% 75%, rgba(255,255,255,0.15) 0%, transparent 40%);
-    border: 1.5px solid rgba(255,255,255,0.6);
-    box-shadow:
-      0 0 8px rgba(255,255,255,0.2),
-      inset 0 0 6px rgba(255,255,255,0.08);
-    backdrop-filter: blur(1px);
-  `;
-  document.body.appendChild(cursor);
-
-  let mouseX = window.innerWidth / 2;
-  let mouseY = window.innerHeight / 2;
-  let glowX = mouseX;
-  let glowY = mouseY;
-
-  document.addEventListener('mousemove', e => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-  });
-
-  if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-    cursor.style.display = 'none';
-  }
-
-  function animateCursor() {
-    const ease = 0.03;
-    glowX += (mouseX - glowX) * ease;
-    glowY += (mouseY - glowY) * ease;
-    cursor.style.left = glowX + 'px';
-    cursor.style.top  = glowY + 'px';
-    requestAnimationFrame(animateCursor);
-  }
-  animateCursor();
-</script>
 </body>
 </html>

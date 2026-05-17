@@ -57,7 +57,7 @@
       border-bottom: 1px solid rgba(0,0,0,0.07);
       flex-shrink: 0; overflow: hidden;
     }
-    body.dark-mode .sidebar-logo { border-color: #2a3448 !important; }
+    body.dark-mode .sidebar-logo { border-color: #2a3448 !important; background: #1a2230 !important; }
     .sidebar-logo img { border-radius: 10px; object-fit: contain; flex-shrink: 0; }
     #sidebar-logo-text {
       font-size: 1.18rem; font-weight: 900;
@@ -144,6 +144,10 @@
       border-bottom-color: transparent !important;
       box-shadow: none !important;
     }
+    /* banner区域顶部栏：深色背景下用白色 */
+    #top-bar.at-top #top-bar-toggle { color: rgba(255,255,255,0.85) !important; }
+    #top-bar.at-top #top-bar-toggle:hover { color: #fff !important; }
+    #top-bar.at-top #top-quote { color: rgba(255,255,255,0.75) !important; }
     #top-bar-toggle {
       width: 54px; height: 54px; flex-shrink: 0;
       background: none; border: none; outline: none;
@@ -306,7 +310,7 @@
       display: flex; flex-direction: column; align-items: center; gap: 3px;
     }
     .quick-engine-btn::before {
-      content: '▼'; font-size: 0.5rem;
+      content: '▼'; font-size: 0.75rem;
       color: transparent; transition: color 0.15s; line-height: 1;
     }
     .quick-engine-btn.active::before { color: rgba(255,255,255,0.9); }

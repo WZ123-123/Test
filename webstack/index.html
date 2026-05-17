@@ -13,10 +13,22 @@
   <link rel="stylesheet" href="assets/css/custom-style.css" />
   <link rel="stylesheet" href="assets/fontawesome-5.15.4/css/all.min.css" />
   <script src="assets/js/jquery.min-3.2.1.js"></script>
-
   <style>
+
     /* ══════════════════════════════════════
-       侧边栏 — 从top:0开始，含Logo
+       全局：消除所有按钮focus轮廓和阴影
+    ══════════════════════════════════════ */
+    button:focus, button:focus-visible,
+    .btn:focus, .btn:focus-visible,
+    .quick-engine-btn:focus,
+    .submit:focus,
+    #top-bar-toggle:focus {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    /* ══════════════════════════════════════
+       侧边栏
     ══════════════════════════════════════ */
     #sidebar {
       position: fixed !important;
@@ -34,23 +46,37 @@
       border-right: 1px solid rgba(0,0,0,0.07);
     }
     body.dark-mode .sidebar-nav-inner {
-      background: #1a2230;
+      background: #1a2230 !important;
       border-color: #2a3448;
     }
 
-    /* ── Logo区域 ── */
+    /* Logo区域 */
     .sidebar-logo {
       display: flex !important;
       align-items: center;
       height: 54px; padding: 0 14px; gap: 10px;
       border-bottom: 1px solid rgba(0,0,0,0.07);
       flex-shrink: 0; overflow: hidden;
+      background: inherit;
     }
     body.dark-mode .sidebar-logo { border-color: #2a3448; }
-    .sidebar-logo img {
-      width: 40px !important; height: 40px !important;
-      border-radius: 10px; object-fit: contain; flex-shrink: 0;
+
+    /* 强制覆盖所有来源的图标尺寸限制 */
+    div#sidebar .sidebar-logo img,
+    div#sidebar .sidebar-logo img[src],
+    #sidebar .sidebar-nav-inner .sidebar-logo img {
+      width: 38px !important;
+      height: 38px !important;
+      min-width: 38px !important;
+      min-height: 38px !important;
+      max-width: 38px !important;
+      max-height: 38px !important;
+      border-radius: 10px !important;
+      object-fit: contain !important;
+      flex-shrink: 0 !important;
+      display: block !important;
     }
+
     #sidebar-logo-text {
       font-size: 1.18rem; font-weight: 900;
       letter-spacing: 0.04em; white-space: nowrap; color: #222;
@@ -59,13 +85,13 @@
     #sidebar.mini-sidebar .sidebar-logo { justify-content: center; padding: 0; }
     #sidebar.mini-sidebar #sidebar-logo-text { display: none; }
 
-    /* ── 菜单 ── */
+    /* 菜单 */
     .sidebar-menu { flex: 1; overflow: hidden; }
     .sidebar-scroll { height: 100%; overflow-y: auto; overflow-x: hidden; }
     .sidebar-menu-inner { padding: 6px 0; }
     .sidebar-emoji {
-      font-size: 1.2rem; display: inline-flex;
-      width: 36px; height: 36px;
+      font-size: 1.1rem; display: inline-flex;
+      width: 32px; height: 32px;
       align-items: center; justify-content: center; flex-shrink: 0;
     }
     #main-menu { list-style: none; margin: 0; padding: 0; }
@@ -80,18 +106,22 @@
     }
     #main-menu li a:hover { background: rgba(22,119,255,0.08) !important; color: #1677ff !important; }
     #main-menu li.active > a { background: rgba(22,119,255,0.12) !important; color: #1677ff !important; }
-    #main-menu li a .menu-label { font-size: 0.85rem; font-weight: 500; }
+    /* 侧边栏分类字体与右侧内容标题一致 */
+    #main-menu li a .menu-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
     #sidebar.mini-sidebar #main-menu li a {
       justify-content: center; padding: 0 !important; margin: 2px 6px;
     }
     #sidebar.mini-sidebar #main-menu li a .menu-label { display: none; }
     #sidebar.mini-sidebar #main-menu li a .sidebar-emoji { display: inline-flex !important; }
 
-    /* ── 悬停浮层 ── */
+    /* 悬停浮层 */
     .sidebar-popup-label {
       position: fixed; left: 64px;
       background: #fff; color: #333;
-      font-size: 0.82rem; font-weight: 600;
+      font-size: 0.85rem; font-weight: 600;
       padding: 6px 14px; border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.14);
       pointer-events: none; opacity: 0;
@@ -102,7 +132,7 @@
     .sidebar-popup-label.show { opacity: 1; transform: translateX(0); }
     body.dark-mode .sidebar-popup-label { background: #263045; color: #ddd; }
 
-    /* ── 底部 ── */
+    /* 底部 */
     .sidebar-bottom { flex-shrink: 0; border-top: 1px solid rgba(0,0,0,0.07); padding: 6px 0; }
     body.dark-mode .sidebar-bottom { border-color: #2a3448; }
     .sidebar-bottom ul { list-style: none; margin: 0; padding: 0; }
@@ -119,7 +149,7 @@
     #sidebar.mini-sidebar .sidebar-bottom li a .menu-label { display: none; }
 
     /* ══════════════════════════════════════
-       顶部栏 — 紧贴侧边栏右侧
+       顶部栏
     ══════════════════════════════════════ */
     #top-bar {
       position: fixed; top: 0; right: 0;
@@ -132,7 +162,10 @@
       padding: 0 24px 0 0;
       transition: background 0.3s, left 0.25s, backdrop-filter 0.3s, border-color 0.3s;
     }
-    body.dark-mode #top-bar { background: rgba(18,24,31,0.82); border-color: rgba(255,255,255,0.06); }
+    body.dark-mode #top-bar {
+      background: rgba(18,24,31,0.82);
+      border-color: rgba(255,255,255,0.06);
+    }
     #top-bar.at-top {
       background: transparent !important;
       backdrop-filter: none !important;
@@ -140,8 +173,6 @@
       border-bottom-color: transparent !important;
       box-shadow: none !important;
     }
-
-    /* 汉堡 */
     #top-bar-toggle {
       width: 54px; height: 54px; flex-shrink: 0;
       background: none; border: none; outline: none;
@@ -150,26 +181,24 @@
       transition: color 0.2s; -webkit-appearance: none; appearance: none;
     }
     #top-bar-toggle:hover { color: #1677ff; }
-    #top-bar-toggle:focus { outline: none; box-shadow: none; }
     body.dark-mode #top-bar-toggle { color: #9aaabb; }
     body.dark-mode #top-bar-toggle:hover { color: #fff; }
 
-    /* 格言 — 颜色加深 */
+    /* 格言加深 */
     #top-quote {
       flex: 1; text-align: right;
-      font-size: 0.8rem; font-style: italic;
-      color: #555; cursor: pointer;
+      font-size: 0.82rem; font-style: italic;
+      color: #444; cursor: pointer;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       padding: 0 0 0 16px;
       transition: color 0.2s, opacity 0.4s;
     }
-    #top-quote:hover { color: #222; }
-    body.dark-mode #top-quote { color: #9aaabb; }
+    #top-quote:hover { color: #111; }
+    body.dark-mode #top-quote { color: #bbc; }
     body.dark-mode #top-quote:hover { color: #fff; }
     #top-quote.fade-out { opacity: 0; }
     #top-quote.fade-in  { opacity: 1; }
 
-    /* 顶部占位 */
     #top-bar-spacer { height: 54px; flex-shrink: 0; }
 
     /* ══════════════════════════════════════
@@ -179,13 +208,14 @@
     #content-wrap { flex: 1; overflow: auto; min-width: 0; }
 
     /* ══════════════════════════════════════
-       Banner
+       Banner — 去掉mb-4白缝，直接与网格衔接
     ══════════════════════════════════════ */
     .header-big {
       position: relative; text-align: center;
       min-height: 220px; overflow: hidden;
       display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #1a2a3a 0%, #0f3460 50%, #1a2a3a 100%);
+      margin-bottom: 0 !important;
     }
     .header-big .banner-bg {
       position: absolute; inset: 0;
@@ -204,11 +234,11 @@
     ══════════════════════════════════════ */
     .s-search {
       position: relative; z-index: 2;
-      width: 100%; max-width: 760px;
-      margin: 0 auto; padding: 20px;
+      width: 100%; max-width: 780px;
+      margin: 0 auto; padding: 24px 20px;
     }
 
-    /* 分类Tab */
+    /* 分类Tab — 字体加大 */
     .header-big .s-type-list.big, .s-type-list.big {
       display: flex !important; flex-direction: row !important;
       flex-wrap: wrap !important; position: static !important;
@@ -216,15 +246,15 @@
       background: none !important; box-shadow: none !important;
       padding: 0 !important; white-space: normal !important;
       overflow: visible !important; gap: 4px;
-      justify-content: center; margin-bottom: 16px;
+      justify-content: center; margin-bottom: 20px;
     }
     .header-big .s-type-list.big label, .s-type-list.big label {
       display: inline-block !important;
-      padding: 5px 18px !important;
+      padding: 6px 20px !important;
       border-radius: 0 !important;
       background: none !important; border: none !important;
       border-bottom: 2px solid transparent !important;
-      cursor: pointer; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; font-size: 1rem; font-weight: 600;
       color: rgba(255,255,255,0.55) !important;
       opacity: 1 !important; transition: all 0.18s;
       user-select: none; margin: 0; white-space: nowrap;
@@ -237,14 +267,14 @@
       left: auto !important; width: auto !important; z-index: auto !important;
     }
 
-    /* 搜索框 — 无前端引擎按钮，放大镜无背景 */
+    /* 搜索框 — 无前端按钮，放大镜纯图标，字体加大 */
     .super-search-fm {
       display: flex; align-items: center;
       background: rgba(255,255,255,0.15);
       border: 1.5px solid rgba(255,255,255,0.3);
       backdrop-filter: blur(8px);
       border-radius: 40px;
-      padding: 0 12px 0 24px; gap: 8px;
+      padding: 0 14px 0 28px; gap: 8px;
       box-shadow: 0 4px 24px rgba(0,0,0,0.2);
       transition: background 0.2s, box-shadow 0.2s;
     }
@@ -256,40 +286,46 @@
     .super-search-fm .search-key {
       flex: 1; background: transparent !important; border: none !important;
       box-shadow: none !important; color: #fff !important;
-      font-size: 1rem; padding: 14px 4px; height: auto;
+      font-size: 1.08rem; padding: 16px 4px; height: auto;
     }
-    .super-search-fm .search-key::placeholder { color: rgba(255,255,255,0.6); }
-    /* 放大镜按钮 — 无背景，纯图标 */
+    .super-search-fm .search-key::placeholder { color: rgba(255,255,255,0.55); }
     .super-search-fm .submit {
-      background: none; border: none; color: rgba(255,255,255,0.85);
-      font-size: 1.15rem; cursor: pointer; padding: 0;
-      width: 36px; height: 36px;
+      background: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      color: rgba(255,255,255,0.85);
+      font-size: 1.2rem; cursor: pointer; padding: 0;
+      width: 38px; height: 38px;
       display: flex; align-items: center; justify-content: center;
       transition: color 0.2s; flex-shrink: 0;
     }
     .super-search-fm .submit:hover { color: #fff; }
+    .super-search-fm .submit:focus { outline: none !important; box-shadow: none !important; }
 
-    /* 快捷引擎 — 纯文字，选中时上方有箭头，无任何框 */
+    /* 快捷引擎 — 一排不换行，选中上方箭头，无框无背景 */
     .quick-engines {
       display: flex; gap: 0; justify-content: center;
-      flex-wrap: nowrap; margin-top: 16px;
+      flex-wrap: nowrap; margin-top: 18px;
       overflow-x: auto;
     }
     .quick-engine-btn {
       position: relative;
-      background: none !important; border: none !important;
+      background: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
       border-radius: 0 !important;
-      padding: 8px 16px 4px;
+      padding: 6px 18px 4px;
       cursor: pointer;
       color: rgba(255,255,255,0.6);
-      font-size: 0.85rem; font-weight: 600;
+      font-size: 0.92rem; font-weight: 600;
       transition: color 0.15s; white-space: nowrap;
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
     }
-    /* 选中时上方箭头（▼） */
     .quick-engine-btn::before {
       content: '▼';
-      font-size: 0.55rem;
+      font-size: 0.5rem;
       color: transparent;
       transition: color 0.15s;
       line-height: 1;
@@ -297,58 +333,53 @@
     .quick-engine-btn.active::before { color: rgba(255,255,255,0.9); }
     .quick-engine-btn:hover { color: rgba(255,255,255,0.9) !important; }
     .quick-engine-btn.active { color: #fff !important; }
-
-    /* 引擎展开面板（保留但不常用） */
-    #search-list { margin-top: 14px; display: none; }
-    .search-type { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
-    .search-type li label {
-      padding: 4px 16px; border-radius: 16px; cursor: pointer;
-      font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.65);
-      transition: all 0.15s; margin: 0; user-select: none; border: 1px solid transparent;
-    }
-    .search-type li label:hover { color: #fff; background: rgba(255,255,255,0.12); }
-    .search-type li input[type=radio] { display: none; }
-    .search-type li input[type=radio]:checked + label { color: #fff; background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); }
+    .quick-engine-btn:focus { outline: none !important; box-shadow: none !important; }
 
     /* ══════════════════════════════════════
-       卡片区域 — 网格纹理背景
+       卡片区域 — 网格纹理，直接紧贴Banner
     ══════════════════════════════════════ */
     #content.content-site {
       background-image:
-        linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
-      background-size: 28px 28px;
-      background-color: #f4f5f7;
-      padding: 20px 20px 40px;
+        linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
+      background-size: 22px 22px;
+      background-color: #f2f3f5;
+      padding: 24px 20px 40px;
+      margin-top: 0 !important;
     }
     body.dark-mode #content.content-site {
       background-image:
-        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 22px 22px;
       background-color: #12181f;
     }
 
-    /* 卡片文字加深加大 */
+    /* 卡片 */
     .url-card .card { border-radius: 10px; }
-    .url-card .card-body { padding: 0.7rem 0.9rem; }
+    .url-card .card-body { padding: 0.65rem 0.85rem; }
     .url-card strong {
-      font-size: 0.92rem !important;
+      font-size: 0.93rem !important;
       color: #1a1a2e !important;
       font-weight: 700 !important;
     }
     body.dark-mode .url-card strong { color: #e0e6f0 !important; }
     .url-card p.text-muted {
-      font-size: 0.76rem !important;
+      font-size: 0.75rem !important;
       color: #555 !important;
     }
     body.dark-mode .url-card p.text-muted { color: #7a8a9a !important; }
 
-    /* 图标尺寸 */
-    .url-img { width: 44px !important; height: 44px !important; flex-shrink: 0; }
-    .url-img img { width: 34px !important; height: 34px !important; border-radius: 8px; object-fit: contain; }
+    /* 网站图标（卡片内） */
+    .url-img { width: 40px !important; height: 40px !important; flex-shrink: 0; }
+    .url-img img { width: 32px !important; height: 32px !important; border-radius: 8px; object-fit: contain; }
 
-    /* 分类标题 */
-    .ws-section h4 { color: #333 !important; font-weight: 700 !important; }
+    /* 分类标题与侧边栏字体大小一致 */
+    .ws-section h4 {
+      color: #333 !important;
+      font-weight: 700 !important;
+      font-size: 0.95rem !important;
+    }
     body.dark-mode .ws-section h4 { color: #9aaabb !important; }
 
     /* ══════════════════════════════════════
@@ -359,7 +390,6 @@
     body.dark-mode #content-wrap { background: #12181f !important; }
     body.dark-mode .card { background: #1e2736 !important; border-color: #2a3448 !important; color: #d4d4d4 !important; }
     body.dark-mode .card:hover { background: #263045 !important; }
-    body.dark-mode .content-site { background: #12181f !important; }
 
     /* 暗色切换 */
     #dark-toggle {
@@ -474,7 +504,6 @@
 
 <body class="io-grey-mode">
 
-<!-- 侧边栏（从top:0开始） -->
 <div id="sidebar" class="sidebar-nav" style="width:180px;">
   <div class="sidebar-nav-inner">
     <div class="sidebar-logo">
@@ -501,10 +530,8 @@
   </div>
 </div>
 
-<!-- 悬停浮层 -->
 <div id="sidebar-popup-label" class="sidebar-popup-label"></div>
 
-<!-- 顶部栏 -->
 <div id="top-bar">
   <button id="top-bar-toggle" onclick="toggleSidebar()" title="切换侧边栏">
     <i class="fas fa-bars"></i>
@@ -512,21 +539,17 @@
   <span id="top-quote" title="点击换一条"></span>
 </div>
 
-<!-- 主内容区 -->
 <div class="page-container">
   <div id="content-wrap" style="margin-left:180px;">
     <div id="top-bar-spacer"></div>
 
-    <!-- Banner -->
-    <div class="header-big post-top css-color mb-4" id="search-bg">
+    <div class="header-big post-top" id="search-bg">
       <div class="banner-bg" id="banner-bg-layer"></div>
       <div class="banner-overlay"></div>
       <div class="s-search">
-        <!-- 分类Tab -->
         <div class="s-type text-center">
           <div class="s-type-list big" id="ws-tabs"></div>
         </div>
-        <!-- 搜索框（无前端引擎按钮） -->
         <form class="super-search-fm" onsubmit="doSearch(event)">
           <input type="text" id="search-text" class="form-control search-key"
                  placeholder="搜索网页…"
@@ -536,12 +559,10 @@
             <i class="fas fa-search"></i>
           </button>
         </form>
-        <!-- 快捷引擎 — 一排，选中时上方箭头，无框 -->
         <div class="quick-engines" id="quick-engines"></div>
       </div>
     </div>
 
-    <!-- 内容区 -->
     <div id="content" class="content-site customize-site">
       <p style="color:#999;text-align:center;padding:3rem;">加载中...</p>
     </div>
@@ -583,9 +604,6 @@
 <script src="assets/js/lazyload.min-12.4.0.js"></script>
 <script src="main.js"></script>
 <script>
-/* ══════════════════════════════════════
-   侧边栏
-══════════════════════════════════════ */
 (function() {
   const EXPANDED_W = '180px', MINI_W = '60px';
   const sidebar = document.getElementById('sidebar');
@@ -639,9 +657,6 @@
   popup.addEventListener('mouseleave', () => popup.classList.remove('show'));
 })();
 
-/* ══════════════════════════════════════
-   暗色模式
-══════════════════════════════════════ */
 function toggleDark() {
   const isDark = document.body.classList.toggle('dark-mode');
   localStorage.setItem('darkMode', isDark ? '1' : '0');
@@ -656,9 +671,6 @@ window.toggleDark = toggleDark;
   }
 })();
 
-/* ══════════════════════════════════════
-   Banner 背景
-══════════════════════════════════════ */
 (function() {
   const layer = document.getElementById('banner-bg-layer');
   if (!layer) return;
@@ -666,9 +678,6 @@ window.toggleDark = toggleDark;
   requestAnimationFrame(() => layer.classList.add('loaded'));
 })();
 
-/* ══════════════════════════════════════
-   格言
-══════════════════════════════════════ */
 (function() {
   let quotes = [], currentIdx = -1;
   async function loadQuotes() {
@@ -700,30 +709,19 @@ window.toggleDark = toggleDark;
   setInterval(() => showQuote(), 60000);
 })();
 
-/* ══════════════════════════════════════
-   顶部栏透明/毛玻璃
-══════════════════════════════════════ */
 (function() {
   const bar = document.getElementById('top-bar');
-  function checkScroll() {
-    bar.classList.toggle('at-top', window.scrollY < 10);
-  }
+  function checkScroll() { bar.classList.toggle('at-top', window.scrollY < 10); }
   window.addEventListener('scroll', checkScroll, { passive: true });
   checkScroll();
 })();
 
-/* ══════════════════════════════════════
-   回顶部
-══════════════════════════════════════ */
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 window.scrollToTop = scrollToTop;
 window.addEventListener('scroll', function() {
   document.getElementById('go-top')?.classList.toggle('visible', window.scrollY > 300);
 });
 
-/* ══════════════════════════════════════
-   搜索键盘
-══════════════════════════════════════ */
 function onSearchKeydown(e) {
   if (e.key === 'Escape') {
     const input = document.getElementById('search-text');
@@ -732,9 +730,6 @@ function onSearchKeydown(e) {
 }
 window.onSearchKeydown = onSearchKeydown;
 
-/* ══════════════════════════════════════
-   搜索模态框
-══════════════════════════════════════ */
 function openSearchModal() {
   const modal = document.getElementById('search-modal');
   if (!modal) return;

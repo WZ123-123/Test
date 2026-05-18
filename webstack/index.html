@@ -142,7 +142,7 @@
     #mobile-top-bar {
       display: none;
       position: fixed; top: 0; left: 0; right: 0;
-      height: 50px; z-index: 1088;
+      height: 50px; z-index: 1092;
       background: rgba(255,255,255,0.92);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -150,6 +150,7 @@
       align-items: center;
       padding: 0 12px;
       gap: 10px;
+      transition: background 0.3s, border-color 0.3s;
     }
     body.dark-mode #mobile-top-bar {
       background: rgba(18,24,31,0.92);
@@ -169,7 +170,7 @@
     #mobile-hamburger {
       width: 40px; height: 40px;
       background: none; border: none;
-      color: #333; font-size: 1.2rem;
+      color: #333; font-size: 1.3rem;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; flex-shrink: 0;
     }
@@ -503,63 +504,86 @@
 
     /* ══ 移动端适配 ══ */
     @media (max-width: 768px) {
+      /* 强制隐藏PC顶部栏，显示移动端顶部栏 */
       #top-bar { display: none !important; }
       #mobile-top-bar { display: flex !important; }
 
-      /* 移动端顶部栏透明 */
+      /* 移动端顶部栏透明（页面顶部时） */
       #mobile-top-bar.at-top {
         background: transparent !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         border-bottom-color: transparent !important;
-        box-shadow: none !important;
       }
-      #mobile-top-bar.at-top #mobile-logo-text { color: rgba(255,255,255,0.92); }
-      #mobile-top-bar.at-top #mobile-hamburger { color: rgba(255,255,255,0.85); }
+      #mobile-top-bar.at-top #mobile-logo-text { color: rgba(255,255,255,0.92) !important; }
+      #mobile-top-bar.at-top #mobile-hamburger { color: rgba(255,255,255,0.85) !important; }
 
-      /* 侧边栏滑出，靠CSS class控制 */
+      /* 侧边栏：默认在屏幕左侧外，mobile-open时滑入 */
       #sidebar {
         transform: translateX(-100%) !important;
         width: 240px !important;
         transition: transform 0.25s ease !important;
+        z-index: 1091 !important;
       }
       #sidebar.mobile-open { transform: translateX(0) !important; }
 
+      /* 内容区不留侧边栏空间 */
       #content-wrap { margin-left: 0 !important; }
-      /* spacer撑出移动端顶部栏高度 */
+
+      /* spacer高度=移动端顶部栏高度 */
       #top-bar-spacer { height: 50px !important; }
 
+      /* 格言不显示 */
       #top-quote { display: none !important; }
 
-      /* Banner：顶部多留padding避免被topbar压住 */
-      .header-big { min-height: 210px; }
-      .s-search { padding: 20px 12px 14px; }
+      /* Banner */
+      .header-big { min-height: 200px; }
+      .s-search { padding: 14px 10px 12px; }
 
-      /* 分类Tab：左对齐+左padding，不截断两端 */
+      /* 分类Tab：强制一行，不可滑动，自动缩小适应 */
       .s-type-list.big,
       .header-big .s-type-list.big {
+        display: flex !important;
         flex-wrap: nowrap !important;
-        justify-content: flex-start !important;
-        overflow-x: auto !important;
-        padding: 0 8px !important;
-        margin-bottom: 12px !important;
+        justify-content: space-between !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        margin-bottom: 10px !important;
+        gap: 0 !important;
       }
       .s-type-list.big label,
       .header-big .s-type-list.big label {
-        font-size: 0.78rem !important;
-        padding: 4px 11px !important;
-        flex-shrink: 0 !important;
+        flex: 1 !important;
+        text-align: center !important;
+        font-size: 0.72rem !important;
+        padding: 4px 2px !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
       }
 
-      /* 快捷引擎完整显示 */
-      .quick-engines { justify-content: flex-start !important; padding: 0 8px; }
+      /* 快捷引擎：强制一行，自动缩小，不可滑动 */
+      .quick-engines {
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        overflow: hidden !important;
+        margin-top: 8px !important;
+        padding: 0 !important;
+      }
       .quick-engine-btn {
-        font-size: 0.82rem !important;
-        padding: 4px 12px 2px !important;
-        flex-shrink: 0 !important;
+        flex: 1 !important;
+        font-size: 0.7rem !important;
+        padding: 4px 1px 2px !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
       }
+      .quick-engine-btn::before { font-size: 0.55rem !important; }
 
-      .super-search-fm { padding: 0 10px 0 16px; }
+      /* 搜索框 */
+      .super-search-fm { padding: 0 8px 0 14px; }
       .super-search-fm input, #search-text {
         font-size: 0.95rem !important;
         padding: 10px 4px !important;
@@ -570,6 +594,7 @@
       /* 卡片两列 */
       .url-card { flex: 0 0 50% !important; max-width: 50% !important; }
 
+      /* 浮动按钮 */
       #dark-toggle { bottom: 16px; right: 16px; width: 40px; height: 40px; font-size: 1rem; }
       #float-tools { bottom: 66px; right: 16px; }
       .float-btn { width: 40px; height: 40px; font-size: 1rem; }

@@ -456,9 +456,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 初始化移动端状态
   applyMobileState();
 
-  // 移动端遮罩点击关闭侧边栏
-  const overlay = document.getElementById('mobile-overlay');
-  if (overlay) overlay.addEventListener('click', closeMobileSidebar);
+  // 移动端遮罩点击关闭侧边栏（已在index.html绑定，这里不重复）
 
   // 绑定标题切换模式
   const logoText = document.getElementById('sidebar-logo-text');

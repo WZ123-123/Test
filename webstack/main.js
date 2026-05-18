@@ -7,6 +7,121 @@ const LINKS_FILE = '../links.json';
 
 const DEFAULT_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0yIDEyaDIwIj48L3BhdGg+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+';
 
+// ── 模式切换 ────────────────────────────────────────────────
+const MODES      = ['normal', 'webstack', 'easy', 'nav'];
+const MODE_PATHS = {
+  normal:   '../normal/index.html',
+  webstack: '../webstack/index.html',
+  easy:     '../easy/index.html',
+  nav:      '../nav/index.html',
+};
+function switchMode() {
+  const cur  = 'webstack';
+  const next = MODES[(MODES.indexOf(cur) + 1) % MODES.length];
+  localStorage.setItem('navMode', next);
+  window.location.href = MODE_PATHS[next];
+}
+
+// ── 内外网切换 ───────────────────────────────────────────────
+let isIntranet = localStorage.getItem('netMode') === 'intranet';
+let _allData   = null;
+
+function getCardUrl(item) {
+  return (isIntranet && item.intranet) ? item.intranet : item.url;
+}
+
+function updateNetBtn() {
+  const btn = document.getElementById('net-toggle-sidebar');
+  if (!btn) return;
+  const label = btn.querySelector('.menu-label');
+  const emoji = btn.querySelector('.sidebar-emoji');
+  if (label) label.textContent = isIntranet ? '切换外网' : '切换内网';
+  if (emoji) emoji.textContent = isIntranet ? '🏠' : '🌐';
+  btn.classList.toggle('intranet-active', isIntranet);
+}
+
+function toggleNetMode() {
+  isIntranet = !isIntranet;
+  localStorage.setItem('netMode', isIntranet ? 'intranet' : 'internet');
+  updateNetBtn();
+  // 重新渲染卡片链接
+  if (_allData) renderContent(_allData);
+}
+window.toggleNetMode = toggleNetMode;
+
+// ── 移动端侧边栏 ─────────────────────────────────────────────
+const MOBILE_BP = 768;
+let isMobileView = window.innerWidth < MOBILE_BP;
+
+function applyMobileState() {
+  isMobileView = window.innerWidth < MOBILE_BP;
+  const sidebar   = document.getElementById('sidebar');
+  const wrap      = document.getElementById('content-wrap');
+  const topBar    = document.getElementById('top-bar');
+  const overlay   = document.getElementById('mobile-overlay');
+  if (!sidebar) return;
+
+  if (isMobileView) {
+    // 移动端：侧边栏默认收起到屏幕外
+    sidebar.style.transform  = 'translateX(-100%)';
+    sidebar.style.width      = '220px';
+    sidebar.style.transition = 'transform 0.25s ease';
+    wrap.style.marginLeft    = '0';
+    topBar.style.left        = '0';
+  } else {
+    // 桌面端：恢复正常
+    const expanded = localStorage.getItem('sidebarExpanded') !== '0';
+    sidebar.style.transform  = '';
+    sidebar.style.width      = expanded ? '180px' : '60px';
+    wrap.style.marginLeft    = expanded ? '180px' : '60px';
+    topBar.style.left        = expanded ? '180px' : '60px';
+    if (overlay) overlay.classList.remove('show');
+  }
+}
+
+function openMobileSidebar() {
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('mobile-overlay');
+  sidebar.style.transform = 'translateX(0)';
+  if (overlay) overlay.classList.add('show');
+}
+
+function closeMobileSidebar() {
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('mobile-overlay');
+  sidebar.style.transform = 'translateX(-100%)';
+  if (overlay) overlay.classList.remove('show');
+}
+
+window.addEventListener('resize', () => {
+  const wasMobile = isMobileView;
+  applyMobileState();
+  if (wasMobile !== isMobileView) applyMobileState();
+});
+
+// ── 覆盖原侧边栏切换逻辑 ────────────────────────────────────
+function toggleSidebar() {
+  if (isMobileView) {
+    const sidebar = document.getElementById('sidebar');
+    const isOpen  = sidebar.style.transform === 'translateX(0px)' ||
+                    sidebar.style.transform === 'translateX(0)';
+    isOpen ? closeMobileSidebar() : openMobileSidebar();
+  } else {
+    const sidebar  = document.getElementById('sidebar');
+    const wrap     = document.getElementById('content-wrap');
+    const topBar   = document.getElementById('top-bar');
+    const expanded = sidebar.style.width !== '60px';
+    const next     = !expanded;
+    localStorage.setItem('sidebarExpanded', next ? '1' : '0');
+    sidebar.classList.toggle('mini-sidebar', !next);
+    sidebar.style.width   = next ? '180px' : '60px';
+    wrap.style.marginLeft = next ? '180px' : '60px';
+    topBar.style.left     = next ? '180px' : '60px';
+  }
+}
+window.toggleSidebar = toggleSidebar;
+
+// ── 工具函数 ─────────────────────────────────────────────────
 function sectionLabel(section) {
   return section.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+/u, '').trim();
 }
@@ -14,7 +129,20 @@ function sectionEmoji(section) {
   const m = section.match(/^([\p{Emoji_Presentation}\p{Extended_Pictographic}]+)/u);
   return m ? m[1] : '';
 }
+function getDomain(url) {
+  try { return new URL(url).hostname; } catch { return null; }
+}
+function buildFaviconUrl(domain) {
+  if (!domain) return DEFAULT_ICON;
+  return `${WORKER_URL}/?domain=${domain}`;
+}
+function faviconSrc(url) { return buildFaviconUrl(getDomain(url)); }
+function engineFavicon(e) { return buildFaviconUrl(e.domain); }
+function sectionId(s) {
+  return 'sec-' + s.replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fa5-]/g, '');
+}
 
+// ── 搜索分类数据 ─────────────────────────────────────────────
 const SEARCH_CATEGORIES = [
   {
     id: 'engine', label: '引擎',
@@ -80,20 +208,10 @@ const SEARCH_CATEGORIES = [
 ];
 
 let currentCategoryId = 'engine';
-let currentEngine = SEARCH_CATEGORIES[0].engines[0];
-let enginePanelOpen = false;
+let currentEngine     = SEARCH_CATEGORIES[0].engines[0];
+let enginePanelOpen   = false;
 
-function getDomain(url) {
-  try { return new URL(url).hostname; } catch { return null; }
-}
-function buildFaviconUrl(domain) {
-  if (!domain) return DEFAULT_ICON;
-  return `${WORKER_URL}/?domain=${domain}`;
-}
-function faviconSrc(url) { return buildFaviconUrl(getDomain(url)); }
-function engineFavicon(e) { return buildFaviconUrl(e.domain); }
-
-/* 分类 Tab */
+// ── 渲染分类 Tab ─────────────────────────────────────────────
 function renderTabs() {
   const el = document.getElementById('ws-tabs');
   if (!el) return;
@@ -104,7 +222,7 @@ function renderTabs() {
     if (cat.id === currentCategoryId) label.classList.add('active');
     label.onclick = () => {
       currentCategoryId = cat.id;
-      currentEngine = cat.engines[0];
+      currentEngine     = cat.engines[0];
       renderTabs();
       updateEngineDisplay();
       renderQuickEngines();
@@ -114,21 +232,18 @@ function renderTabs() {
   });
 }
 
-function updateEngineDisplay() {
-  // 无前端引擎显示区，此函数保留供模态框调用
-}
+function updateEngineDisplay() {}
 
-/* 快捷引擎 — 显示全部，不限制数量 */
+// ── 快捷引擎 ─────────────────────────────────────────────────
 function renderQuickEngines() {
   const wrap = document.getElementById('quick-engines');
   if (!wrap) return;
   wrap.innerHTML = '';
   const cat = SEARCH_CATEGORIES.find(c => c.id === currentCategoryId);
   if (!cat) return;
-
   cat.engines.forEach(engine => {
     const btn = document.createElement('button');
-    btn.type = 'button';
+    btn.type      = 'button';
     btn.className = 'quick-engine-btn' + (engine === currentEngine ? ' active' : '');
     btn.textContent = engine.name;
     btn.onclick = () => {
@@ -140,45 +255,7 @@ function renderQuickEngines() {
   });
 }
 
-/* 引擎面板 */
-function renderEngineList() {
-  const panel = document.getElementById('search-list');
-  if (!panel) return;
-  panel.innerHTML = '';
-  const cat = SEARCH_CATEGORIES.find(c => c.id === currentCategoryId);
-  if (!cat) return;
-  const ul = document.createElement('ul');
-  ul.className = 'search-type';
-  cat.engines.forEach((engine, idx) => {
-    const li = document.createElement('li');
-    const id = `ws-engine-${idx}`;
-    const input = document.createElement('input');
-    input.type = 'radio'; input.name = 'ws-type'; input.id = id; input.hidden = true;
-    if (engine === currentEngine) input.checked = true;
-    const label = document.createElement('label');
-    label.htmlFor = id;
-    label.innerHTML = `<span>${engine.name}</span>`;
-    label.onclick = () => {
-      currentEngine = engine;
-      updateEngineDisplay(); renderEngineList(); renderQuickEngines();
-      document.getElementById('search-text')?.focus();
-    };
-    li.appendChild(input); li.appendChild(label); ul.appendChild(li);
-  });
-  panel.appendChild(ul);
-}
-
-function toggleEnginePanel() {
-  enginePanelOpen = !enginePanelOpen;
-  const panel = document.getElementById('search-list');
-  const arrow = document.getElementById('ws-engine-arrow');
-  if (panel) panel.style.display = enginePanelOpen ? 'block' : 'none';
-  if (arrow) arrow.style.transform = enginePanelOpen ? 'rotate(180deg)' : '';
-  if (enginePanelOpen) renderEngineList();
-}
-window.toggleEnginePanel = toggleEnginePanel;
-
-/* 搜索执行 */
+// ── 搜索执行 ─────────────────────────────────────────────────
 function doSearch(e) {
   if (e) e.preventDefault();
   const kw = document.getElementById('search-text')?.value.trim();
@@ -189,12 +266,12 @@ window.doSearch = doSearch;
 function onSearchKeydown(e) {
   if (e.key === 'Escape') {
     const input = document.getElementById('search-text');
-    if (input) { input.value = ''; }
-    if (enginePanelOpen) toggleEnginePanel();
+    if (input) input.value = '';
   }
 }
 window.onSearchKeydown = onSearchKeydown;
 
+// ── 站内筛选 ─────────────────────────────────────────────────
 function filterCards(query) {
   query = (query || '').toLowerCase().trim();
   document.querySelectorAll('.ws-section').forEach(block => {
@@ -211,23 +288,19 @@ function filterCards(query) {
 }
 window.filterCards = filterCards;
 
-function sectionId(s) {
-  return 'sec-' + s.replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fa5-]/g, '');
-}
-
-/* 渲染侧边栏 */
+// ── 渲染侧边栏 ───────────────────────────────────────────────
 function renderSidebar(sections) {
   const menu = document.getElementById('main-menu');
   if (!menu) return;
   menu.innerHTML = '';
   sections.forEach(({ section }) => {
-    const id = sectionId(section);
+    const id    = sectionId(section);
     const emoji = sectionEmoji(section);
     const label = sectionLabel(section);
-    const li = document.createElement('li');
+    const li    = document.createElement('li');
     li.className = 'sidebar-item';
     const a = document.createElement('a');
-    a.href = '#' + id;
+    a.href      = '#' + id;
     a.className = 'nav-smooth';
     a.innerHTML = `<span class="sidebar-emoji">${emoji}</span><span class="menu-label">${label}</span>`;
     li.appendChild(a);
@@ -237,29 +310,27 @@ function renderSidebar(sections) {
   document.querySelectorAll('a.nav-smooth').forEach(link => {
     link.addEventListener('click', function(e) {
       e.preventDefault();
-      const targetId = this.getAttribute('href').substring(1);
-      const target = document.getElementById(targetId);
+      const target = document.getElementById(this.getAttribute('href').substring(1));
       if (target) {
-        /* 修正定位：减去顶部栏54px高度，再留8px间距 */
-        const topBarH = 54;
-        const margin  = 8;
-        const top = target.getBoundingClientRect().top + window.scrollY - topBarH - margin;
+        const top = target.getBoundingClientRect().top + window.scrollY - 54 - 8;
         window.scrollTo({ top, behavior: 'smooth' });
       }
       document.querySelectorAll('#main-menu li').forEach(l => l.classList.remove('active'));
       this.parentElement.classList.add('active');
+      // 移动端点击后关闭侧边栏
+      if (isMobileView) closeMobileSidebar();
     });
   });
 }
 
-/* 渲染内容区 */
+// ── 渲染内容区 ───────────────────────────────────────────────
 function renderContent(sections) {
   const main = document.getElementById('content');
   if (!main) return;
   main.innerHTML = '';
 
   sections.forEach(({ section, items }) => {
-    const id = sectionId(section);
+    const id    = sectionId(section);
     const emoji = sectionEmoji(section);
     const label = sectionLabel(section);
 
@@ -278,18 +349,25 @@ function renderContent(sections) {
     row.className = 'row';
 
     items.forEach(item => {
-      const url = item.url || '#';
-      const iconSrc = item.icon || faviconSrc(url);
-      const title = (item.title || '').replace(/</g, '&lt;');
-      const desc = (item.desc || item['data-desc'] || '').replace(/</g, '&lt;');
-      const domain = getDomain(url) || url;
+      const url      = getCardUrl(item);
+      const iconSrc  = item.icon || faviconSrc(url);
+      const title    = (item.title || '').replace(/</g, '&lt;');
+      const desc     = (item.desc || item['data-desc'] || '').replace(/</g, '&lt;');
+      const domain   = getDomain(url) || url;
+      const hasNet   = !!item.intranet;
+      const netBadge = hasNet
+        ? `<span class="net-badge" style="font-size:0.6rem;padding:1px 4px;border-radius:4px;background:${isIntranet ? '#d46b08' : '#1677ff'};color:#fff;margin-left:4px;">${isIntranet ? '内' : '外'}</span>`
+        : '';
 
       const col = document.createElement('div');
+      // 移动端2列，小屏3列，中屏4列，大屏6列
       col.className = 'url-card col-6 col-sm-4 col-md-3 col-xl-2';
       col.innerHTML = `
         <div class="url-body default">
-          <a href="${url}" target="_blank" data-url="${url}"
-             class="card no-c mb-4"
+          <a href="${url}" target="_blank"
+             data-url="${item.url}"
+             ${item.intranet ? `data-intranet="${item.intranet}"` : ''}
+             class="card no-c mb-4 ${hasNet ? 'has-net' : ''}"
              data-toggle="tooltip" data-placement="bottom"
              data-original-title="${domain}">
             <div class="card-body">
@@ -297,8 +375,10 @@ function renderContent(sections) {
                 <div class="url-img mr-2 d-flex align-items-center justify-content-center">
                   <img src="${iconSrc}" onerror="this.src='${DEFAULT_ICON}';this.onerror=null;" alt="${title}">
                 </div>
-                <div class="url-info flex-fill">
-                  <div class="text-sm overflowClip_1"><strong>${title}</strong></div>
+                <div class="url-info flex-fill" style="min-width:0;">
+                  <div class="text-sm overflowClip_1">
+                    <strong>${title}</strong>${netBadge}
+                  </div>
                   <p class="overflowClip_1 m-0 text-muted text-xs">${desc}</p>
                 </div>
               </div>
@@ -318,22 +398,104 @@ function renderContent(sections) {
   }
 }
 
-/* 切换主题 */
-function switchToMain() {
-  localStorage.setItem('navTheme', 'main');
-  window.location.href = '../index.html';
+// ── 搜索模态框（引擎列表） ───────────────────────────────────
+function renderEngineList() {
+  const panel = document.getElementById('search-list');
+  if (!panel) return;
+  panel.innerHTML = '';
+  const cat = SEARCH_CATEGORIES.find(c => c.id === currentCategoryId);
+  if (!cat) return;
+  const ul = document.createElement('ul');
+  ul.className = 'search-type';
+  cat.engines.forEach((engine, idx) => {
+    const li    = document.createElement('li');
+    const id    = `ws-engine-${idx}`;
+    const input = document.createElement('input');
+    input.type = 'radio'; input.name = 'ws-type'; input.id = id; input.hidden = true;
+    if (engine === currentEngine) input.checked = true;
+    const label = document.createElement('label');
+    label.htmlFor = id;
+    label.innerHTML = `<span>${engine.name}</span>`;
+    label.onclick = () => {
+      currentEngine = engine;
+      updateEngineDisplay(); renderEngineList(); renderQuickEngines();
+      document.getElementById('search-text')?.focus();
+    };
+    li.appendChild(input); li.appendChild(label); ul.appendChild(li);
+  });
+  panel.appendChild(ul);
 }
-window.switchToMain = switchToMain;
 
-/* 入口 */
+function renderModalCats() {
+  const wrap = document.getElementById('search-modal-cats');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  SEARCH_CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className   = 'modal-cat-btn' + (cat.id === currentCategoryId ? ' active' : '');
+    btn.textContent = cat.label;
+    btn.onclick = () => {
+      currentCategoryId = cat.id; currentEngine = cat.engines[0];
+      updateEngineDisplay(); renderQuickEngines();
+      renderModalCats(); renderModalEngines();
+      document.getElementById('search-modal-input')?.focus();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
+function renderModalEngines() {
+  const wrap = document.getElementById('search-modal-engines');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const cat = SEARCH_CATEGORIES.find(c => c.id === currentCategoryId);
+  if (!cat) return;
+  cat.engines.forEach(engine => {
+    const btn = document.createElement('button');
+    btn.className   = 'modal-engine-btn' + (engine === currentEngine ? ' active' : '');
+    btn.textContent = engine.name;
+    btn.onclick = () => {
+      currentEngine = engine;
+      updateEngineDisplay(); renderQuickEngines(); renderModalEngines();
+      document.getElementById('search-modal-input')?.focus();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
+// ── 入口 ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // 记录当前模式
+  localStorage.setItem('navMode', 'webstack');
+
+  // 初始化移动端状态
+  applyMobileState();
+
+  // 移动端遮罩点击关闭侧边栏
+  const overlay = document.getElementById('mobile-overlay');
+  if (overlay) overlay.addEventListener('click', closeMobileSidebar);
+
+  // 绑定标题切换模式
+  const logoText = document.getElementById('sidebar-logo-text');
+  if (logoText) {
+    logoText.style.cursor = 'pointer';
+    logoText.title = '点击切换模式';
+    logoText.addEventListener('click', switchMode);
+  }
+
+  // 绑定内外网切换按钮
+  const netBtn = document.getElementById('net-toggle-sidebar');
+  if (netBtn) netBtn.addEventListener('click', toggleNetMode);
+  updateNetBtn();
+
   renderTabs();
   updateEngineDisplay();
   renderQuickEngines();
 
   try {
-    const res = await fetch(LINKS_FILE);
+    const res  = await fetch(LINKS_FILE);
     const data = await res.json();
+    _allData   = data;
     renderSidebar(data);
     renderContent(data);
   } catch (err) {

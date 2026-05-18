@@ -4,11 +4,10 @@
 
 const WORKER_URL = 'https://ico.xmynscnq.dpdns.org';
 const LINKS_FILE = '../links.json';
-
 const DEFAULT_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0yIDEyaDIwIj48L3BhdGg+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+';
 
-// ── 模式切换 ────────────────────────────────────────────────
-const MODES      = ['normal', 'webstack', 'easy', 'nav'];
+// ── 模式切换 ──────────────────────────────────────────────
+const MODES = ['normal', 'webstack', 'easy', 'nav'];
 const MODE_PATHS = {
   normal:   '../normal/index.html',
   webstack: '../webstack/index.html',
@@ -16,87 +15,62 @@ const MODE_PATHS = {
   nav:      '../nav/index.html',
 };
 function switchMode() {
-  const cur  = 'webstack';
-  const next = MODES[(MODES.indexOf(cur) + 1) % MODES.length];
+  const next = MODES[(MODES.indexOf('webstack') + 1) % MODES.length];
   localStorage.setItem('navMode', next);
   window.location.href = MODE_PATHS[next];
 }
 
-// ── 内外网切换 ───────────────────────────────────────────────
+// ── 内外网切换 ────────────────────────────────────────────
 let isIntranet = localStorage.getItem('netMode') === 'intranet';
-let _allData   = null;
+let _allData = null;
 
 function getCardUrl(item) {
   return (isIntranet && item.intranet) ? item.intranet : item.url;
 }
-
 function updateNetBtn() {
   const btn = document.getElementById('net-toggle-sidebar');
   if (!btn) return;
-  const label = btn.querySelector('.menu-label');
-  const emoji = btn.querySelector('.sidebar-emoji');
-  if (label) label.textContent = isIntranet ? '内网模式' : '外网模式';
-  if (emoji) emoji.textContent = isIntranet ? '🏠' : '🌐';
-  btn.classList.toggle('intranet-active', isIntranet);
+  btn.querySelector('.menu-label').textContent = isIntranet ? '内网模式' : '外网模式';
+  btn.querySelector('.sidebar-emoji').textContent = isIntranet ? '🏠' : '🌐';
 }
-
 function toggleNetMode() {
   isIntranet = !isIntranet;
   localStorage.setItem('netMode', isIntranet ? 'intranet' : 'internet');
   updateNetBtn();
-  // 重新渲染卡片链接
   if (_allData) renderContent(_allData);
 }
 window.toggleNetMode = toggleNetMode;
 
-// ── 移动端侧边栏 ─────────────────────────────────────────────
-const MOBILE_BP = 768;
-let isMobileView = window.innerWidth < MOBILE_BP;
+// ── 侧边栏全局helper（避免作用域问题）───────────────────────
+function getSidebar() { return document.getElementById('sidebar'); }
+function getOverlay() { return document.getElementById('mobile-overlay'); }
+function isMobile()   { return window.innerWidth < 768; }
 
-function applyMobileState() {
-  isMobileView = window.innerWidth < MOBILE_BP;
-  const sidebar = document.getElementById('sidebar');
-  const wrap    = document.getElementById('content-wrap');
-  const topBar  = document.getElementById('top-bar');
-  const overlay = document.getElementById('mobile-overlay');
-  if (!sidebar) return;
-
-  if (isMobileView) {
-    // 移动端：清除所有JS内联样式，让CSS的transform和width完全接管
-    sidebar.style.transform  = '';
-    sidebar.style.width      = '';
-    sidebar.style.transition = '';
-    sidebar.classList.remove('mobile-open', 'mini-sidebar');
-    if (overlay) overlay.classList.remove('show');
-    wrap.style.marginLeft = '0';
-    topBar.style.left     = '0';
-  } else {
-    sidebar.classList.remove('mobile-open');
-    if (overlay) overlay.classList.remove('show');
-    sidebar.style.transform = '';
-    const expanded = localStorage.getItem('sidebarExpanded') !== '0';
-    sidebar.classList.toggle('mini-sidebar', !expanded);
-    sidebar.style.width   = expanded ? '180px' : '60px';
-    wrap.style.marginLeft = expanded ? '180px' : '60px';
-    topBar.style.left     = expanded ? '180px' : '60px';
-  }
+function openMobileSidebar() {
+  const s = getSidebar();
+  s.style.transform = 'translateX(0)';
+  s.classList.add('mobile-open');
+  getOverlay()?.classList.add('show');
+}
+function closeMobileSidebar() {
+  const s = getSidebar();
+  s.style.transform = 'translateX(-100%)';
+  s.classList.remove('mobile-open');
+  getOverlay()?.classList.remove('show');
 }
 
-window.addEventListener('resize', applyMobileState);
-// ── 覆盖原侧边栏切换逻辑 ────────────────────────────────────
+// ── 侧边栏切换 ────────────────────────────────────────────
 function toggleSidebar() {
-  const sidebar  = document.getElementById('sidebar');
-  const wrap     = document.getElementById('content-wrap');
-  const topBar   = document.getElementById('top-bar');
-  const overlay  = document.getElementById('mobile-overlay');
-
-  if (isMobileView) {
-    const isOpen = sidebar.classList.contains('mobile-open');
-    sidebar.classList.toggle('mobile-open', !isOpen);
-    if (overlay) overlay.classList.toggle('show', !isOpen);
+  if (isMobile()) {
+    getSidebar().classList.contains('mobile-open')
+      ? closeMobileSidebar()
+      : openMobileSidebar();
   } else {
+    const sidebar  = getSidebar();
+    const wrap     = document.getElementById('content-wrap');
+    const topBar   = document.getElementById('top-bar');
     const expanded = localStorage.getItem('sidebarExpanded') !== '0';
-    const next     = !expanded;
+    const next = !expanded;
     localStorage.setItem('sidebarExpanded', next ? '1' : '0');
     sidebar.classList.toggle('mini-sidebar', !next);
     sidebar.style.width   = next ? '180px' : '60px';
@@ -106,12 +80,29 @@ function toggleSidebar() {
 }
 window.toggleSidebar = toggleSidebar;
 
-// ── 工具函数 ─────────────────────────────────────────────────
-function sectionLabel(section) {
-  return section.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+/u, '').trim();
+window.addEventListener('resize', () => {
+  const sidebar  = getSidebar();
+  const wrap     = document.getElementById('content-wrap');
+  const topBar   = document.getElementById('top-bar');
+  if (!isMobile()) {
+    closeMobileSidebar();
+    const expanded = localStorage.getItem('sidebarExpanded') !== '0';
+    sidebar.classList.toggle('mini-sidebar', !expanded);
+    sidebar.style.width   = expanded ? '180px' : '60px';
+    wrap.style.marginLeft = expanded ? '180px' : '60px';
+    topBar.style.left     = expanded ? '180px' : '60px';
+  } else {
+    wrap.style.marginLeft = '0';
+    topBar.style.left     = '0';
+  }
+});
+
+// ── 工具函数 ──────────────────────────────────────────────
+function sectionLabel(s) {
+  return s.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+/u, '').trim();
 }
-function sectionEmoji(section) {
-  const m = section.match(/^([\p{Emoji_Presentation}\p{Extended_Pictographic}]+)/u);
+function sectionEmoji(s) {
+  const m = s.match(/^([\p{Emoji_Presentation}\p{Extended_Pictographic}]+)/u);
   return m ? m[1] : '';
 }
 function getDomain(url) {
@@ -122,12 +113,11 @@ function buildFaviconUrl(domain) {
   return `${WORKER_URL}/?domain=${domain}`;
 }
 function faviconSrc(url) { return buildFaviconUrl(getDomain(url)); }
-function engineFavicon(e) { return buildFaviconUrl(e.domain); }
 function sectionId(s) {
   return 'sec-' + s.replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fa5-]/g, '');
 }
 
-// ── 搜索分类数据 ─────────────────────────────────────────────
+// ── 搜索分类 ──────────────────────────────────────────────
 const SEARCH_CATEGORIES = [
   {
     id: 'engine', label: '引擎',
@@ -193,10 +183,9 @@ const SEARCH_CATEGORIES = [
 ];
 
 let currentCategoryId = 'engine';
-let currentEngine     = SEARCH_CATEGORIES[0].engines[0];
-let enginePanelOpen   = false;
+let currentEngine = SEARCH_CATEGORIES[0].engines[0];
 
-// ── 渲染分类 Tab ─────────────────────────────────────────────
+// ── Tab ───────────────────────────────────────────────────
 function renderTabs() {
   const el = document.getElementById('ws-tabs');
   if (!el) return;
@@ -207,19 +196,15 @@ function renderTabs() {
     if (cat.id === currentCategoryId) label.classList.add('active');
     label.onclick = () => {
       currentCategoryId = cat.id;
-      currentEngine     = cat.engines[0];
+      currentEngine = cat.engines[0];
       renderTabs();
-      updateEngineDisplay();
       renderQuickEngines();
-      if (enginePanelOpen) renderEngineList();
     };
     el.appendChild(label);
   });
 }
 
-function updateEngineDisplay() {}
-
-// ── 快捷引擎 ─────────────────────────────────────────────────
+// ── 快捷引擎 ─────────────────────────────────────────────
 function renderQuickEngines() {
   const wrap = document.getElementById('quick-engines');
   if (!wrap) return;
@@ -228,7 +213,7 @@ function renderQuickEngines() {
   if (!cat) return;
   cat.engines.forEach(engine => {
     const btn = document.createElement('button');
-    btn.type      = 'button';
+    btn.type = 'button';
     btn.className = 'quick-engine-btn' + (engine === currentEngine ? ' active' : '');
     btn.textContent = engine.name;
     btn.onclick = () => {
@@ -240,7 +225,7 @@ function renderQuickEngines() {
   });
 }
 
-// ── 搜索执行 ─────────────────────────────────────────────────
+// ── 搜索 ─────────────────────────────────────────────────
 function doSearch(e) {
   if (e) e.preventDefault();
   const kw = document.getElementById('search-text')?.value.trim();
@@ -249,190 +234,103 @@ function doSearch(e) {
 window.doSearch = doSearch;
 
 function onSearchKeydown(e) {
-  if (e.key === 'Escape') {
-    const input = document.getElementById('search-text');
-    if (input) input.value = '';
-  }
+  if (e.key === 'Escape') { const i = document.getElementById('search-text'); if(i) i.value=''; }
 }
 window.onSearchKeydown = onSearchKeydown;
 
-// ── 站内筛选 ─────────────────────────────────────────────────
+// ── 站内筛选 ─────────────────────────────────────────────
 function filterCards(query) {
   query = (query || '').toLowerCase().trim();
   document.querySelectorAll('.ws-section').forEach(block => {
-    let hasVisible = false;
+    let vis = false;
     block.querySelectorAll('.url-card').forEach(card => {
-      const title = card.querySelector('strong')?.textContent.toLowerCase() ?? '';
-      const desc  = card.querySelector('p')?.textContent.toLowerCase() ?? '';
-      const show  = !query || title.includes(query) || desc.includes(query);
+      const t = card.querySelector('strong')?.textContent.toLowerCase() ?? '';
+      const d = card.querySelector('p')?.textContent.toLowerCase() ?? '';
+      const show = !query || t.includes(query) || d.includes(query);
       card.style.display = show ? '' : 'none';
-      if (show) hasVisible = true;
+      if (show) vis = true;
     });
-    block.style.display = (!query || hasVisible) ? '' : 'none';
+    block.style.display = (!query || vis) ? '' : 'none';
   });
 }
 window.filterCards = filterCards;
 
-// ── 渲染侧边栏 ───────────────────────────────────────────────
+// ── 渲染侧边栏 ───────────────────────────────────────────
 function renderSidebar(sections) {
   const menu = document.getElementById('main-menu');
   if (!menu) return;
   menu.innerHTML = '';
   sections.forEach(({ section }) => {
-    const id    = sectionId(section);
-    const emoji = sectionEmoji(section);
-    const label = sectionLabel(section);
-    const li    = document.createElement('li');
+    const li = document.createElement('li');
     li.className = 'sidebar-item';
     const a = document.createElement('a');
-    a.href      = '#' + id;
+    a.href = '#' + sectionId(section);
     a.className = 'nav-smooth';
-    a.innerHTML = `<span class="sidebar-emoji">${emoji}</span><span class="menu-label">${label}</span>`;
+    a.innerHTML = `<span class="sidebar-emoji">${sectionEmoji(section)}</span><span class="menu-label">${sectionLabel(section)}</span>`;
     li.appendChild(a);
     menu.appendChild(li);
   });
-
   document.querySelectorAll('a.nav-smooth').forEach(link => {
     link.addEventListener('click', function(e) {
       e.preventDefault();
       const target = document.getElementById(this.getAttribute('href').substring(1));
-      if (target) {
-        const top = target.getBoundingClientRect().top + window.scrollY - 54 - 8;
-        window.scrollTo({ top, behavior: 'smooth' });
-      }
+      if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 62, behavior: 'smooth' });
       document.querySelectorAll('#main-menu li').forEach(l => l.classList.remove('active'));
       this.parentElement.classList.add('active');
-      // 移动端点击后关闭侧边栏
-      if (isMobileView) {
-        sidebar.classList.remove('mobile-open');
-        const overlay = document.getElementById('mobile-overlay');
-        if (overlay) overlay.classList.remove('show');
-      }
+      if (isMobile()) closeMobileSidebar(); // 全局函数，无作用域问题
     });
   });
 }
 
-// ── 渲染内容区 ───────────────────────────────────────────────
+// ── 渲染内容 ─────────────────────────────────────────────
 function renderContent(sections) {
   const main = document.getElementById('content');
   if (!main) return;
   main.innerHTML = '';
-
   sections.forEach(({ section, items }) => {
-    const id    = sectionId(section);
-    const emoji = sectionEmoji(section);
-    const label = sectionLabel(section);
-
     const block = document.createElement('div');
     block.className = 'ws-section';
-
-    const heading = document.createElement('div');
-    heading.className = 'd-flex flex-fill';
-    heading.innerHTML = `
-      <h4 class="text-gray text-lg mb-4" id="${id}">
-        <span class="section-emoji mr-1">${emoji}</span>${label}
-      </h4>`;
-    block.appendChild(heading);
-
+    block.innerHTML = `<div class="d-flex flex-fill"><h4 class="text-gray text-lg mb-4" id="${sectionId(section)}"><span class="section-emoji mr-1">${sectionEmoji(section)}</span>${sectionLabel(section)}</h4></div>`;
     const row = document.createElement('div');
     row.className = 'row';
-
     items.forEach(item => {
-      const url      = getCardUrl(item);
-      const iconSrc  = item.icon || faviconSrc(url);
-      const title    = (item.title || '').replace(/</g, '&lt;');
-      const desc     = (item.desc || item['data-desc'] || '').replace(/</g, '&lt;');
-      const domain   = getDomain(url) || url;
-      const hasNet   = !!item.intranet;
-      const netBadge = hasNet
-        ? `<span class="net-badge" style="font-size:0.6rem;padding:1px 4px;border-radius:4px;background:${isIntranet ? '#d46b08' : '#1677ff'};color:#fff;margin-left:4px;">${isIntranet ? '内' : '外'}</span>`
+      const url     = getCardUrl(item);
+      const iconSrc = item.icon || faviconSrc(url);
+      const title   = (item.title || '').replace(/</g, '&lt;');
+      const desc    = (item.desc || item['data-desc'] || '').replace(/</g, '&lt;');
+      const domain  = getDomain(url) || url;
+      const netBadge = item.intranet
+        ? `<span style="font-size:0.6rem;padding:1px 4px;border-radius:4px;background:${isIntranet?'#d46b08':'#1677ff'};color:#fff;margin-left:4px;">${isIntranet?'内':'外'}</span>`
         : '';
-
       const col = document.createElement('div');
-      // 移动端2列，小屏3列，中屏4列，大屏6列
       col.className = 'url-card col-6 col-sm-4 col-md-3 col-xl-2';
-      col.innerHTML = `
-        <div class="url-body default">
-          <a href="${url}" target="_blank"
-             data-url="${item.url}"
-             ${item.intranet ? `data-intranet="${item.intranet}"` : ''}
-             class="card no-c mb-4 ${hasNet ? 'has-net' : ''}"
-             data-toggle="tooltip" data-placement="bottom"
-             data-original-title="${domain}">
-            <div class="card-body">
-              <div class="url-content d-flex align-items-center">
-                <div class="url-img mr-2 d-flex align-items-center justify-content-center">
-                  <img src="${iconSrc}" onerror="this.src='${DEFAULT_ICON}';this.onerror=null;" alt="${title}">
-                </div>
-                <div class="url-info flex-fill" style="min-width:0;">
-                  <div class="text-sm overflowClip_1">
-                    <strong>${title}</strong>${netBadge}
-                  </div>
-                  <p class="overflowClip_1 m-0 text-muted text-xs">${desc}</p>
-                </div>
-              </div>
-            </div>
-          </a>
-        </div>`;
+      col.innerHTML = `<div class="url-body default"><a href="${url}" target="_blank" data-url="${item.url}" ${item.intranet?`data-intranet="${item.intranet}"`:''}  class="card no-c mb-4" data-toggle="tooltip" data-placement="bottom" data-original-title="${domain}"><div class="card-body"><div class="url-content d-flex align-items-center"><div class="url-img mr-2 d-flex align-items-center justify-content-center"><img src="${iconSrc}" onerror="this.src='${DEFAULT_ICON}';this.onerror=null;" alt="${title}"></div><div class="url-info flex-fill" style="min-width:0;"><div class="text-sm overflowClip_1"><strong>${title}</strong>${netBadge}</div><p class="overflowClip_1 m-0 text-muted text-xs">${desc}</p></div></div></div></a></div>`;
       row.appendChild(col);
     });
-
     block.appendChild(row);
     block.appendChild(document.createElement('br'));
     main.appendChild(block);
   });
-
-  if (typeof $ !== 'undefined') {
-    $('[data-toggle="tooltip"]').tooltip();
-  }
+  if (typeof $ !== 'undefined') $('[data-toggle="tooltip"]').tooltip();
 }
 
-// ── 搜索模态框（引擎列表） ───────────────────────────────────
-function renderEngineList() {
-  const panel = document.getElementById('search-list');
-  if (!panel) return;
-  panel.innerHTML = '';
-  const cat = SEARCH_CATEGORIES.find(c => c.id === currentCategoryId);
-  if (!cat) return;
-  const ul = document.createElement('ul');
-  ul.className = 'search-type';
-  cat.engines.forEach((engine, idx) => {
-    const li    = document.createElement('li');
-    const id    = `ws-engine-${idx}`;
-    const input = document.createElement('input');
-    input.type = 'radio'; input.name = 'ws-type'; input.id = id; input.hidden = true;
-    if (engine === currentEngine) input.checked = true;
-    const label = document.createElement('label');
-    label.htmlFor = id;
-    label.innerHTML = `<span>${engine.name}</span>`;
-    label.onclick = () => {
-      currentEngine = engine;
-      updateEngineDisplay(); renderEngineList(); renderQuickEngines();
-      document.getElementById('search-text')?.focus();
-    };
-    li.appendChild(input); li.appendChild(label); ul.appendChild(li);
-  });
-  panel.appendChild(ul);
-}
-
+// ── 模态框 ───────────────────────────────────────────────
 function renderModalCats() {
   const wrap = document.getElementById('search-modal-cats');
   if (!wrap) return;
   wrap.innerHTML = '';
   SEARCH_CATEGORIES.forEach(cat => {
     const btn = document.createElement('button');
-    btn.className   = 'modal-cat-btn' + (cat.id === currentCategoryId ? ' active' : '');
+    btn.className = 'modal-cat-btn' + (cat.id === currentCategoryId ? ' active' : '');
     btn.textContent = cat.label;
     btn.onclick = () => {
       currentCategoryId = cat.id; currentEngine = cat.engines[0];
-      updateEngineDisplay(); renderQuickEngines();
-      renderModalCats(); renderModalEngines();
+      renderQuickEngines(); renderModalCats(); renderModalEngines();
       document.getElementById('search-modal-input')?.focus();
     };
     wrap.appendChild(btn);
   });
 }
-
 function renderModalEngines() {
   const wrap = document.getElementById('search-modal-engines');
   if (!wrap) return;
@@ -441,48 +339,51 @@ function renderModalEngines() {
   if (!cat) return;
   cat.engines.forEach(engine => {
     const btn = document.createElement('button');
-    btn.className   = 'modal-engine-btn' + (engine === currentEngine ? ' active' : '');
+    btn.className = 'modal-engine-btn' + (engine === currentEngine ? ' active' : '');
     btn.textContent = engine.name;
     btn.onclick = () => {
       currentEngine = engine;
-      updateEngineDisplay(); renderQuickEngines(); renderModalEngines();
+      renderQuickEngines(); renderModalEngines();
       document.getElementById('search-modal-input')?.focus();
     };
     wrap.appendChild(btn);
   });
 }
 
-// ── 入口 ─────────────────────────────────────────────────────
+// ── 入口 ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  // 记录当前模式
   localStorage.setItem('navMode', 'webstack');
 
-  // 初始化移动端状态
-  applyMobileState();
-
-  // 移动端遮罩点击关闭侧边栏（已在index.html绑定，这里不重复）
-
-  // 绑定标题切换模式
-  const logoText = document.getElementById('sidebar-logo-text');
-  if (logoText) {
-    logoText.style.cursor = 'pointer';
-    logoText.title = '点击切换模式';
-    logoText.addEventListener('click', switchMode);
+  // 桌面端初始化侧边栏
+  if (!isMobile()) {
+    const sidebar  = getSidebar();
+    const wrap     = document.getElementById('content-wrap');
+    const topBar   = document.getElementById('top-bar');
+    const expanded = localStorage.getItem('sidebarExpanded') !== '0';
+    sidebar.classList.toggle('mini-sidebar', !expanded);
+    sidebar.style.width   = expanded ? '180px' : '60px';
+    wrap.style.marginLeft = expanded ? '180px' : '60px';
+    topBar.style.left     = expanded ? '180px' : '60px';
   }
 
-  // 绑定内外网切换按钮
-  const netBtn = document.getElementById('net-toggle-sidebar');
-  if (netBtn) netBtn.addEventListener('click', toggleNetMode);
+  // 遮罩关闭侧边栏
+  getOverlay()?.addEventListener('click', closeMobileSidebar);
+
+  // 标题切换模式
+  document.getElementById('sidebar-logo-text')?.addEventListener('click', switchMode);
+  document.getElementById('mobile-logo-text')?.addEventListener('click', switchMode);
+
+  // 内外网
+  document.getElementById('net-toggle-sidebar')?.addEventListener('click', toggleNetMode);
   updateNetBtn();
 
   renderTabs();
-  updateEngineDisplay();
   renderQuickEngines();
 
   try {
     const res  = await fetch(LINKS_FILE);
     const data = await res.json();
-    _allData   = data;
+    _allData = data;
     renderSidebar(data);
     renderContent(data);
   } catch (err) {

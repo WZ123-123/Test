@@ -156,7 +156,7 @@
       border-color: rgba(255,255,255,0.06);
     }
     #mobile-logo-img {
-      width: 36px; height: 36px;
+      width: 42px; height: 42px;
       border-radius: 8px; object-fit: contain; flex-shrink: 0;
     }
     #mobile-logo-text {
@@ -503,11 +503,10 @@
 
     /* ══ 移动端适配 ══ */
     @media (max-width: 768px) {
-      /* 桌面端顶部栏隐藏，移动端顶部栏显示 */
       #top-bar { display: none !important; }
       #mobile-top-bar { display: flex !important; }
 
-      /* 移动端顶部栏透明（at-top状态） */
+      /* 移动端顶部栏透明 */
       #mobile-top-bar.at-top {
         background: transparent !important;
         backdrop-filter: none !important;
@@ -515,10 +514,10 @@
         border-bottom-color: transparent !important;
         box-shadow: none !important;
       }
-      #mobile-top-bar.at-top #mobile-logo-text { color: rgba(255,255,255,0.9); }
+      #mobile-top-bar.at-top #mobile-logo-text { color: rgba(255,255,255,0.92); }
       #mobile-top-bar.at-top #mobile-hamburger { color: rgba(255,255,255,0.85); }
 
-      /* 侧边栏滑出式 */
+      /* 侧边栏滑出，靠CSS class控制 */
       #sidebar {
         transform: translateX(-100%) !important;
         width: 240px !important;
@@ -526,42 +525,40 @@
       }
       #sidebar.mobile-open { transform: translateX(0) !important; }
 
-      /* 内容区不留侧边栏空间 */
       #content-wrap { margin-left: 0 !important; }
-
-      /* spacer与移动端顶部栏同高 */
+      /* spacer撑出移动端顶部栏高度 */
       #top-bar-spacer { height: 50px !important; }
 
-      /* 格言隐藏 */
       #top-quote { display: none !important; }
 
-      /* Banner高度和内边距 */
-      .header-big { min-height: 200px; }
-      .s-search { padding: 16px 12px 14px; }
+      /* Banner：顶部多留padding避免被topbar压住 */
+      .header-big { min-height: 210px; }
+      .s-search { padding: 20px 12px 14px; }
 
-      /* 分类Tab：字体缩小，强制一排不换行 */
+      /* 分类Tab：左对齐+左padding，不截断两端 */
       .s-type-list.big,
       .header-big .s-type-list.big {
         flex-wrap: nowrap !important;
         justify-content: flex-start !important;
         overflow-x: auto !important;
-        padding: 0 4px !important;
+        padding: 0 8px !important;
+        margin-bottom: 12px !important;
       }
       .s-type-list.big label,
       .header-big .s-type-list.big label {
         font-size: 0.78rem !important;
-        padding: 4px 12px !important;
+        padding: 4px 11px !important;
         flex-shrink: 0 !important;
       }
 
-      /* 快捷引擎：保证名字完整显示 */
+      /* 快捷引擎完整显示 */
+      .quick-engines { justify-content: flex-start !important; padding: 0 8px; }
       .quick-engine-btn {
         font-size: 0.82rem !important;
         padding: 4px 12px 2px !important;
         flex-shrink: 0 !important;
       }
 
-      /* 搜索框字体缩小 */
       .super-search-fm { padding: 0 10px 0 16px; }
       .super-search-fm input, #search-text {
         font-size: 0.95rem !important;
@@ -573,7 +570,6 @@
       /* 卡片两列 */
       .url-card { flex: 0 0 50% !important; max-width: 50% !important; }
 
-      /* 浮动按钮 */
       #dark-toggle { bottom: 16px; right: 16px; width: 40px; height: 40px; font-size: 1rem; }
       #float-tools { bottom: 66px; right: 16px; }
       .float-btn { width: 40px; height: 40px; font-size: 1rem; }
@@ -707,39 +703,20 @@
 /* 桌面端侧边栏初始化（不定义 toggleSidebar，由 main.js 统一处理） */
 (function() {
   const MOBILE_BP  = 768;
-  const EXPANDED_W = '180px', MINI_W = '60px';
   const sidebar = document.getElementById('sidebar');
   const wrap    = document.getElementById('content-wrap');
   const topBar  = document.getElementById('top-bar');
 
-  function isMobile() { return window.innerWidth < MOBILE_BP; }
-
-  function applyDesktopState() {
-    if (isMobile()) {
-      wrap.style.marginLeft = '0';
-      topBar.style.left     = '0';
-      return;
-    }
+  // 桌面端初始状态
+  if (window.innerWidth >= MOBILE_BP) {
     const expanded = localStorage.getItem('sidebarExpanded') !== '0';
-    sidebar.style.transition = 'none';
     sidebar.classList.toggle('mini-sidebar', !expanded);
-    sidebar.style.width   = expanded ? EXPANDED_W : MINI_W;
-    wrap.style.marginLeft = expanded ? EXPANDED_W : MINI_W;
-    topBar.style.left     = expanded ? EXPANDED_W : MINI_W;
-    requestAnimationFrame(() => { sidebar.style.transition = ''; });
+    sidebar.style.width   = expanded ? '180px' : '60px';
+    wrap.style.marginLeft = expanded ? '180px' : '60px';
+    topBar.style.left     = expanded ? '180px' : '60px';
   }
 
-  applyDesktopState();
-
-  window.addEventListener('resize', () => {
-    if (!isMobile()) {
-      sidebar.classList.remove('mobile-open');
-      document.getElementById('mobile-overlay').classList.remove('show');
-    }
-    applyDesktopState();
-  });
-
-  // 遮罩关闭侧边栏
+  // resize时由main.js的applyMobileState处理，这里只监听遮罩
   document.getElementById('mobile-overlay').addEventListener('click', () => {
     sidebar.classList.remove('mobile-open');
     document.getElementById('mobile-overlay').classList.remove('show');

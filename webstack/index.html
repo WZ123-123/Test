@@ -537,7 +537,7 @@
       #top-quote { display: none !important; }
 
       /* Banner */
-      .header-big { min-height: 200px; }
+      .header-big { min-height: 200px; padding-top: 50px;}
       .s-search { padding: 14px 10px 12px; }
 
       /* 分类Tab：强制一行，不可滑动，自动缩小适应 */
@@ -732,12 +732,13 @@
   const wrap    = document.getElementById('content-wrap');
   const topBar  = document.getElementById('top-bar');
 
-  if (window.innerWidth < MOBILE_BP) {
-    // 移动端：用JS直接设置transform，优先级高于一切CSS
-    sidebar.style.cssText = 'transform: translateX(-100%) !important; width: 240px !important; transition: transform 0.25s ease !important;';
-    wrap.style.marginLeft = '0';
-    topBar.style.cssText = 'display: none !important;';
-  } else {
+if (window.innerWidth < MOBILE_BP) {
+  sidebar.style.transform = 'translateX(-100%)';
+  sidebar.style.width = '240px';
+  sidebar.style.transition = 'transform 0.25s ease';
+  wrap.style.marginLeft = '0';
+  topBar.style.display = 'none';
+} else {
     // 桌面端初始状态
     const expanded = localStorage.getItem('sidebarExpanded') !== '0';
     sidebar.classList.toggle('mini-sidebar', !expanded);

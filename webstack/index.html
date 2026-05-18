@@ -156,8 +156,8 @@
       border-color: rgba(255,255,255,0.06);
     }
     #mobile-logo-img {
-      width: 28px; height: 28px;
-      border-radius: 6px; object-fit: contain; flex-shrink: 0;
+      width: 36px; height: 36px;
+      border-radius: 8px; object-fit: contain; flex-shrink: 0;
     }
     #mobile-logo-text {
       flex: 1;
@@ -503,51 +503,77 @@
 
     /* ══ 移动端适配 ══ */
     @media (max-width: 768px) {
-      /* 隐藏桌面端顶部栏和侧边栏默认展开状态 */
+      /* 桌面端顶部栏隐藏，移动端顶部栏显示 */
       #top-bar { display: none !important; }
       #mobile-top-bar { display: flex !important; }
 
+      /* 移动端顶部栏透明（at-top状态） */
+      #mobile-top-bar.at-top {
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border-bottom-color: transparent !important;
+        box-shadow: none !important;
+      }
+      #mobile-top-bar.at-top #mobile-logo-text { color: rgba(255,255,255,0.9); }
+      #mobile-top-bar.at-top #mobile-hamburger { color: rgba(255,255,255,0.85); }
+
       /* 侧边栏滑出式 */
       #sidebar {
-        transform: translateX(-100%);
+        transform: translateX(-100%) !important;
         width: 240px !important;
         transition: transform 0.25s ease !important;
       }
       #sidebar.mobile-open { transform: translateX(0) !important; }
 
-      /* 内容区顶部留出移动端顶部栏高度 */
+      /* 内容区不留侧边栏空间 */
       #content-wrap { margin-left: 0 !important; }
-      #top-bar-spacer { height: 50px; }
+
+      /* spacer与移动端顶部栏同高 */
+      #top-bar-spacer { height: 50px !important; }
 
       /* 格言隐藏 */
       #top-quote { display: none !important; }
 
-      /* Banner搜索区缩小内边距 */
-      .s-search { padding: 16px 12px 14px; }
+      /* Banner高度和内边距 */
       .header-big { min-height: 200px; }
+      .s-search { padding: 16px 12px 14px; }
 
-      /* 分类Tab字体更小，强制一排 */
+      /* 分类Tab：字体缩小，强制一排不换行 */
+      .s-type-list.big,
+      .header-big .s-type-list.big {
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        overflow-x: auto !important;
+        padding: 0 4px !important;
+      }
       .s-type-list.big label,
       .header-big .s-type-list.big label {
-        font-size: 0.75rem !important;
-        padding: 4px 10px !important;
+        font-size: 0.78rem !important;
+        padding: 4px 12px !important;
+        flex-shrink: 0 !important;
       }
 
-      /* 快捷引擎字体缩小 */
-      .quick-engine-btn { font-size: 0.8rem !important; padding: 4px 10px 2px !important; }
+      /* 快捷引擎：保证名字完整显示 */
+      .quick-engine-btn {
+        font-size: 0.82rem !important;
+        padding: 4px 12px 2px !important;
+        flex-shrink: 0 !important;
+      }
 
       /* 搜索框字体缩小 */
-      .super-search-fm input,
-      #search-text {
+      .super-search-fm { padding: 0 10px 0 16px; }
+      .super-search-fm input, #search-text {
         font-size: 0.95rem !important;
         padding: 10px 4px !important;
       }
-      .super-search-fm { padding: 0 10px 0 16px; }
+      .super-search-fm input::placeholder,
+      #search-text::placeholder { font-size: 0.95rem !important; }
 
       /* 卡片两列 */
       .url-card { flex: 0 0 50% !important; max-width: 50% !important; }
 
-      /* 浮动按钮位置调整 */
+      /* 浮动按钮 */
       #dark-toggle { bottom: 16px; right: 16px; width: 40px; height: 40px; font-size: 1rem; }
       #float-tools { bottom: 66px; right: 16px; }
       .float-btn { width: 40px; height: 40px; font-size: 1rem; }
@@ -678,7 +704,7 @@
   window.addEventListener('load', fixLogoImg);
 })();
 
-/* 桌面端侧边栏（移动端由 main.js 的 toggleSidebar 接管） */
+/* 桌面端侧边栏初始化（不定义 toggleSidebar，由 main.js 统一处理） */
 (function() {
   const MOBILE_BP  = 768;
   const EXPANDED_W = '180px', MINI_W = '60px';
@@ -688,53 +714,38 @@
 
   function isMobile() { return window.innerWidth < MOBILE_BP; }
 
-  function applyDesktopState(animate) {
-    if (isMobile()) return;
+  function applyDesktopState() {
+    if (isMobile()) {
+      wrap.style.marginLeft = '0';
+      topBar.style.left     = '0';
+      return;
+    }
     const expanded = localStorage.getItem('sidebarExpanded') !== '0';
-    if (!animate) sidebar.style.transition = 'none';
+    sidebar.style.transition = 'none';
     sidebar.classList.toggle('mini-sidebar', !expanded);
     sidebar.style.width   = expanded ? EXPANDED_W : MINI_W;
     wrap.style.marginLeft = expanded ? EXPANDED_W : MINI_W;
     topBar.style.left     = expanded ? EXPANDED_W : MINI_W;
-    if (!animate) requestAnimationFrame(() => sidebar.style.transition = '');
+    requestAnimationFrame(() => { sidebar.style.transition = ''; });
   }
 
-  // 初始化
-  applyDesktopState(false);
+  applyDesktopState();
 
-  // 响应窗口变化
   window.addEventListener('resize', () => {
     if (!isMobile()) {
       sidebar.classList.remove('mobile-open');
       document.getElementById('mobile-overlay').classList.remove('show');
-      applyDesktopState(false);
-    } else {
-      wrap.style.marginLeft = '0';
-      topBar.style.left     = '0';
     }
+    applyDesktopState();
   });
 
-  // 遮罩关闭
+  // 遮罩关闭侧边栏
   document.getElementById('mobile-overlay').addEventListener('click', () => {
     sidebar.classList.remove('mobile-open');
     document.getElementById('mobile-overlay').classList.remove('show');
   });
 
-  // 桌面端 toggleSidebar（移动端由 main.js 处理）
-  const _origToggle = window.toggleSidebar;
-  window.toggleSidebar = function() {
-    if (isMobile()) {
-      const isOpen = sidebar.classList.contains('mobile-open');
-      sidebar.classList.toggle('mobile-open', !isOpen);
-      document.getElementById('mobile-overlay').classList.toggle('show', !isOpen);
-    } else {
-      const expanded = sidebar.style.width !== MINI_W;
-      localStorage.setItem('sidebarExpanded', expanded ? '0' : '1');
-      applyDesktopState(true);
-    }
-  };
-
-  // 悬停浮层（桌面端mini模式）
+  // 悬停浮层（桌面mini模式）
   const popup = document.getElementById('sidebar-popup-label');
   let popupTimer = null;
   document.getElementById('main-menu').addEventListener('mouseover', function(e) {
@@ -756,6 +767,17 @@
   });
   popup.addEventListener('mouseenter', () => clearTimeout(popupTimer));
   popup.addEventListener('mouseleave', () => popup.classList.remove('show'));
+})();
+
+/* 移动端顶部栏透明逻辑（与PC端at-top一致） */
+(function() {
+  const mbar = document.getElementById('mobile-top-bar');
+  if (!mbar) return;
+  function checkScroll() {
+    mbar.classList.toggle('at-top', window.scrollY < 10);
+  }
+  window.addEventListener('scroll', checkScroll, { passive: true });
+  checkScroll();
 })();
 
 /* 移动端顶部栏标题切换模式 */

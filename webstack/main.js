@@ -101,22 +101,24 @@ window.addEventListener('resize', () => {
 
 // ── 覆盖原侧边栏切换逻辑 ────────────────────────────────────
 function toggleSidebar() {
+  const sidebar  = document.getElementById('sidebar');
+  const wrap     = document.getElementById('content-wrap');
+  const topBar   = document.getElementById('top-bar');
+  const overlay  = document.getElementById('mobile-overlay');
+  const EXPANDED_W = '180px', MINI_W = '60px';
+
   if (isMobileView) {
-    const sidebar = document.getElementById('sidebar');
-    const isOpen  = sidebar.style.transform === 'translateX(0px)' ||
-                    sidebar.style.transform === 'translateX(0)';
-    isOpen ? closeMobileSidebar() : openMobileSidebar();
+    const isOpen = sidebar.classList.contains('mobile-open');
+    sidebar.classList.toggle('mobile-open', !isOpen);
+    if (overlay) overlay.classList.toggle('show', !isOpen);
   } else {
-    const sidebar  = document.getElementById('sidebar');
-    const wrap     = document.getElementById('content-wrap');
-    const topBar   = document.getElementById('top-bar');
-    const expanded = sidebar.style.width !== '60px';
+    const expanded = localStorage.getItem('sidebarExpanded') !== '0';
     const next     = !expanded;
     localStorage.setItem('sidebarExpanded', next ? '1' : '0');
     sidebar.classList.toggle('mini-sidebar', !next);
-    sidebar.style.width   = next ? '180px' : '60px';
-    wrap.style.marginLeft = next ? '180px' : '60px';
-    topBar.style.left     = next ? '180px' : '60px';
+    sidebar.style.width   = next ? EXPANDED_W : MINI_W;
+    wrap.style.marginLeft = next ? EXPANDED_W : MINI_W;
+    topBar.style.left     = next ? EXPANDED_W : MINI_W;
   }
 }
 window.toggleSidebar = toggleSidebar;

@@ -518,14 +518,12 @@
       #mobile-top-bar.at-top #mobile-logo-text { color: rgba(255,255,255,0.92) !important; }
       #mobile-top-bar.at-top #mobile-hamburger { color: rgba(255,255,255,0.85) !important; }
 
-      /* 侧边栏：默认隐藏在左侧外，mobile-open时滑入 */
+      /* 侧边栏：默认隐藏，transform 由 JS setProperty 控制，CSS 不加 !important 避免覆盖 */
       #sidebar {
-        transform: translateX(-100%) !important;
         width: 240px !important;
         transition: transform 0.25s ease !important;
         z-index: 1091 !important;
       }
-      #sidebar.mobile-open { transform: translateX(0) !important; }
 
       /* 内容区不留侧边栏空间 */
       #content-wrap { margin-left: 0 !important; }
@@ -536,9 +534,9 @@
       /* 格言不显示 */
       #top-quote { display: none !important; }
 
-      /* Banner：padding-top 为顶部栏高度(50px) + 间距(14px) */
-      .header-big { min-height: 220px; padding-top: 64px; }
-      .s-search { padding: 10px 10px 12px; }
+      /* Banner：padding-top 为顶部栏高度(50px) + 间距(14px)；高度收紧避免下方空白 */
+      .header-big { min-height: 0 !important; height: auto !important; padding-top: 64px; padding-bottom: 20px; }
+      .s-search { padding: 10px 10px 8px; }
 
       /* 分类Tab：强制一行，不可滑动，自动缩小适应 */
       .s-type-list.big,
@@ -563,18 +561,18 @@
         text-overflow: ellipsis !important;
       }
 
-      /* 快捷引擎：强制一行，自动缩小，不可滑动 */
+      /* 快捷引擎：强制一行，允许超出文字缩小，不可滑动 */
       .quick-engines {
         flex-wrap: nowrap !important;
-        justify-content: space-between !important;
+        justify-content: space-around !important;
         overflow: hidden !important;
         margin-top: 8px !important;
         padding: 0 !important;
       }
       .quick-engine-btn {
         flex: 1 !important;
-        font-size: 0.7rem !important;
-        padding: 4px 1px 2px !important;
+        font-size: 0.62rem !important;
+        padding: 4px 0px 2px !important;
         min-width: 0 !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
@@ -733,7 +731,8 @@
   const topBar  = document.getElementById('top-bar');
 
   if (window.innerWidth < MOBILE_BP) {
-    /* 移动端：只设置布局，侧边栏 transform 完全交给 CSS 控制，不写内联 style */
+    /* 移动端：用 setProperty 设置初始隐藏，与 openMobileSidebar 保持一致 */
+    sidebar.style.setProperty('transform', 'translateX(-100%)', 'important');
     wrap.style.marginLeft = '0';
     topBar.style.display = 'none';
   } else {

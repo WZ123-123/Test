@@ -738,6 +738,7 @@
     /* 移动端：清除 mini-sidebar 和所有 transform，left 由 CSS 控制 */
     sidebar.classList.remove('mini-sidebar');
     sidebar.style.removeProperty('transform');
+    sidebar.style.removeProperty('width'); 
     wrap.style.marginLeft = '0';
     topBar.style.display = 'none';
   } else {

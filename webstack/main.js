@@ -46,13 +46,17 @@ function getSidebar() { return document.getElementById('sidebar'); }
 function getOverlay() { return document.getElementById('mobile-overlay'); }
 function isMobile()   { return window.innerWidth < 768; }
 
-// 纯 class 驱动，不写任何内联 style.transform，完全交给 CSS
+// 用内联 style 直接控制 transform，优先级最高，绕开一切 CSS !important 竞争
 function openMobileSidebar() {
-  getSidebar().classList.add('mobile-open');
+  const s = getSidebar();
+  s.style.setProperty('transform', 'translateX(0)', 'important');
+  s.classList.add('mobile-open');
   getOverlay()?.classList.add('show');
 }
 function closeMobileSidebar() {
-  getSidebar().classList.remove('mobile-open');
+  const s = getSidebar();
+  s.style.setProperty('transform', 'translateX(-100%)', 'important');
+  s.classList.remove('mobile-open');
   getOverlay()?.classList.remove('show');
 }
 
@@ -83,7 +87,9 @@ window.addEventListener('resize', () => {
   const topBar   = document.getElementById('top-bar');
   if (!isMobile()) {
     // 从移动端切回桌面端时，清理移动端状态
-    getSidebar().classList.remove('mobile-open');
+    const _s = getSidebar();
+    _s.style.removeProperty('transform'); // 清掉移动端设的内联 transform
+    _s.classList.remove('mobile-open');
     getOverlay()?.classList.remove('show');
     const expanded = localStorage.getItem('sidebarExpanded') !== '0';
     sidebar.classList.toggle('mini-sidebar', !expanded);

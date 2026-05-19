@@ -518,8 +518,9 @@
       #mobile-top-bar.at-top #mobile-logo-text { color: rgba(255,255,255,0.92) !important; }
       #mobile-top-bar.at-top #mobile-hamburger { color: rgba(255,255,255,0.85) !important; }
 
-      /* 侧边栏：用 left 控制显隐，完全脱离 transform 干扰 */
+      /* 侧边栏：left控制位置，同时强制子元素不被原主题transform推走 */
       #sidebar {
+        display: flex !important;
         width: 240px !important;
         left: -240px !important;
         transform: none !important;
@@ -527,7 +528,13 @@
         z-index: 1091 !important;
       }
       #sidebar.mobile-open { left: 0 !important; }
-      /* 移动端强制显示侧边栏内容，防止 mini-sidebar 残留 */
+      /* 关键：覆盖 style-3.03029.1.css 里 .sidebar-nav > * { transform: translate3d(-100%,0,0) } */
+      #sidebar > .sidebar-nav-inner {
+        transform: none !important;
+        width: 240px !important;
+        max-width: none !important;
+      }
+      /* 移动端强制显示侧边栏内容 */
       #sidebar .menu-label { display: inline !important; }
       #sidebar .sidebar-logo { justify-content: flex-start !important; padding: 0 14px !important; }
       #sidebar #sidebar-logo-text { display: block !important; }

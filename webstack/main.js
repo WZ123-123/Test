@@ -55,12 +55,14 @@ function openMobileSidebar() {
   s.style.setProperty('display', 'flex', 'important');
   s.classList.add('mobile-open');
   getOverlay()?.classList.add('show');
+  document.getElementById('mobile-top-bar').style.display = 'none'; 
 }
 function closeMobileSidebar() {
   const s = getSidebar();
   s.classList.remove('mobile-open');
   s.style.setProperty('display', 'flex', 'important');
   getOverlay()?.classList.remove('show');
+  document.getElementById('mobile-top-bar').style.display = 'flex';
 }
 
 // ── 侧边栏切换 ────────────────────────────────────────────

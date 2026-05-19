@@ -51,6 +51,7 @@ function openMobileSidebar() {
   const s = getSidebar();
   s.classList.remove('mini-sidebar');
   s.style.removeProperty('transform');  // 清掉所有残留 transform
+  s.style.removeProperty('width');
   s.classList.add('mobile-open');
   getOverlay()?.classList.add('show');
 }
@@ -373,6 +374,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     // 移动端确保清除 mini-sidebar
     getSidebar().classList.remove('mini-sidebar');
+    getSidebar().style.removeProperty('width'); 
   }
 
   // 遮罩关闭侧边栏（唯一绑定点，index.html 里不再重复绑定）

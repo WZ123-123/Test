@@ -518,7 +518,7 @@
       #mobile-top-bar.at-top #mobile-logo-text { color: rgba(255,255,255,0.92) !important; }
       #mobile-top-bar.at-top #mobile-hamburger { color: rgba(255,255,255,0.85) !important; }
 
-      /* 侧边栏：默认在屏幕左侧外，mobile-open时滑入 */
+      /* 侧边栏：默认隐藏在左侧外，mobile-open时滑入 */
       #sidebar {
         transform: translateX(-100%) !important;
         width: 240px !important;
@@ -536,9 +536,9 @@
       /* 格言不显示 */
       #top-quote { display: none !important; }
 
-      /* Banner */
-      .header-big { min-height: 200px; padding-top: 50px;}
-      .s-search { padding: 14px 10px 12px; }
+      /* Banner：padding-top 为顶部栏高度(50px) + 间距(14px) */
+      .header-big { min-height: 220px; padding-top: 64px; }
+      .s-search { padding: 10px 10px 12px; }
 
       /* 分类Tab：强制一行，不可滑动，自动缩小适应 */
       .s-type-list.big,
@@ -725,21 +725,19 @@
   window.addEventListener('load', fixLogoImg);
 })();
 
-/* 桌面端侧边栏初始化（不定义 toggleSidebar，由 main.js 统一处理） */
+/* 桌面端侧边栏初始化 */
 (function() {
-  const MOBILE_BP  = 768;
+  const MOBILE_BP = 768;
   const sidebar = document.getElementById('sidebar');
   const wrap    = document.getElementById('content-wrap');
   const topBar  = document.getElementById('top-bar');
 
-if (window.innerWidth < MOBILE_BP) {
-  sidebar.style.transform = 'translateX(-100%)';
-  sidebar.style.width = '240px';
-  sidebar.style.transition = 'transform 0.25s ease';
-  wrap.style.marginLeft = '0';
-  topBar.style.display = 'none';
-} else {
-    // 桌面端初始状态
+  if (window.innerWidth < MOBILE_BP) {
+    /* 移动端：只设置布局，侧边栏 transform 完全交给 CSS 控制，不写内联 style */
+    wrap.style.marginLeft = '0';
+    topBar.style.display = 'none';
+  } else {
+    /* 桌面端初始状态 */
     const expanded = localStorage.getItem('sidebarExpanded') !== '0';
     sidebar.classList.toggle('mini-sidebar', !expanded);
     sidebar.style.width   = expanded ? '180px' : '60px';
@@ -747,13 +745,7 @@ if (window.innerWidth < MOBILE_BP) {
     topBar.style.left     = expanded ? '180px' : '60px';
   }
 
-  // resize时由main.js的applyMobileState处理，这里只监听遮罩
-  document.getElementById('mobile-overlay').addEventListener('click', () => {
-    sidebar.classList.remove('mobile-open');
-    document.getElementById('mobile-overlay').classList.remove('show');
-  });
-
-  // 悬停浮层（桌面mini模式）
+  /* 悬停浮层（桌面mini模式） */
   const popup = document.getElementById('sidebar-popup-label');
   let popupTimer = null;
   document.getElementById('main-menu').addEventListener('mouseover', function(e) {
@@ -777,7 +769,7 @@ if (window.innerWidth < MOBILE_BP) {
   popup.addEventListener('mouseleave', () => popup.classList.remove('show'));
 })();
 
-/* 移动端顶部栏透明逻辑（与PC端at-top一致） */
+/* 移动端顶部栏透明逻辑 */
 (function() {
   const mbar = document.getElementById('mobile-top-bar');
   if (!mbar) return;
@@ -787,15 +779,6 @@ if (window.innerWidth < MOBILE_BP) {
   window.addEventListener('scroll', checkScroll, { passive: true });
   checkScroll();
 })();
-
-/* 移动端顶部栏标题切换模式 */
-document.getElementById('mobile-logo-text').addEventListener('click', function() {
-  const MODES      = ['normal', 'webstack', 'easy', 'nav'];
-  const MODE_PATHS = { normal: '../normal/index.html', webstack: '../webstack/index.html', easy: '../easy/index.html', nav: '../nav/index.html' };
-  const next = MODES[(MODES.indexOf('webstack') + 1) % MODES.length];
-  localStorage.setItem('navMode', next);
-  window.location.href = MODE_PATHS[next];
-});
 
 /* 暗色模式 */
 function toggleDark() {
@@ -914,7 +897,7 @@ function renderModalCats() {
     btn.textContent = cat.label;
     btn.onclick = () => {
       currentCategoryId = cat.id; currentEngine = cat.engines[0];
-      updateEngineDisplay(); renderQuickEngines();
+      renderQuickEngines();
       renderModalCats(); renderModalEngines();
       document.getElementById('search-modal-input')?.focus();
     };
@@ -934,7 +917,7 @@ function renderModalEngines() {
     btn.textContent = engine.name;
     btn.onclick = () => {
       currentEngine = engine;
-      updateEngineDisplay(); renderQuickEngines(); renderModalEngines();
+      renderQuickEngines(); renderModalEngines();
       document.getElementById('search-modal-input')?.focus();
     };
     wrap.appendChild(btn);

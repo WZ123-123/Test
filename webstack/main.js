@@ -41,21 +41,18 @@ function toggleNetMode() {
 }
 window.toggleNetMode = toggleNetMode;
 
-// ── 侧边栏全局helper（避免作用域问题）───────────────────────
+// ── 侧边栏全局helper ──────────────────────────────────────
 function getSidebar() { return document.getElementById('sidebar'); }
 function getOverlay() { return document.getElementById('mobile-overlay'); }
 function isMobile()   { return window.innerWidth < 768; }
 
+// 纯 class 驱动，不写任何内联 style.transform，完全交给 CSS
 function openMobileSidebar() {
-  const s = getSidebar();
-  s.style.transform = 'translateX(0)';
-  s.classList.add('mobile-open');
+  getSidebar().classList.add('mobile-open');
   getOverlay()?.classList.add('show');
 }
 function closeMobileSidebar() {
-  const s = getSidebar();
-  s.style.transform = 'translateX(-100%)';
-  s.classList.remove('mobile-open');
+  getSidebar().classList.remove('mobile-open');
   getOverlay()?.classList.remove('show');
 }
 
@@ -85,7 +82,9 @@ window.addEventListener('resize', () => {
   const wrap     = document.getElementById('content-wrap');
   const topBar   = document.getElementById('top-bar');
   if (!isMobile()) {
-    closeMobileSidebar();
+    // 从移动端切回桌面端时，清理移动端状态
+    getSidebar().classList.remove('mobile-open');
+    getOverlay()?.classList.remove('show');
     const expanded = localStorage.getItem('sidebarExpanded') !== '0';
     sidebar.classList.toggle('mini-sidebar', !expanded);
     sidebar.style.width   = expanded ? '180px' : '60px';
@@ -277,7 +276,7 @@ function renderSidebar(sections) {
       if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 62, behavior: 'smooth' });
       document.querySelectorAll('#main-menu li').forEach(l => l.classList.remove('active'));
       this.parentElement.classList.add('active');
-      if (isMobile()) closeMobileSidebar(); // 全局函数，无作用域问题
+      if (isMobile()) closeMobileSidebar();
     });
   });
 }
@@ -366,7 +365,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     topBar.style.left     = expanded ? '180px' : '60px';
   }
 
-  // 遮罩关闭侧边栏
+  // 遮罩关闭侧边栏（唯一绑定点，index.html 里不再重复绑定）
   getOverlay()?.addEventListener('click', closeMobileSidebar);
 
   // 标题切换模式

@@ -46,19 +46,20 @@ function getSidebar() { return document.getElementById('sidebar'); }
 function getOverlay() { return document.getElementById('mobile-overlay'); }
 function isMobile()   { return window.innerWidth < 768; }
 
-// 移动端侧边栏：用 class 控制 left，同时清除所有桌面端残留的内联样式
+// 移动端侧边栏：强制 display:flex 覆盖外部CSS的 display:none
 function openMobileSidebar() {
   const s = getSidebar();
   s.classList.remove('mini-sidebar');
   s.style.removeProperty('transform');
-  s.style.removeProperty('width');      // 清除桌面端 mini-sidebar 留下的 width:60px
-  s.style.removeProperty('display'); 
+  s.style.removeProperty('width');
+  s.style.setProperty('display', 'flex', 'important');
   s.classList.add('mobile-open');
   getOverlay()?.classList.add('show');
 }
 function closeMobileSidebar() {
   const s = getSidebar();
   s.classList.remove('mobile-open');
+  s.style.setProperty('display', 'flex', 'important');
   getOverlay()?.classList.remove('show');
 }
 
@@ -373,11 +374,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     wrap.style.marginLeft = expanded ? '180px' : '60px';
     topBar.style.left     = expanded ? '180px' : '60px';
   } else {
-    // 移动端：清除所有桌面端残留内联样式
+    // 移动端：清除所有桌面端残留内联样式，强制display:flex覆盖外部CSS的display:none
     const ms = getSidebar();
     ms.classList.remove('mini-sidebar');
     ms.style.removeProperty('width');
     ms.style.removeProperty('transform');
+    ms.style.setProperty('display', 'flex', 'important');
   }
 
   // 遮罩关闭侧边栏（唯一绑定点，index.html 里不再重复绑定）

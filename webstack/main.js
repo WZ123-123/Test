@@ -1,325 +1,893 @@
-/* ===========================
-   王五导航 · WebStack主题 · main.js
-   =========================== */
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>王五导航 · WebStack</title>
+  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>" />
+  <link rel="stylesheet" href="assets/css/block-library.min-5.6.2.css" />
+  <link rel="stylesheet" href="assets/css/iconfont-3.03029.1.css" />
+  <link rel="stylesheet" href="assets/css/bootstrap.min-4.3.1.css" />
+  <link rel="stylesheet" href="assets/css/style-3.03029.1.css" />
+  <link rel="stylesheet" href="assets/css/custom-style.css" />
+  <link rel="stylesheet" href="assets/fontawesome-5.15.4/css/all.min.css" />
+  <script src="assets/js/jquery.min-3.2.1.js"></script>
+  <style>
+    /* 全局消除focus轮廓 */
+    button:focus, button:focus-visible,
+    .btn:focus, .btn:focus-visible,
+    .quick-engine-btn:focus,
+    .submit:focus,
+    #top-bar-toggle:focus {
+      outline: none !important;
+      box-shadow: none !important;
+    }
 
-const WORKER_URL = 'https://ico.xmynscnq.dpdns.org';
-const LINKS_FILE = '../links.json';
-const DEFAULT_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0yIDEyaDIwIj48L3BhdGg+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+';
+    /* ══ 侧边栏 ══ */
+    #sidebar {
+      position: fixed !important;
+      top: 0 !important; left: 0;
+      height: 100vh !important;
+      z-index: 1090;
+      transition: width 0.25s ease, transform 0.25s ease;
+      display: flex; flex-direction: column;
+    }
+    body.io-grey-mode #sidebar .sidebar-nav-inner,
+    body #sidebar .sidebar-nav-inner {
+      max-width: none !important;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      background: #fff !important;
+      border-right: 1px solid rgba(0,0,0,0.07);
+    }
+    body.dark-mode #sidebar .sidebar-nav-inner,
+    body.dark-mode.io-grey-mode #sidebar .sidebar-nav-inner {
+      background: #1a2230 !important;
+      border-color: #2a3448 !important;
+    }
 
-// ── 模式切换 ──────────────────────────────────────────────
-const MODES = ['normal', 'webstack', 'easy', 'nav'];
-const MODE_PATHS = {
-  normal:   '../normal/index.html',
-  webstack: '../webstack/index.html',
-  easy:     '../easy/index.html',
-  nav:      '../nav/index.html',
-};
-function switchMode() {
-  const next = MODES[(MODES.indexOf('webstack') + 1) % MODES.length];
-  localStorage.setItem('navMode', next);
-  window.location.href = MODE_PATHS[next];
-}
+    /* Logo区 */
+    .sidebar-logo {
+      display: flex !important;
+      align-items: center;
+      height: 60px; padding: 0 14px; gap: 10px;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      flex-shrink: 0; overflow: hidden;
+    }
+    body.dark-mode .sidebar-logo { border-color: #2a3448 !important; background: #1a2230 !important; }
+    .sidebar-logo img { border-radius: 10px; object-fit: contain; flex-shrink: 0; }
+    #sidebar-logo-text {
+      font-size: 1.18rem; font-weight: 900;
+      letter-spacing: 0.04em; white-space: nowrap; color: #222;
+      cursor: pointer;
+    }
+    body.dark-mode #sidebar-logo-text { color: #e0e6f0 !important; }
+    #sidebar.mini-sidebar .sidebar-logo { justify-content: center; padding: 0; }
+    #sidebar.mini-sidebar #sidebar-logo-text { display: none; }
 
-// ── 内外网切换 ────────────────────────────────────────────
-let isIntranet = localStorage.getItem('netMode') === 'intranet';
-let _allData = null;
+    /* 菜单 */
+    .sidebar-menu { flex: 1; overflow: hidden; }
+    .sidebar-scroll { height: 100%; overflow-y: auto; overflow-x: hidden; }
+    .sidebar-menu-inner { padding: 6px 0; }
+    .sidebar-emoji {
+      font-size: 1.1rem; display: inline-flex;
+      width: 32px; height: 32px;
+      align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    #main-menu { list-style: none; margin: 0; padding: 0; }
+    #main-menu li a {
+      display: flex !important; align-items: center; gap: 10px;
+      padding: 0 14px !important; height: 40px;
+      line-height: 40px !important; max-height: 40px !important;
+      border-radius: 8px; margin: 2px 8px;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap; overflow: hidden;
+      color: #515c6b; text-decoration: none;
+    }
+    #main-menu li a:hover { background: rgba(22,119,255,0.08) !important; color: #1677ff !important; }
+    #main-menu li.active > a { background: rgba(22,119,255,0.12) !important; color: #1677ff !important; }
+    #main-menu li a .menu-label { font-size: 0.95rem; font-weight: 600; }
+    #sidebar.mini-sidebar #main-menu li a { justify-content: center; padding: 0 !important; margin: 2px 6px; }
+    #sidebar.mini-sidebar #main-menu li a .menu-label { display: none; }
+    #sidebar.mini-sidebar #main-menu li a .sidebar-emoji { display: inline-flex !important; }
 
-function getCardUrl(item) {
-  return (isIntranet && item.intranet) ? item.intranet : item.url;
-}
-function updateNetBtn() {
-  const btn = document.getElementById('net-toggle-sidebar');
-  if (!btn) return;
-  btn.querySelector('.menu-label').textContent = isIntranet ? '内网模式' : '外网模式';
-  btn.querySelector('.sidebar-emoji').textContent = isIntranet ? '🏠' : '🌐';
-}
-function toggleNetMode() {
-  isIntranet = !isIntranet;
-  localStorage.setItem('netMode', isIntranet ? 'intranet' : 'internet');
-  updateNetBtn();
-  if (_allData) renderContent(_allData);
-}
-window.toggleNetMode = toggleNetMode;
+    /* 悬停浮层 */
+    .sidebar-popup-label {
+      position: fixed; left: 64px;
+      background: #fff; color: #333;
+      font-size: 0.85rem; font-weight: 600;
+      padding: 6px 14px; border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+      pointer-events: none; opacity: 0;
+      transform: translateX(-6px);
+      transition: opacity 0.15s, transform 0.15s;
+      white-space: nowrap; z-index: 9999;
+    }
+    .sidebar-popup-label.show { opacity: 1; transform: translateX(0); }
+    body.dark-mode .sidebar-popup-label { background: #263045; color: #ddd; }
 
-// ── 侧边栏全局helper ──────────────────────────────────────
-function getSidebar() { return document.getElementById('sidebar'); }
-function getOverlay() { return document.getElementById('mobile-overlay'); }
-function isMobile()   { return window.innerWidth < 768; }
+    /* 底部 */
+    .sidebar-bottom { flex-shrink: 0; border-top: 1px solid rgba(0,0,0,0.07); padding: 6px 0; }
+    body.dark-mode .sidebar-bottom { border-color: #2a3448; }
+    .sidebar-bottom ul { list-style: none; margin: 0; padding: 0; }
+    .sidebar-bottom li a {
+      display: flex !important; align-items: center; gap: 10px;
+      padding: 0 14px !important; height: 40px;
+      border-radius: 8px; margin: 2px 8px;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap; overflow: hidden;
+      color: #515c6b; cursor: pointer;
+    }
+    .sidebar-bottom li a:hover { background: rgba(22,119,255,0.08) !important; color: #1677ff !important; }
+    #sidebar.mini-sidebar .sidebar-bottom li a { justify-content: center; padding: 0 !important; margin: 2px 6px; }
+    #sidebar.mini-sidebar .sidebar-bottom li a .menu-label { display: none; }
+    body.dark-mode #main-menu li a { color: #b0bec5 !important; }
+    body.dark-mode #main-menu li a:hover { color: #4da6ff !important; }
+    body.dark-mode #main-menu li.active > a { color: #4da6ff !important; }
+    body.dark-mode .sidebar-bottom li a { color: #b0bec5 !important; }
+    body.dark-mode .sidebar-bottom li a:hover { color: #4da6ff !important; }
+    #net-toggle-sidebar.intranet-active .sidebar-emoji::after { content: ''; }
 
-// 用内联 style 直接控制 transform，优先级最高，绕开一切 CSS !important 竞争
-function openMobileSidebar() {
-  const s = getSidebar();
-  s.style.setProperty('transform', 'translateX(0)', 'important');
-  s.classList.add('mobile-open');
-  getOverlay()?.classList.add('show');
-}
-function closeMobileSidebar() {
-  const s = getSidebar();
-  s.style.setProperty('transform', 'translateX(-100%)', 'important');
-  s.classList.remove('mobile-open');
-  getOverlay()?.classList.remove('show');
-}
+    /* ══ 移动端遮罩 ══ */
+    #mobile-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1089;
+    }
+    #mobile-overlay.show { display: block; }
 
-// ── 侧边栏切换 ────────────────────────────────────────────
-function toggleSidebar() {
-  if (isMobile()) {
-    getSidebar().classList.contains('mobile-open')
-      ? closeMobileSidebar()
-      : openMobileSidebar();
-  } else {
-    const sidebar  = getSidebar();
-    const wrap     = document.getElementById('content-wrap');
-    const topBar   = document.getElementById('top-bar');
-    const expanded = localStorage.getItem('sidebarExpanded') !== '0';
-    const next = !expanded;
-    localStorage.setItem('sidebarExpanded', next ? '1' : '0');
-    sidebar.classList.toggle('mini-sidebar', !next);
-    sidebar.style.width   = next ? '180px' : '60px';
-    wrap.style.marginLeft = next ? '180px' : '60px';
-    topBar.style.left     = next ? '180px' : '60px';
+    /* ══ 移动端顶部栏 ══ */
+    #mobile-top-bar {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 50px; z-index: 1092;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    body.dark-mode #mobile-top-bar {
+      background: rgba(18,24,31,0.92);
+      border-color: rgba(255,255,255,0.06);
+    }
+    #mobile-logo-img {
+      width: 42px; height: 42px;
+      border-radius: 8px; object-fit: contain; flex-shrink: 0;
+    }
+    #mobile-logo-text {
+      flex: 1;
+      font-size: 1rem; font-weight: 900;
+      color: #222; letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+    body.dark-mode #mobile-logo-text { color: #e0e6f0; }
+    #mobile-hamburger {
+      width: 40px; height: 40px;
+      background: none; border: none;
+      color: #333; font-size: 1.3rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+    }
+    body.dark-mode #mobile-hamburger { color: #ccd6e0; }
+
+    /* ══ 顶部栏（桌面端） ══ */
+    #top-bar {
+      position: fixed; top: 0; right: 0;
+      height: 54px; z-index: 1089;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      display: flex; align-items: center;
+      padding: 0 24px 0 0;
+      transition: background 0.3s, left 0.25s, backdrop-filter 0.3s, border-color 0.3s;
+    }
+    body.dark-mode #top-bar { background: rgba(18,24,31,0.82); border-color: rgba(255,255,255,0.06); }
+    #top-bar.at-top {
+      background: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border-bottom-color: transparent !important;
+      box-shadow: none !important;
+    }
+    #top-bar.at-top #top-bar-toggle { color: rgba(255,255,255,0.85) !important; }
+    #top-bar.at-top #top-bar-toggle:hover { color: #fff !important; }
+    #top-bar.at-top #top-quote { color: rgba(255,255,255,0.75) !important; }
+    #top-bar-toggle {
+      width: 54px; height: 54px; flex-shrink: 0;
+      background: none; border: none; outline: none;
+      cursor: pointer; color: #222; font-size: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s; -webkit-appearance: none; appearance: none;
+    }
+    #top-bar-toggle:hover { color: #1677ff; }
+    body.dark-mode #top-bar-toggle { color: #ccd6e0; }
+    body.dark-mode #top-bar-toggle:hover { color: #fff; }
+    #top-quote {
+      flex: 1; text-align: right;
+      font-size: 0.82rem; font-style: italic;
+      color: #222; cursor: default;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      padding: 0 0 0 16px;
+      transition: opacity 0.4s;
+      user-select: none;
+    }
+    body.dark-mode #top-quote { color: #d0d8e4; }
+    #top-quote.fade-out { opacity: 0; }
+    #top-quote.fade-in  { opacity: 1; }
+    #top-bar-spacer { height: 54px; flex-shrink: 0; }
+
+    /* ══ 主内容 ══ */
+    .page-container { display: flex; }
+    #content-wrap { flex: 1; overflow: auto; min-width: 0; }
+
+    /* ══ Banner ══ */
+    .header-big {
+      position: relative; text-align: center;
+      min-height: 240px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1a2a3a 0%, #0f3460 50%, #1a2a3a 100%);
+      margin-bottom: 0 !important;
+    }
+    .header-big .banner-bg {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      opacity: 0; transition: opacity 0.6s ease; z-index: 0;
+    }
+    .header-big .banner-bg.loaded { opacity: 1; }
+    .header-big .banner-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(10,20,35,0.55) 0%, rgba(10,20,35,0.45) 60%, rgba(10,20,35,0.65) 100%);
+      z-index: 1;
+    }
+
+    /* ══ 搜索区 ══ */
+    .s-search {
+      position: relative; z-index: 2;
+      width: 100%; max-width: 900px;
+      margin: 0 auto; padding: 24px 20px 20px;
+    }
+
+    /* 分类Tab */
+    .header-big .s-type-list.big, .s-type-list.big {
+      display: flex !important; flex-direction: row !important;
+      flex-wrap: nowrap !important; position: static !important;
+      top: auto !important; width: auto !important;
+      background: none !important; box-shadow: none !important;
+      padding: 0 !important; white-space: nowrap !important;
+      overflow-x: auto !important; overflow-y: hidden !important;
+      scrollbar-width: none !important;
+      gap: 0;
+      justify-content: center; margin-bottom: 16px;
+    }
+    .s-type-list.big::-webkit-scrollbar { display: none; }
+    .header-big .s-type-list.big label, .s-type-list.big label {
+      display: inline-block !important;
+      padding: 5px 14px !important;
+      border-radius: 0 !important;
+      background: none !important; border: none !important;
+      border-bottom: 2px solid transparent !important;
+      cursor: pointer; font-size: 0.88rem; font-weight: 600;
+      color: rgba(255,255,255,0.55) !important;
+      opacity: 1 !important; transition: all 0.18s;
+      user-select: none; margin: 0; white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .header-big .s-type-list.big label span { display: none !important; }
+    .s-type-list.big label:hover { color: #fff !important; }
+    .s-type-list.big label.active { color: #fff !important; border-bottom-color: #fff !important; }
+    .header-big .s-type {
+      position: static !important; top: auto !important;
+      left: auto !important; width: auto !important; z-index: auto !important;
+    }
+
+    /* 搜索框 */
+    .super-search-fm {
+      display: flex; align-items: center;
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.3);
+      backdrop-filter: blur(8px);
+      border-radius: 40px;
+      padding: 0 14px 0 28px; gap: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .super-search-fm:focus-within {
+      background: rgba(255,255,255,0.22);
+      box-shadow: 0 6px 32px rgba(0,0,0,0.3);
+      border-color: rgba(255,255,255,0.5);
+    }
+    .super-search-fm input,
+    .super-search-fm input.form-control,
+    .super-search-fm .search-key,
+    #search-text {
+      flex: 1 !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      color: #fff !important;
+      font-size: 1.15rem !important;
+      padding: 14px 4px !important;
+      height: auto !important;
+      line-height: 1.4 !important;
+      border-radius: 0 !important;
+    }
+    .super-search-fm input::placeholder,
+    .super-search-fm .search-key::placeholder,
+    #search-text::placeholder {
+      color: rgba(255,255,255,0.5) !important;
+      font-size: 1.15rem !important;
+    }
+    .super-search-fm .submit {
+      background: none !important; border: none !important;
+      outline: none !important; box-shadow: none !important;
+      color: rgba(255,255,255,0.85);
+      font-size: 1.3rem; cursor: pointer; padding: 0;
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s; flex-shrink: 0;
+    }
+    .super-search-fm .submit:hover { color: #fff; }
+
+    /* 快捷引擎 */
+    .quick-engines {
+      display: flex; gap: 0; justify-content: center;
+      flex-wrap: nowrap; margin-top: 14px;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .quick-engines::-webkit-scrollbar { display: none; }
+    .quick-engine-btn {
+      background: none !important; border: none !important;
+      outline: none !important; box-shadow: none !important;
+      border-radius: 0 !important;
+      padding: 5px 16px 3px; cursor: pointer;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.95rem; font-weight: 600;
+      transition: color 0.15s; white-space: nowrap;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+    }
+    .quick-engine-btn::before {
+      content: '▼'; font-size: 0.75rem;
+      color: transparent; transition: color 0.15s; line-height: 1;
+    }
+    .quick-engine-btn.active::before { color: rgba(255,255,255,0.9); }
+    .quick-engine-btn:hover { color: rgba(255,255,255,0.9) !important; }
+    .quick-engine-btn.active { color: #fff !important; }
+
+    /* ══ 内容区网格 ══ */
+    #content.content-site {
+      background-image:
+        linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.07) 1px, transparent 1px);
+      background-size: 18px 18px;
+      background-color: #f2f3f5;
+      padding: 24px 20px 40px;
+      margin-top: 0 !important;
+    }
+    body.dark-mode #content.content-site {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.055) 1px, transparent 1px);
+      background-size: 18px 18px;
+      background-color: #12181f;
+    }
+
+    /* 卡片 */
+    .url-card .card { border-radius: 10px; }
+    .url-card .card-body { padding: 0.65rem 0.85rem; }
+    .url-card strong { font-size: 0.93rem !important; color: #1a1a2e !important; font-weight: 700 !important; }
+    body.dark-mode .url-card strong { color: #e0e6f0 !important; }
+    .url-card p.text-muted { font-size: 0.75rem !important; color: #555 !important; }
+    body.dark-mode .url-card p.text-muted { color: #7a8a9a !important; }
+    .url-img { width: 40px !important; height: 40px !important; flex-shrink: 0; }
+    .url-img img { width: 32px !important; height: 32px !important; border-radius: 8px; object-fit: contain; }
+    .ws-section h4 { color: #333 !important; font-weight: 700 !important; font-size: 0.95rem !important; }
+    body.dark-mode .ws-section h4 { color: #9aaabb !important; }
+
+    /* ══ 暗色模式 ══ */
+    body.dark-mode { background: #12181f !important; color: #d4d4d4 !important; }
+    body.dark-mode .page-container { background: #12181f !important; }
+    body.dark-mode #content-wrap { background: #12181f !important; }
+    body.dark-mode .card { background: #1e2736 !important; border-color: #2a3448 !important; color: #d4d4d4 !important; }
+    body.dark-mode .card:hover { background: #263045 !important; }
+
+    #dark-toggle {
+      position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+      width: 46px; height: 46px; border-radius: 50%;
+      background: #1677ff; border: none; color: #fff;
+      font-size: 1.15rem; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, transform 0.15s;
+    }
+    #dark-toggle:hover { background: #0958d9; transform: scale(1.08); }
+    body.dark-mode #dark-toggle { background: #f0c040; color: #222; }
+    body.dark-mode #dark-toggle:hover { background: #e6b800; }
+
+    #float-tools {
+      position: fixed; right: 28px; bottom: 84px;
+      display: flex; flex-direction: column; gap: 10px; z-index: 9998;
+    }
+    .float-btn {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: #fff; border: none; color: #555;
+      font-size: 1.1rem; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .float-btn:hover { background: #f0f4ff; color: #1677ff; transform: scale(1.08); }
+    body.dark-mode .float-btn { background: #1e2736; color: #aaa; }
+    body.dark-mode .float-btn:hover { background: #263045; color: #fff; }
+    #go-top { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    #go-top.visible { opacity: 1; pointer-events: auto; }
+
+    /* ══ 搜索模态框 ══ */
+    #search-modal {
+      display: none; position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      align-items: center; justify-content: center;
+    }
+    #search-modal.open { display: flex; }
+    #search-modal-box {
+      background: #fff; border-radius: 20px;
+      padding: 28px 32px 32px; width: 90%; max-width: 720px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+      animation: modal-in 0.2s ease; position: relative;
+    }
+    body.dark-mode #search-modal-box { background: #1e2736; }
+    @keyframes modal-in {
+      from { opacity:0; transform: scale(0.97); }
+      to   { opacity:1; transform: scale(1); }
+    }
+    #search-modal-cats {
+      display: flex; gap: 0; border-bottom: 1px solid #eee;
+      margin-bottom: 18px; overflow-x: auto; scrollbar-width: none;
+    }
+    #search-modal-cats::-webkit-scrollbar { display: none; }
+    body.dark-mode #search-modal-cats { border-color: #2a3448; }
+    .modal-cat-btn {
+      background: none; border: none; border-bottom: 2px solid transparent;
+      padding: 8px 20px; font-size: 0.92rem; font-weight: 600;
+      color: #888; cursor: pointer; white-space: nowrap;
+      transition: all 0.15s; margin-bottom: -1px; outline: none !important;
+    }
+    .modal-cat-btn:hover { color: #1677ff; }
+    .modal-cat-btn.active { color: #1677ff; border-bottom-color: #1677ff; }
+    body.dark-mode .modal-cat-btn { color: #6a7a8a; }
+    body.dark-mode .modal-cat-btn.active { color: #4da6ff; border-bottom-color: #4da6ff; }
+    #search-modal-engines { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .modal-engine-btn {
+      padding: 5px 16px; border-radius: 14px; border: 1px solid #e0e0e0;
+      background: #f5f5f5; color: #555;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; outline: none !important;
+    }
+    .modal-engine-btn:hover, .modal-engine-btn.active { background: #1677ff; color: #fff; border-color: #1677ff; }
+    body.dark-mode .modal-engine-btn { background: #263045; border-color: #2a3448; color: #aaa; }
+    body.dark-mode .modal-engine-btn.active { background: #1677ff; color: #fff; }
+    #search-modal-form {
+      display: flex; align-items: center; gap: 10px;
+      border: 1.5px solid #e0e0e0; border-radius: 12px;
+      padding: 6px 8px 6px 20px; transition: border-color 0.2s;
+    }
+    #search-modal-form:focus-within { border-color: #1677ff; }
+    body.dark-mode #search-modal-form { border-color: #2a3448; background: #263045; }
+    #search-modal-input {
+      flex: 1; border: none; outline: none; background: transparent;
+      font-size: 1.05rem; color: #222; padding: 10px 0;
+    }
+    body.dark-mode #search-modal-input { color: #ddd; }
+    #search-modal-input::placeholder { color: #aaa; }
+    #search-modal-submit {
+      background: #1677ff; border: none; color: #fff;
+      width: 42px; height: 42px; border-radius: 10px;
+      font-size: 1rem; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; outline: none !important;
+    }
+    #search-modal-submit:hover { background: #0958d9; }
+    #search-modal-close {
+      position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
+      background: none; border: none; color: rgba(255,255,255,0.85);
+      font-size: 2rem; cursor: pointer;
+      transition: color 0.2s; z-index: 10001; outline: none !important;
+    }
+    #search-modal-close:hover { color: #fff; }
+
+    /* ══ 移动端适配 ══ */
+    @media (max-width: 768px) {
+      /* 强制隐藏PC顶部栏，显示移动端顶部栏 */
+      #top-bar { display: none !important; }
+      #mobile-top-bar { display: flex !important; }
+
+      /* 移动端顶部栏透明（页面顶部时） */
+      #mobile-top-bar.at-top {
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border-bottom-color: transparent !important;
+      }
+      #mobile-top-bar.at-top #mobile-logo-text { color: rgba(255,255,255,0.92) !important; }
+      #mobile-top-bar.at-top #mobile-hamburger { color: rgba(255,255,255,0.85) !important; }
+
+      /* 侧边栏：默认隐藏，transform 由 JS setProperty 控制，CSS 不加 !important 避免覆盖 */
+      #sidebar {
+        width: 240px !important;
+        transition: transform 0.25s ease !important;
+        z-index: 1091 !important;
+      }
+
+      /* 内容区不留侧边栏空间 */
+      #content-wrap { margin-left: 0 !important; }
+
+      /* spacer高度=移动端顶部栏高度 */
+      #top-bar-spacer { height: 50px !important; }
+
+      /* 格言不显示 */
+      #top-quote { display: none !important; }
+
+      /* Banner：padding-top 为顶部栏高度(50px) + 间距(14px)；高度收紧避免下方空白 */
+      .header-big { min-height: 0 !important; height: auto !important; padding-top: 64px; padding-bottom: 20px; }
+      .s-search { padding: 10px 10px 8px; }
+
+      /* 分类Tab：强制一行，不可滑动，自动缩小适应 */
+      .s-type-list.big,
+      .header-big .s-type-list.big {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        margin-bottom: 10px !important;
+        gap: 0 !important;
+      }
+      .s-type-list.big label,
+      .header-big .s-type-list.big label {
+        flex: 1 !important;
+        text-align: center !important;
+        font-size: 0.72rem !important;
+        padding: 4px 2px !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+
+      /* 快捷引擎：可横向滚动，不压缩不截断，少量居中 */
+      .quick-engines {
+        flex-wrap: nowrap !important;
+        justify-content: center !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        margin-top: 8px !important;
+        padding: 0 4px !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+      }
+      .quick-engines::-webkit-scrollbar { display: none !important; }
+      .quick-engine-btn {
+        flex: 0 0 auto !important;
+        font-size: 0.78rem !important;
+        padding: 4px 8px 2px !important;
+        white-space: nowrap !important;
+      }
+      .quick-engine-btn::before { font-size: 0.55rem !important; }
+
+      /* 搜索框 */
+      .super-search-fm { padding: 0 8px 0 14px; }
+      .super-search-fm input, #search-text {
+        font-size: 0.95rem !important;
+        padding: 10px 4px !important;
+      }
+      .super-search-fm input::placeholder,
+      #search-text::placeholder { font-size: 0.95rem !important; }
+
+      /* 卡片两列 */
+      .url-card { flex: 0 0 50% !important; max-width: 50% !important; }
+
+      /* 浮动按钮 */
+      #dark-toggle { bottom: 16px; right: 16px; width: 40px; height: 40px; font-size: 1rem; }
+      #float-tools { bottom: 66px; right: 16px; }
+      .float-btn { width: 40px; height: 40px; font-size: 1rem; }
+    }
+  </style>
+</head>
+
+<body class="io-grey-mode">
+
+<!-- 移动端顶部栏 -->
+<div id="mobile-top-bar">
+  <img id="mobile-logo-img" src="assets/images/logo.png" alt="logo" onerror="this.style.display='none'">
+  <span id="mobile-logo-text">王五导航</span>
+  <button id="mobile-hamburger" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </button>
+</div>
+
+<!-- 移动端遮罩 -->
+<div id="mobile-overlay"></div>
+
+<div id="sidebar" class="sidebar-nav">
+  <div class="sidebar-nav-inner">
+    <div class="sidebar-logo">
+      <img id="sidebar-logo-img" src="assets/images/logo.png" alt="logo" onerror="this.style.display='none'">
+      <span id="sidebar-logo-text" title="点击切换模式">王五导航</span>
+    </div>
+    <div class="sidebar-menu flex-fill">
+      <div class="sidebar-scroll">
+        <div class="sidebar-menu-inner">
+          <ul id="main-menu"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-bottom">
+      <ul>
+        <li>
+          <a id="net-toggle-sidebar" style="cursor:pointer;">
+            <span class="sidebar-emoji">🌐</span>
+            <span class="menu-label">外网模式</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div id="sidebar-popup-label" class="sidebar-popup-label"></div>
+
+<div id="top-bar">
+  <button id="top-bar-toggle" onclick="toggleSidebar()" title="切换侧边栏">
+    <i class="fas fa-bars"></i>
+  </button>
+  <span id="top-quote"></span>
+</div>
+
+<div class="page-container">
+  <div id="content-wrap" style="margin-left:180px;">
+    <div id="top-bar-spacer"></div>
+    <div class="header-big post-top" id="search-bg">
+      <div class="banner-bg" id="banner-bg-layer"></div>
+      <div class="banner-overlay"></div>
+      <div class="s-search">
+        <div class="s-type text-center">
+          <div class="s-type-list big" id="ws-tabs"></div>
+        </div>
+        <form class="super-search-fm" onsubmit="doSearch(event)">
+          <input type="text" id="search-text" class="form-control search-key"
+                 placeholder="搜索网页…" autocomplete="off"
+                 onkeydown="onSearchKeydown(event)" />
+          <button class="submit" type="submit">
+            <i class="fas fa-search"></i>
+          </button>
+        </form>
+        <div class="quick-engines" id="quick-engines"></div>
+      </div>
+    </div>
+    <div id="content" class="content-site customize-site">
+      <p style="color:#999;text-align:center;padding:3rem;">加载中...</p>
+    </div>
+  </div>
+</div>
+
+<button id="dark-toggle" title="切换暗色模式" onclick="toggleDark()">
+  <i class="fas fa-moon" id="dark-icon"></i>
+</button>
+
+<div id="search-modal" onclick="closeSearchModal(event)">
+  <div id="search-modal-box">
+    <button id="search-modal-close" onclick="closeSearchModal()">
+      <i class="fas fa-times-circle"></i>
+    </button>
+    <div id="search-modal-cats"></div>
+    <div id="search-modal-engines"></div>
+    <div id="search-modal-form">
+      <input id="search-modal-input" type="text" placeholder="搜索…"
+             onkeydown="onModalKeydown(event)" autocomplete="off" />
+      <button id="search-modal-submit" onclick="doModalSearch()">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="float-tools">
+  <button class="float-btn" id="go-top" title="回到顶部" onclick="scrollToTop()">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+  <button class="float-btn" id="site-search-btn" title="站内搜索" onclick="openSearchModal()">
+    <i class="fas fa-search"></i>
+  </button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="assets/js/bootstrap.min-4.3.1.js"></script>
+<script src="assets/js/lazyload.min-12.4.0.js"></script>
+<script src="main.js"></script>
+<script>
+/* Logo图标大小 */
+(function() {
+  function fixLogoImg() {
+    const img = document.getElementById('sidebar-logo-img');
+    if (!img) return;
+    img.style.cssText = 'width:52px!important;height:52px!important;min-width:52px!important;min-height:52px!important;max-width:52px!important;max-height:52px!important;border-radius:10px!important;object-fit:contain!important;flex-shrink:0!important;display:block!important;';
   }
-}
-window.toggleSidebar = toggleSidebar;
+  fixLogoImg();
+  document.addEventListener('DOMContentLoaded', fixLogoImg);
+  window.addEventListener('load', fixLogoImg);
+})();
 
-window.addEventListener('resize', () => {
-  const sidebar  = getSidebar();
-  const wrap     = document.getElementById('content-wrap');
-  const topBar   = document.getElementById('top-bar');
-  if (!isMobile()) {
-    // 从移动端切回桌面端时，清理移动端状态
-    const _s = getSidebar();
-    _s.style.removeProperty('transform'); // 清掉移动端设的内联 transform
-    _s.classList.remove('mobile-open');
-    getOverlay()?.classList.remove('show');
+/* 桌面端侧边栏初始化 */
+(function() {
+  const MOBILE_BP = 768;
+  const sidebar = document.getElementById('sidebar');
+  const wrap    = document.getElementById('content-wrap');
+  const topBar  = document.getElementById('top-bar');
+
+  if (window.innerWidth < MOBILE_BP) {
+    /* 移动端：清除 mini-sidebar，设置初始隐藏 */
+    sidebar.classList.remove('mini-sidebar');
+    sidebar.style.setProperty('transform', 'translateX(-100%)', 'important');
+    wrap.style.marginLeft = '0';
+    topBar.style.display = 'none';
+  } else {
+    /* 桌面端初始状态 */
     const expanded = localStorage.getItem('sidebarExpanded') !== '0';
     sidebar.classList.toggle('mini-sidebar', !expanded);
     sidebar.style.width   = expanded ? '180px' : '60px';
     wrap.style.marginLeft = expanded ? '180px' : '60px';
     topBar.style.left     = expanded ? '180px' : '60px';
-  } else {
-    wrap.style.marginLeft = '0';
-    topBar.style.left     = '0';
   }
+
+  /* 悬停浮层（桌面mini模式） */
+  const popup = document.getElementById('sidebar-popup-label');
+  let popupTimer = null;
+  document.getElementById('main-menu').addEventListener('mouseover', function(e) {
+    if (!sidebar.classList.contains('mini-sidebar')) return;
+    const li = e.target.closest('li');
+    if (!li) return;
+    const label = li.querySelector('.menu-label');
+    if (!label) return;
+    clearTimeout(popupTimer);
+    const rect = li.getBoundingClientRect();
+    popup.textContent = label.textContent;
+    popup.style.top = (rect.top + rect.height / 2 - 16) + 'px';
+    popup.classList.add('show');
+  });
+  document.getElementById('main-menu').addEventListener('mouseout', function(e) {
+    const li = e.target.closest('li');
+    if (!li) return;
+    popupTimer = setTimeout(() => popup.classList.remove('show'), 120);
+  });
+  popup.addEventListener('mouseenter', () => clearTimeout(popupTimer));
+  popup.addEventListener('mouseleave', () => popup.classList.remove('show'));
+})();
+
+/* 移动端顶部栏透明逻辑 */
+(function() {
+  const mbar = document.getElementById('mobile-top-bar');
+  if (!mbar) return;
+  function checkScroll() {
+    mbar.classList.toggle('at-top', window.scrollY < 10);
+  }
+  window.addEventListener('scroll', checkScroll, { passive: true });
+  checkScroll();
+})();
+
+/* 暗色模式 */
+function toggleDark() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('darkMode', isDark ? '1' : '0');
+  document.getElementById('dark-icon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+}
+window.toggleDark = toggleDark;
+(function() {
+  if (localStorage.getItem('darkMode') === '1') {
+    document.body.classList.add('dark-mode');
+    const icon = document.getElementById('dark-icon');
+    if (icon) icon.className = 'fas fa-sun';
+  }
+})();
+
+/* Banner背景 */
+(function() {
+  const layer = document.getElementById('banner-bg-layer');
+  if (!layer) return;
+  layer.style.backgroundImage = 'url(assets/images/banner.png)';
+  requestAnimationFrame(() => layer.classList.add('loaded'));
+})();
+
+/* 格言 */
+(function() {
+  let quotes = [], currentIdx = -1;
+  async function loadQuotes() {
+    try {
+      const res = await fetch('../quotes.json');
+      quotes = await res.json();
+      showQuote();
+    } catch(e) { console.warn('quotes.json 加载失败', e); }
+  }
+  function showQuote() {
+    if (!quotes.length) return;
+    const el = document.getElementById('top-quote');
+    if (!el) return;
+    let idx;
+    do { idx = Math.floor(Math.random() * quotes.length); }
+    while (idx === currentIdx && quotes.length > 1);
+    currentIdx = idx;
+    el.classList.add('fade-out');
+    setTimeout(() => {
+      el.textContent = quotes[idx].text;
+      el.classList.remove('fade-out');
+      el.classList.add('fade-in');
+    }, 350);
+  }
+  loadQuotes();
+})();
+
+/* 顶部栏透明 */
+(function() {
+  const bar = document.getElementById('top-bar');
+  function checkScroll() { bar.classList.toggle('at-top', window.scrollY < 10); }
+  window.addEventListener('scroll', checkScroll, { passive: true });
+  checkScroll();
+})();
+
+/* 回顶部 */
+function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+window.scrollToTop = scrollToTop;
+window.addEventListener('scroll', function() {
+  document.getElementById('go-top')?.classList.toggle('visible', window.scrollY > 300);
 });
 
-// ── 工具函数 ──────────────────────────────────────────────
-function sectionLabel(s) {
-  return s.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+/u, '').trim();
-}
-function sectionEmoji(s) {
-  const m = s.match(/^([\p{Emoji_Presentation}\p{Extended_Pictographic}]+)/u);
-  return m ? m[1] : '';
-}
-function getDomain(url) {
-  try { return new URL(url).hostname; } catch { return null; }
-}
-function buildFaviconUrl(domain) {
-  if (!domain) return DEFAULT_ICON;
-  return `${WORKER_URL}/?domain=${domain}`;
-}
-function faviconSrc(url) { return buildFaviconUrl(getDomain(url)); }
-function sectionId(s) {
-  return 'sec-' + s.replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fa5-]/g, '');
-}
-
-// ── 搜索分类 ──────────────────────────────────────────────
-const SEARCH_CATEGORIES = [
-  {
-    id: 'engine', label: '引擎',
-    engines: [
-      { name: '百度',       url: 'https://www.baidu.com/s?wd=',           domain: 'baidu.com' },
-      { name: 'Google',     url: 'https://www.google.com/search?q=',      domain: 'google.com' },
-      { name: 'Brave',      url: 'https://search.brave.com/search?q=',    domain: 'search.brave.com' },
-      { name: '搜狗',       url: 'https://www.sogou.com/web?query=',      domain: 'sogou.com' },
-      { name: 'Bing',       url: 'https://www.bing.com/search?q=',        domain: 'bing.com' },
-      { name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=',            domain: 'duckduckgo.com' },
-      { name: '360',        url: 'https://www.so.com/s?q=',               domain: 'so.com' },
-      { name: '夸克',       url: 'https://www.quark.cn/s?q=',             domain: 'quark.cn' },
-    ]
-  },
-  {
-    id: 'community', label: '社区',
-    engines: [
-      { name: 'GitHub', url: 'https://github.com/search?q=',             domain: 'github.com' },
-      { name: '微博',   url: 'https://s.weibo.com/weibo?q=',              domain: 'weibo.com' },
-      { name: '知乎',   url: 'https://www.zhihu.com/search?q=',           domain: 'zhihu.com' },
-      { name: '豆瓣',   url: 'https://www.douban.com/search?q=',          domain: 'douban.com' },
-      { name: '贴吧',   url: 'https://tieba.baidu.com/f/search/res?qw=',  domain: 'tieba.baidu.com' },
-      { name: 'Reddit', url: 'https://www.reddit.com/search/?q=',         domain: 'reddit.com' },
-    ]
-  },
-  {
-    id: 'video', label: '视频',
-    engines: [
-      { name: 'B站',    url: 'https://search.bilibili.com/all?keyword=', domain: 'bilibili.com' },
-      { name: '腾讯',   url: 'https://v.qq.com/search.html#stag=0&s=',  domain: 'v.qq.com' },
-      { name: '爱奇艺', url: 'https://so.iqiyi.com/so/q_',              domain: 'iqiyi.com' },
-      { name: '优酷',   url: 'https://so.youku.com/search_video/q_',    domain: 'youku.com' },
-      { name: '芒果',   url: 'https://so.mgtv.com/so/k-',               domain: 'mgtv.com' },
-    ]
-  },
-  {
-    id: 'music', label: '音乐',
-    engines: [
-      { name: 'QQ音乐', url: 'https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=', domain: 'y.qq.com' },
-      { name: '网易云', url: 'https://music.163.com/#/search/m/?s=', domain: 'music.163.com' },
-    ]
-  },
-  {
-    id: 'life', label: '生活',
-    engines: [
-      { name: '淘宝',   url: 'https://s.taobao.com/search?q=',                             domain: 'taobao.com' },
-      { name: '京东',   url: 'https://search.jd.com/Search?keyword=',                      domain: 'jd.com' },
-      { name: '拼多多', url: 'https://mobile.yangkeduo.com/search_result.html?search_key=', domain: 'pinduoduo.com' },
-      { name: '做菜',   url: 'https://www.xiachufang.com/search/?keyword=',                 domain: 'xiachufang.com' },
-      { name: '翻译',   url: 'https://fanyi.baidu.com/#zh/en/',                            domain: 'fanyi.baidu.com' },
-    ]
-  },
-  {
-    id: 'job', label: '求职',
-    engines: [
-      { name: '智联招聘', url: 'https://sou.zhaopin.com/?jl=530&kw=',                       domain: 'zhaopin.com' },
-      { name: 'BOSS直聘', url: 'https://www.zhipin.com/web/geek/job?query=',                domain: 'zhipin.com' },
-      { name: '猎聘',     url: 'https://www.liepin.com/zhaopin/?key=',                      domain: 'liepin.com' },
-      { name: '前程无忧', url: 'https://search.51job.com/list/000000,000000,0000,00,9,99,', domain: '51job.com' },
-      { name: '拉勾网',   url: 'https://www.lagou.com/wn/jobs?kd=',                         domain: 'lagou.com' },
-    ]
-  },
-];
-
-let currentCategoryId = 'engine';
-let currentEngine = SEARCH_CATEGORIES[0].engines[0];
-
-// ── Tab ───────────────────────────────────────────────────
-function renderTabs() {
-  const el = document.getElementById('ws-tabs');
-  if (!el) return;
-  el.innerHTML = '';
-  SEARCH_CATEGORIES.forEach(cat => {
-    const label = document.createElement('label');
-    label.textContent = cat.label;
-    if (cat.id === currentCategoryId) label.classList.add('active');
-    label.onclick = () => {
-      currentCategoryId = cat.id;
-      currentEngine = cat.engines[0];
-      renderTabs();
-      renderQuickEngines();
-    };
-    el.appendChild(label);
-  });
-}
-
-// ── 快捷引擎 ─────────────────────────────────────────────
-function renderQuickEngines() {
-  const wrap = document.getElementById('quick-engines');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  const cat = SEARCH_CATEGORIES.find(c => c.id === currentCategoryId);
-  if (!cat) return;
-  cat.engines.forEach(engine => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'quick-engine-btn' + (engine === currentEngine ? ' active' : '');
-    btn.textContent = engine.name;
-    btn.onclick = () => {
-      currentEngine = engine;
-      renderQuickEngines();
-      document.getElementById('search-text')?.focus();
-    };
-    wrap.appendChild(btn);
-  });
-}
-
-// ── 搜索 ─────────────────────────────────────────────────
-function doSearch(e) {
-  if (e) e.preventDefault();
-  const kw = document.getElementById('search-text')?.value.trim();
-  if (kw) window.open(currentEngine.url + encodeURIComponent(kw), '_blank');
-}
-window.doSearch = doSearch;
-
+/* 搜索键盘 */
 function onSearchKeydown(e) {
-  if (e.key === 'Escape') { const i = document.getElementById('search-text'); if(i) i.value=''; }
+  if (e.key === 'Escape') {
+    const input = document.getElementById('search-text');
+    if (input) input.value = '';
+  }
 }
 window.onSearchKeydown = onSearchKeydown;
 
-// ── 站内筛选 ─────────────────────────────────────────────
-function filterCards(query) {
-  query = (query || '').toLowerCase().trim();
-  document.querySelectorAll('.ws-section').forEach(block => {
-    let vis = false;
-    block.querySelectorAll('.url-card').forEach(card => {
-      const t = card.querySelector('strong')?.textContent.toLowerCase() ?? '';
-      const d = card.querySelector('p')?.textContent.toLowerCase() ?? '';
-      const show = !query || t.includes(query) || d.includes(query);
-      card.style.display = show ? '' : 'none';
-      if (show) vis = true;
-    });
-    block.style.display = (!query || vis) ? '' : 'none';
-  });
+/* 搜索模态框 */
+function openSearchModal() {
+  const modal = document.getElementById('search-modal');
+  if (!modal) return;
+  renderModalCats(); renderModalEngines();
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('search-modal-input')?.focus(), 80);
 }
-window.filterCards = filterCards;
+window.openSearchModal = openSearchModal;
 
-// ── 渲染侧边栏 ───────────────────────────────────────────
-function renderSidebar(sections) {
-  const menu = document.getElementById('main-menu');
-  if (!menu) return;
-  menu.innerHTML = '';
-  sections.forEach(({ section }) => {
-    const li = document.createElement('li');
-    li.className = 'sidebar-item';
-    const a = document.createElement('a');
-    a.href = '#' + sectionId(section);
-    a.className = 'nav-smooth';
-    a.innerHTML = `<span class="sidebar-emoji">${sectionEmoji(section)}</span><span class="menu-label">${sectionLabel(section)}</span>`;
-    li.appendChild(a);
-    menu.appendChild(li);
-  });
-  document.querySelectorAll('a.nav-smooth').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      const target = document.getElementById(this.getAttribute('href').substring(1));
-      if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 62, behavior: 'smooth' });
-      document.querySelectorAll('#main-menu li').forEach(l => l.classList.remove('active'));
-      this.parentElement.classList.add('active');
-      if (isMobile()) closeMobileSidebar();
-    });
-  });
+function closeSearchModal(e) {
+  if (e && e.target !== document.getElementById('search-modal') &&
+      e.target !== document.getElementById('search-modal-close') &&
+      !document.getElementById('search-modal-close')?.contains(e.target)) return;
+  document.getElementById('search-modal')?.classList.remove('open');
+  const input = document.getElementById('search-modal-input');
+  if (input) input.value = '';
 }
+window.closeSearchModal = closeSearchModal;
 
-// ── 渲染内容 ─────────────────────────────────────────────
-function renderContent(sections) {
-  const main = document.getElementById('content');
-  if (!main) return;
-  main.innerHTML = '';
-  sections.forEach(({ section, items }) => {
-    const block = document.createElement('div');
-    block.className = 'ws-section';
-    block.innerHTML = `<div class="d-flex flex-fill"><h4 class="text-gray text-lg mb-4" id="${sectionId(section)}"><span class="section-emoji mr-1">${sectionEmoji(section)}</span>${sectionLabel(section)}</h4></div>`;
-    const row = document.createElement('div');
-    row.className = 'row';
-    items.forEach(item => {
-      const url     = getCardUrl(item);
-      const iconSrc = item.icon || faviconSrc(url);
-      const title   = (item.title || '').replace(/</g, '&lt;');
-      const desc    = (item.desc || item['data-desc'] || '').replace(/</g, '&lt;');
-      const domain  = getDomain(url) || url;
-      const netBadge = item.intranet
-        ? `<span style="font-size:0.6rem;padding:1px 4px;border-radius:4px;background:${isIntranet?'#d46b08':'#1677ff'};color:#fff;margin-left:4px;">${isIntranet?'内':'外'}</span>`
-        : '';
-      const col = document.createElement('div');
-      col.className = 'url-card col-6 col-sm-4 col-md-3 col-xl-2';
-      col.innerHTML = `<div class="url-body default"><a href="${url}" target="_blank" data-url="${item.url}" ${item.intranet?`data-intranet="${item.intranet}"`:''}  class="card no-c mb-4" data-toggle="tooltip" data-placement="bottom" data-original-title="${domain}"><div class="card-body"><div class="url-content d-flex align-items-center"><div class="url-img mr-2 d-flex align-items-center justify-content-center"><img src="${iconSrc}" onerror="this.src='${DEFAULT_ICON}';this.onerror=null;" alt="${title}"></div><div class="url-info flex-fill" style="min-width:0;"><div class="text-sm overflowClip_1"><strong>${title}</strong>${netBadge}</div><p class="overflowClip_1 m-0 text-muted text-xs">${desc}</p></div></div></div></a></div>`;
-      row.appendChild(col);
-    });
-    block.appendChild(row);
-    block.appendChild(document.createElement('br'));
-    main.appendChild(block);
-  });
-  if (typeof $ !== 'undefined') $('[data-toggle="tooltip"]').tooltip();
+function doModalSearch() {
+  const kw = document.getElementById('search-modal-input')?.value.trim();
+  if (kw) window.open(currentEngine.url + encodeURIComponent(kw), '_blank');
 }
+window.doModalSearch = doModalSearch;
 
-// ── 模态框 ───────────────────────────────────────────────
+function onModalKeydown(e) {
+  if (e.key === 'Enter') doModalSearch();
+  if (e.key === 'Escape') closeSearchModal();
+}
+window.onModalKeydown = onModalKeydown;
+
 function renderModalCats() {
   const wrap = document.getElementById('search-modal-cats');
   if (!wrap) return;
@@ -330,12 +898,14 @@ function renderModalCats() {
     btn.textContent = cat.label;
     btn.onclick = () => {
       currentCategoryId = cat.id; currentEngine = cat.engines[0];
-      renderQuickEngines(); renderModalCats(); renderModalEngines();
+      renderQuickEngines();
+      renderModalCats(); renderModalEngines();
       document.getElementById('search-modal-input')?.focus();
     };
     wrap.appendChild(btn);
   });
 }
+
 function renderModalEngines() {
   const wrap = document.getElementById('search-modal-engines');
   if (!wrap) return;
@@ -355,45 +925,11 @@ function renderModalEngines() {
   });
 }
 
-// ── 入口 ─────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
-  localStorage.setItem('navMode', 'webstack');
-
-  // 桌面端初始化侧边栏
-  if (!isMobile()) {
-    const sidebar  = getSidebar();
-    const wrap     = document.getElementById('content-wrap');
-    const topBar   = document.getElementById('top-bar');
-    const expanded = localStorage.getItem('sidebarExpanded') !== '0';
-    sidebar.classList.toggle('mini-sidebar', !expanded);
-    sidebar.style.width   = expanded ? '180px' : '60px';
-    wrap.style.marginLeft = expanded ? '180px' : '60px';
-    topBar.style.left     = expanded ? '180px' : '60px';
-  }
-
-  // 遮罩关闭侧边栏（唯一绑定点，index.html 里不再重复绑定）
-  getOverlay()?.addEventListener('click', closeMobileSidebar);
-
-  // 标题切换模式
-  document.getElementById('sidebar-logo-text')?.addEventListener('click', switchMode);
-  document.getElementById('mobile-logo-text')?.addEventListener('click', switchMode);
-
-  // 内外网
-  document.getElementById('net-toggle-sidebar')?.addEventListener('click', toggleNetMode);
-  updateNetBtn();
-
-  renderTabs();
-  renderQuickEngines();
-
-  try {
-    const res  = await fetch(LINKS_FILE);
-    const data = await res.json();
-    _allData = data;
-    renderSidebar(data);
-    renderContent(data);
-  } catch (err) {
-    console.error('加载 links.json 失败：', err);
-    const el = document.getElementById('content');
-    if (el) el.innerHTML = '<p style="color:#999;text-align:center;padding:3rem;">链接数据加载失败</p>';
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (document.getElementById('search-modal')?.classList.contains('open')) closeSearchModal();
   }
 });
+</script>
+</body>
+</html>

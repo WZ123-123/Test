@@ -527,6 +527,10 @@
         z-index: 1091 !important;
       }
       #sidebar.mobile-open { left: 0 !important; }
+      /* 移动端强制显示侧边栏内容，防止 mini-sidebar 残留 */
+      #sidebar .menu-label { display: inline !important; }
+      #sidebar .sidebar-logo { justify-content: flex-start !important; padding: 0 14px !important; }
+      #sidebar #sidebar-logo-text { display: block !important; }
 
       /* 内容区不留侧边栏空间 */
       #content-wrap { margin-left: 0 !important; }
@@ -735,11 +739,12 @@
   const topBar  = document.getElementById('top-bar');
 
   if (window.innerWidth < MOBILE_BP) {
-  sidebar.classList.remove('mini-sidebar');
-  sidebar.style.removeProperty('transform');
-  sidebar.style.removeProperty('width');   // ← 加这行
-  wrap.style.marginLeft = '0';
-  topBar.style.display = 'none';
+    /* 移动端：清除所有桌面端残留内联样式，left 由 CSS 控制 */
+    sidebar.classList.remove('mini-sidebar');
+    sidebar.style.removeProperty('transform');
+    sidebar.style.removeProperty('width');
+    wrap.style.marginLeft = '0';
+    topBar.style.display = 'none';
   } else {
     /* 桌面端初始状态 */
     const expanded = localStorage.getItem('sidebarExpanded') !== '0';

@@ -520,7 +520,6 @@
 
       /* 侧边栏：用 left 控制显隐，完全脱离 transform 干扰 */
       #sidebar {
-        display: flex !important;
         width: 240px !important;
         left: -240px !important;
         transform: none !important;
@@ -740,10 +739,11 @@
   const topBar  = document.getElementById('top-bar');
 
   if (window.innerWidth < MOBILE_BP) {
-    /* 移动端：清除所有桌面端残留内联样式，left 由 CSS 控制 */
+    /* 移动端：强制 display:flex 覆盖外部CSS的 display:none，left 由 CSS 控制 */
     sidebar.classList.remove('mini-sidebar');
     sidebar.style.removeProperty('transform');
     sidebar.style.removeProperty('width');
+    sidebar.style.setProperty('display', 'flex', 'important');
     wrap.style.marginLeft = '0';
     topBar.style.display = 'none';
   } else {

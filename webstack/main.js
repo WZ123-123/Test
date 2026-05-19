@@ -52,6 +52,7 @@ function openMobileSidebar() {
   s.classList.remove('mini-sidebar');
   s.style.removeProperty('transform');
   s.style.removeProperty('width');      // 清除桌面端 mini-sidebar 留下的 width:60px
+  s.style.removeProperty('display'); 
   s.classList.add('mobile-open');
   getOverlay()?.classList.add('show');
 }

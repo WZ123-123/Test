@@ -6,21 +6,15 @@
 </head>
 <body>
 <script>
-const MODES = ['normal', 'webstack', 'easy', 'nav'];
+const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux'];
 const DEFAULT_MODE = 'normal';
-
-// URL 参数优先
 const params = new URLSearchParams(location.search);
 const urlMode = params.get('mode');
-
 let mode = MODES.includes(urlMode)
   ? urlMode
   : (localStorage.getItem('navMode') || DEFAULT_MODE);
-
-// 确保合法
 if (!MODES.includes(mode)) mode = DEFAULT_MODE;
 
-// webstack 路径特殊
 if (mode === 'webstack') {
   location.replace('webstack/index.html');
 } else if (mode === 'normal') {
@@ -29,6 +23,8 @@ if (mode === 'webstack') {
   location.replace('easy/index.html');
 } else if (mode === 'nav') {
   location.replace('nav/index.html');
+} else if (mode === '5iux') {
+  location.replace('5IUX/index.html');
 }
 </script>
 </body>

@@ -38,11 +38,7 @@
       width: 100%; margin: 0; padding: 0 0 10px;
       position: relative; z-index: 2000; border-radius: 5px;
     }
-    #search form {
-      position: relative;
-      border-radius: 0 5px 0 0;
-      overflow: visible;
-    }
+    #search form { position: relative; margin-bottom: 0; }
 
     /* 分类Tab — 彩色方块，有间距 */
     .search-type-tabs {
@@ -87,20 +83,15 @@
       background: #fff;
       box-shadow: 0 0px 24px 0 rgba(50,50,50,0.08);
     }
-    #search button.submit {
-      position: absolute; top: 0; right: 0;
-      background: none; border: 0;
-      width: 60px; height: 50px;
-      line-height: 50px; outline: none; cursor: pointer;
-    }
-    #search button.submit i { color: #aaa; font-size: 18px; }
-    #search button.submit:hover i { color: #1677ff; }
+    #search button.submit { position: absolute; top: 0; right: 0; background: none; border: 0; width: 60px; height: 50px; line-height: 50px; outline: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    #search button.submit img { opacity: 0.5; transition: opacity 0.2s; }
+    #search button.submit:hover img { opacity: 1; }
 
     .quick-engines-row {
       display: flex; flex-wrap: nowrap; gap: 6px;
       margin-top: 0; overflow-x: auto;
       scrollbar-width: none;
-      padding: 6px 0 0 0;
+      padding: 0;
       background: none;
       border: none;
     }
@@ -167,7 +158,9 @@
       font-weight: 600; cursor: pointer;
       backdrop-filter: blur(8px);
       transition: background 0.2s;
+      outline: none !important;
     }
+    #net-toggle:focus { outline: none !important; box-shadow: none !important; }
     #net-toggle:hover { background: rgba(255,255,255,0.3); }
 
     @media screen and (max-width: 992px) {
@@ -216,7 +209,7 @@
     <ul class="search-type-tabs" id="search-cat-tabs"></ul>
     <form id="search-form" onsubmit="doSearch(event)">
       <input type="text" id="search-text" placeholder="搜索网页…" autocomplete="off">
-      <button class="submit" type="submit"><i class="fas fa-search"></i></button>
+      <button class="submit" type="submit"><img src="sou.svg" style="width:20px;height:20px;margin:7px 0;opacity:0.5;" alt="搜索"></button>
     </form>
     <div class="quick-engines-row" id="quick-engines-row"></div>
   </div>

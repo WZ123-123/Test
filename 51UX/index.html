@@ -9,12 +9,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.13.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
   <style>
-    /* ══ 基础 ══ */
     body { font-size: 14px; background: #f4f8fb; overflow-x: hidden; }
     a { text-decoration: none; }
     a:hover { text-decoration: none; }
 
-    /* ══ 视频背景 ══ */
     .banner-video {
       position: absolute;
       width: 100%; overflow: hidden;
@@ -27,7 +25,6 @@
       position: absolute; bottom: 0; z-index: 10;
     }
 
-    /* ══ 顶部导航 ══ */
     .navbar-light .navbar-nav .nav-link { color: #fff; }
     .navbar-light .navbar-nav .active .nav-link { color: #fff; }
     .navbar-light .navbar-nav .nav-link:hover { color: #fff; }
@@ -37,13 +34,12 @@
     }
     .navbar-brand-text:hover { color: #fff; }
 
-    /* ══ 搜索区 ══ */
     #search {
       width: 100%; margin: 0; padding: 0 0 10px;
       position: relative; z-index: 2000; border-radius: 5px;
     }
     #search form { position: relative; }
-    /* 分类Tab */
+
     .search-type-tabs {
       display: flex; flex-wrap: nowrap;
       margin-bottom: 0; padding-left: 0;
@@ -63,10 +59,8 @@
       transition: background 0.2s;
     }
     .search-type-tabs li.active label,
-    .search-type-tabs li label:hover {
-      background: #fff;
-    }
-    /* 搜索框 */
+    .search-type-tabs li label:hover { background: #fff; }
+
     #search-text {
       width: 100%; height: 50px; line-height: 50px;
       text-indent: 10px; font-size: 16px;
@@ -87,7 +81,7 @@
     }
     #search button.submit i { color: #aaa; font-size: 18px; }
     #search button.submit:hover i { color: #1677ff; }
-    /* 快捷引擎行 */
+
     .quick-engines-row {
       display: flex; flex-wrap: nowrap; gap: 0;
       margin-top: 10px; overflow-x: auto;
@@ -107,7 +101,6 @@
     .qe-btn:hover { background: rgba(255,255,255,0.4); color: #fff; }
     .qe-btn.active { background: rgba(255,255,255,0.9); color: #333; }
 
-    /* ══ 内容卡片 ══ */
     .mylist {
       list-style: none; padding: 10px 20px;
       position: relative; z-index: 1000;
@@ -130,21 +123,14 @@
       display: inline-block;
     }
     .mylist li.site-item:hover { background: #eee; }
-    .mylist li.site-item a {
-      color: #555; display: block; text-align: center;
-    }
+    .mylist li.site-item a { color: #555; display: block; text-align: center; }
     .site-icon-wrap {
-      width: 45px; height: 45px;
-      padding: 8px;
+      width: 45px; height: 45px; padding: 8px;
       background: #fff; border: 1px solid #eee;
-      border-radius: 10px;
-      margin: 0 auto;
+      border-radius: 10px; margin: 0 auto;
       display: flex; align-items: center; justify-content: center;
     }
-    .site-icon-wrap img {
-      width: 28px; height: 28px;
-      object-fit: contain; border-radius: 4px;
-    }
+    .site-icon-wrap img { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; }
     .site-name {
       width: 100%; display: block;
       height: 26px; line-height: 26px;
@@ -153,7 +139,6 @@
       white-space: nowrap; padding: 0 4px;
     }
 
-    /* ══ 内外网切换 ══ */
     #net-toggle {
       position: fixed; top: 12px; right: 16px;
       z-index: 99999;
@@ -167,13 +152,9 @@
     }
     #net-toggle:hover { background: rgba(255,255,255,0.3); }
 
-    /* ══ 响应式 ══ */
     @media screen and (max-width: 992px) {
       .banner-video video { width: 1200px; }
-      div#navbarsMain {
-        background: rgba(0,0,0,0.8);
-        padding: 10px 30px; border-radius: 20px;
-      }
+      div#navbarsMain { background: rgba(0,0,0,0.8); padding: 10px 30px; border-radius: 20px; }
     }
     @media screen and (max-width: 767px) {
       .banner-video video { width: 960px; }
@@ -183,14 +164,9 @@
       .site-icon-wrap img { width: 20px; height: 20px; }
       .site-name { font-size: 12px; }
     }
-    @media screen and (min-width: 1200px) {
-      .mylist li.site-item { min-width: 132px; }
-    }
-    @media screen and (min-width: 992px) and (max-width: 1200px) {
-      .mylist li.site-item { min-width: 110px; }
-    }
+    @media screen and (min-width: 1200px) { .mylist li.site-item { min-width: 132px; } }
+    @media screen and (min-width: 992px) and (max-width: 1200px) { .mylist li.site-item { min-width: 110px; } }
 
-    /* ══ 滚动条 ══ */
     ::-webkit-scrollbar { width: 8px; height: 8px; border-radius: 4px; }
     ::-webkit-scrollbar-track { background: #eee; }
     ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
@@ -199,7 +175,6 @@
 </head>
 <body>
 
-<!-- 视频背景 -->
 <div class="banner-video">
   <video autoplay loop muted>
     <source src="https://cdn.jsdelivr.net/gh/5iux/uploads/pic/3840-banner.mp4" type="video/mp4">
@@ -207,71 +182,59 @@
   <div class="bottom-cover" style="background-image: linear-gradient(rgba(255,255,255,0) 0%, rgb(244 248 251 / 0.6) 50%, rgb(244 248 251) 100%);"></div>
 </div>
 
-<!-- 内外网切换 -->
 <button id="net-toggle">🌐 外网</button>
 
-<!-- 顶部导航 -->
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="position:absolute;z-index:10000;">
-  <a class="navbar-brand navbar-brand-text" href="#">🧭 王五导航</a>
+  <a class="navbar-brand navbar-brand-text" id="brand-title" href="#">🧭 王五导航</a>
   <button class="navbar-toggler" style="border:none;outline:none;"
     type="button" data-toggle="collapse" data-target="#navbarsMain">
     <i class="fas fa-bars" style="color:#fff;"></i>
   </button>
-  <div class="collapse navbar-collapse" id="navbarsMain">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item active"><a class="nav-link" href="../webstack/index.html">WebStack版</a></li>
-      <li class="nav-item"><a class="nav-link" href="../normal/index.html">Normal版</a></li>
-      <li class="nav-item"><a class="nav-link" href="../nav/index.html">Nav版</a></li>
-      <li class="nav-item"><a class="nav-link" href="../easy/index.html">Easy版</a></li>
-    </ul>
-  </div>
+  <div class="collapse navbar-collapse" id="navbarsMain"></div>
 </nav>
 
-<!-- 主内容 -->
 <div class="container" style="margin-top:100px;position:relative;z-index:100;">
-
-  <!-- 搜索区 -->
   <div id="search">
-    <!-- 分类Tab -->
     <ul class="search-type-tabs" id="search-cat-tabs"></ul>
-    <!-- 搜索框 -->
     <form id="search-form" onsubmit="doSearch(event)">
       <input type="text" id="search-text" placeholder="搜索网页…" autocomplete="off">
-      <button class="submit" type="submit">
-        <i class="fas fa-search"></i>
-      </button>
+      <button class="submit" type="submit"><i class="fas fa-search"></i></button>
     </form>
-    <!-- 快捷引擎 -->
     <div class="quick-engines-row" id="quick-engines-row"></div>
   </div>
-
-  <!-- 链接卡片区 -->
   <div id="content">
     <p style="color:#999;text-align:center;padding:3rem;">加载中...</p>
   </div>
-
 </div>
 
-<!-- 版权 -->
 <p class="mt-5 mb-3 text-muted text-center" style="position:relative;z-index:100;">
   ©2025 王五导航. All rights reserved.
 </p>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+/* ══ 模式切换 ══ */
+const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux'];
+localStorage.setItem('navMode', '5iux');
+
+document.getElementById('brand-title').addEventListener('click', () => {
+  const next = MODES[(MODES.indexOf('5iux') + 1) % MODES.length];
+  localStorage.setItem('navMode', next);
+  window.location.href = '../index.html';
+});
+
 /* ══ 配置 ══ */
-const WORKER_URL  = 'https://ico.xmynscnq.dpdns.org';
-const LINKS_FILE  = '../links.json';
+const WORKER_URL   = 'https://ico.xmynscnq.dpdns.org';
+const LINKS_FILE   = '../links.json';
 const DEFAULT_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0yIDEyaDIwIj48L3BhdGg+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+';
 
-/* ══ 搜索引擎分类（复用你的配置）══ */
 const SEARCH_CATEGORIES = [
   { id:'engine', label:'引擎', engines:[
-    { name:'百度',   url:'https://www.baidu.com/s?wd=' },
-    { name:'Google', url:'https://www.google.com/search?q=' },
-    { name:'Brave',  url:'https://search.brave.com/search?q=' },
-    { name:'搜狗',   url:'https://www.sogou.com/web?query=' },
-    { name:'Bing',   url:'https://www.bing.com/search?q=' },
+    { name:'百度',    url:'https://www.baidu.com/s?wd=' },
+    { name:'Google',  url:'https://www.google.com/search?q=' },
+    { name:'Brave',   url:'https://search.brave.com/search?q=' },
+    { name:'搜狗',    url:'https://www.sogou.com/web?query=' },
+    { name:'Bing',    url:'https://www.bing.com/search?q=' },
     { name:'DuckDuck',url:'https://duckduckgo.com/?q=' },
   ]},
   { id:'community', label:'社区', engines:[
@@ -293,14 +256,14 @@ const SEARCH_CATEGORIES = [
     { name:'网易云', url:'https://music.163.com/#/search/m/?s=' },
   ]},
   { id:'life', label:'生活', engines:[
-    { name:'淘宝',   url:'https://s.taobao.com/search?q=' },
-    { name:'京东',   url:'https://search.jd.com/Search?keyword=' },
-    { name:'翻译',   url:'https://fanyi.baidu.com/#zh/en/' },
+    { name:'淘宝', url:'https://s.taobao.com/search?q=' },
+    { name:'京东', url:'https://search.jd.com/Search?keyword=' },
+    { name:'翻译', url:'https://fanyi.baidu.com/#zh/en/' },
   ]},
   { id:'job', label:'求职', engines:[
     { name:'BOSS直聘',url:'https://www.zhipin.com/web/geek/job?query=' },
-    { name:'智联',   url:'https://sou.zhaopin.com/?jl=530&kw=' },
-    { name:'猎聘',   url:'https://www.liepin.com/zhaopin/?key=' },
+    { name:'智联',    url:'https://sou.zhaopin.com/?jl=530&kw=' },
+    { name:'猎聘',    url:'https://www.liepin.com/zhaopin/?key=' },
   ]},
 ];
 
@@ -308,26 +271,10 @@ let currentCatId = 'engine';
 let currentEngine = SEARCH_CATEGORIES[0].engines[0];
 let isIntranet = localStorage.getItem('netMode') === 'intranet';
 
-/* ══ 工具函数 ══ */
-function getDomain(url) {
-  try { return new URL(url).hostname; } catch { return null; }
-}
-function faviconSrc(url) {
-  const d = getDomain(url);
-  return d ? `${WORKER_URL}/?domain=${d}` : DEFAULT_ICON;
-}
-function sectionEmoji(s) {
-  const m = s.match(/^([\p{Emoji_Presentation}\p{Extended_Pictographic}]+)/u);
-  return m ? m[1] : '';
-}
-function sectionLabel(s) {
-  return s.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+/u, '').trim();
-}
-function getCardUrl(item) {
-  return (isIntranet && item.intranet) ? item.intranet : item.url;
-}
+function getDomain(url) { try { return new URL(url).hostname; } catch { return null; } }
+function faviconSrc(url) { const d = getDomain(url); return d ? `${WORKER_URL}/?domain=${d}` : DEFAULT_ICON; }
+function getCardUrl(item) { return (isIntranet && item.intranet) ? item.intranet : item.url; }
 
-/* ══ 渲染搜索分类Tab ══ */
 function renderCatTabs() {
   const el = document.getElementById('search-cat-tabs');
   if (!el) return;
@@ -337,18 +284,12 @@ function renderCatTabs() {
     li.className = cat.id === currentCatId ? 'active' : '';
     const label = document.createElement('label');
     label.textContent = cat.label;
-    label.onclick = () => {
-      currentCatId = cat.id;
-      currentEngine = cat.engines[0];
-      renderCatTabs();
-      renderQuickEngines();
-    };
+    label.onclick = () => { currentCatId = cat.id; currentEngine = cat.engines[0]; renderCatTabs(); renderQuickEngines(); };
     li.appendChild(label);
     el.appendChild(li);
   });
 }
 
-/* ══ 渲染快捷引擎 ══ */
 function renderQuickEngines() {
   const wrap = document.getElementById('quick-engines-row');
   if (!wrap) return;
@@ -360,27 +301,20 @@ function renderQuickEngines() {
     btn.type = 'button';
     btn.className = 'qe-btn' + (engine === currentEngine ? ' active' : '');
     btn.textContent = engine.name;
-    btn.onclick = () => {
-      currentEngine = engine;
-      renderQuickEngines();
-      document.getElementById('search-text')?.focus();
-    };
+    btn.onclick = () => { currentEngine = engine; renderQuickEngines(); document.getElementById('search-text')?.focus(); };
     wrap.appendChild(btn);
   });
 }
 
-/* ══ 搜索 ══ */
 function doSearch(e) {
   if (e) e.preventDefault();
   const kw = document.getElementById('search-text')?.value.trim();
   if (kw) window.open(currentEngine.url + encodeURIComponent(kw), '_blank');
 }
 
-/* ══ 内外网切换 ══ */
 function updateNetBtn() {
   const btn = document.getElementById('net-toggle');
-  if (!btn) return;
-  btn.textContent = isIntranet ? '🏠 内网' : '🌐 外网';
+  if (btn) btn.textContent = isIntranet ? '🏠 内网' : '🌐 外网';
 }
 document.getElementById('net-toggle').addEventListener('click', () => {
   isIntranet = !isIntranet;
@@ -390,7 +324,6 @@ document.getElementById('net-toggle').addEventListener('click', () => {
 });
 updateNetBtn();
 
-/* ══ 渲染链接卡片 ══ */
 function renderLinks(data) {
   const main = document.getElementById('content');
   if (!main) return;
@@ -398,40 +331,26 @@ function renderLinks(data) {
   data.forEach(({ section, items }) => {
     const ul = document.createElement('ul');
     ul.className = 'mylist row';
-
     const titleLi = document.createElement('li');
     titleLi.className = 'title';
     titleLi.textContent = section;
     ul.appendChild(titleLi);
-
     items.forEach(item => {
-      const url      = getCardUrl(item);
-      const iconSrc  = item.icon || faviconSrc(url);
-      const title    = (item.title || '').replace(/</g, '&lt;');
-
+      const url     = getCardUrl(item);
+      const iconSrc = item.icon || faviconSrc(url);
+      const title   = (item.title || '').replace(/</g, '&lt;');
       const li = document.createElement('li');
       li.className = 'col-3 col-sm-3 col-md-2 col-lg-1 site-item';
-      li.innerHTML = `
-        <a href="${url}" target="_blank">
-          <div class="site-icon-wrap">
-            <img src="${iconSrc}"
-                 onerror="this.src='${DEFAULT_ICON}';this.onerror=null;"
-                 alt="${title}">
-          </div>
-          <span class="site-name">${title}</span>
-        </a>`;
+      li.innerHTML = `<a href="${url}" target="_blank"><div class="site-icon-wrap"><img src="${iconSrc}" onerror="this.src='${DEFAULT_ICON}';this.onerror=null;" alt="${title}"></div><span class="site-name">${title}</span></a>`;
       ul.appendChild(li);
     });
-
     main.appendChild(ul);
   });
 }
 
-/* ══ 入口 ══ */
 (async () => {
   renderCatTabs();
   renderQuickEngines();
-
   try {
     const res  = await fetch(LINKS_FILE);
     const data = await res.json();
@@ -439,8 +358,7 @@ function renderLinks(data) {
     renderLinks(data);
   } catch (err) {
     console.error('加载 links.json 失败：', err);
-    document.getElementById('content').innerHTML =
-      '<p style="color:#999;text-align:center;padding:3rem;">链接数据加载失败</p>';
+    document.getElementById('content').innerHTML = '<p style="color:#999;text-align:center;padding:3rem;">链接数据加载失败</p>';
   }
 })();
 </script>

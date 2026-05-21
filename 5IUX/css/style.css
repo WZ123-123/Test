@@ -22,7 +22,7 @@ svg.icon { width: 14px; height: 14px; margin: 0 5px 0 8px; vertical-align: -0.15
 #search button:hover{cursor:pointer}
 #search button i{color:#ddd;font-size:18px}
 .search-group{display:none;padding-left:75px}
-.s-current .search-type{padding-left:0;display:block}
+.s-current .search-type{display:block}
 .s-current{display:block}
 #search-list{position:relative}
 .s-type{position:absolute;top:0;left:0;z-index:13;width:75px}

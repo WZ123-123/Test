@@ -9,6 +9,79 @@
   <link rel="stylesheet" href="css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/jquery.min.js"></script>
+  <style>
+    .banner-video { position: absolute; width: 100%; overflow: hidden; left: 0; top: 0; max-height: 750px; }
+    .banner-video video { width: 2048px; float: left; }
+    .bottom-cover { width: 100%; height: 50%; position: absolute; bottom: 0; z-index: 10; }
+
+    .navbar-brand-text { color: #fff; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.05em; cursor: pointer; }
+    .navbar-brand-text:hover { color: #fff; }
+
+    #search { width:100%; margin:0; padding:0 0 10px; position:relative; z-index:2000; }
+    #search form { position:relative; }
+
+    .search-type {
+      white-space:nowrap; margin:0; padding-left:10px; list-style:none;
+      overflow-x:auto; overflow-y:hidden; display:flex;
+      scrollbar-width:none; -webkit-overflow-scrolling:touch;
+    }
+    .search-type::-webkit-scrollbar { display:none; }
+    .search-type li { display:inline-block; background:rgba(255,255,255,0.4); border-radius:3px 3px 0 0; margin-right:4px; flex-shrink:0; }
+    .search-type li label { display:inline-block; padding:0 11px; font-size:14px; line-height:31px; border-radius:3px 3px 0 0; cursor:pointer; margin:0; font-weight:600; transition:background 0.2s; }
+    .search-type input:checked + label,
+    .search-type input:hover  + label { background:#fff; }
+    .search-type li:nth-child(1)  label { color:#2100E0; }
+    .search-type li:nth-child(2)  label { color:#3B83FA; }
+    .search-type li:nth-child(3)  label { color:#FB7A24; }
+    .search-type li:nth-child(4)  label { color:#00B4D8; }
+    .search-type li:nth-child(5)  label { color:#008373; }
+    .search-type li:nth-child(6)  label { color:#ff5722; }
+    .search-type li:nth-child(7)  label { color:#E91E8C; }
+    .search-type li:nth-child(8)  label { color:#9C27B0; }
+    .search-type li:nth-child(9)  label { color:#333; }
+    .search-type li:nth-child(10) label { color:#E6162D; }
+    .search-type li:nth-child(11) label { color:#0066FF; }
+    .search-type li:nth-child(12) label { color:#00A1D6; }
+    .search-type li:nth-child(13) label { color:#FE2C55; }
+    .search-type li:nth-child(14) label { color:#31C27C; }
+    .search-type li:nth-child(15) label { color:#C20C0C; }
+    .search-type li:nth-child(16) label { color:#4CAF50; }
+    .search-type li:nth-child(17) label { color:#FF6B35; }
+
+    #search-text { width:100%; height:50px; line-height:50px; text-indent:10px; font-size:16px; border-radius:5px; background:#fff; border:none; box-shadow:0 0.5rem 0.625rem #d4d4d44d; transition:0.3s all linear; outline:0; }
+    #search-text:focus { box-shadow:0 0 24px 0 rgba(50,50,50,0.08); }
+    #search button.submit { position:absolute; top:0; right:0; background:none; border:0; width:60px; height:50px; outline:none; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    #search button.submit img { opacity:1; transition:opacity 0.2s; }
+    #search button.submit:hover img { opacity:0.7; }
+
+    .mylist { list-style:none; padding:10px 20px; position:relative; z-index:1000; margin:20px 0; border-radius:15px; background:#fff; box-shadow:0 0.5rem 0.625rem #d4d4d44d; }
+    .mylist li.title { width:100%; min-width:auto; margin:0; height:35px; font-size:16px; line-height:33px; padding:0 20px 0 10px; border-bottom:1px solid #eee; margin-bottom:10px; color:#333; font-weight:700; }
+    .mylist li.site-item { width:100px; transition:0.3s all linear; font-size:14px; overflow:hidden; padding:10px 0; border-radius:10px; display:inline-block; }
+    .mylist li.site-item:hover { background:#eee; }
+    .mylist li.site-item a { color:#555; display:block; text-align:center; }
+    .site-icon-wrap { width:45px; height:45px; padding:8px; background:#fff; border:1px solid #eee; border-radius:10px; margin:0 auto; display:flex; align-items:center; justify-content:center; }
+    .site-icon-wrap img { width:28px; height:28px; object-fit:contain; border-radius:4px; }
+    .site-name { width:100%; display:block; height:26px; line-height:26px; text-align:center; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 4px; }
+
+    #net-toggle { position:fixed; top:12px; right:16px; z-index:99999; background:rgba(255,255,255,0.85); border:1px solid rgba(255,255,255,0.9); color:#333; border-radius:20px; padding:4px 14px; font-size:0.82rem; font-weight:600; cursor:pointer; backdrop-filter:blur(8px); transition:background 0.2s; outline:none !important; }
+    #net-toggle:focus { outline:none !important; box-shadow:none !important; }
+    #net-toggle:hover { background:rgba(255,255,255,1); }
+
+    @media screen and (max-width: 992px) {
+      .banner-video video { width: 1200px; }
+      div#navbarsMain { background: rgba(0,0,0,0.8); padding: 10px 30px; border-radius: 20px; }
+    }
+    @media screen and (max-width: 767px) {
+      .banner-video video { width: 960px; }
+      .mylist { border-radius: 8px; }
+      .mylist li.site-item { margin: 5px 0; }
+      .site-icon-wrap { width: 30px; height: 30px; padding: 5px; border-radius: 5px; }
+      .site-icon-wrap img { width: 20px; height: 20px; }
+      .site-name { font-size: 12px; }
+    }
+    @media screen and (min-width: 1200px) { .mylist li.site-item { min-width: 132px; } }
+    @media screen and (min-width: 992px) and (max-width: 1200px) { .mylist li.site-item { min-width: 110px; } }
+  </style>
 </head>
 <body>
 

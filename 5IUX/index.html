@@ -144,13 +144,15 @@
 <script src="js/sou.js"></script>
 <script>
 /* ══ 模式切换 ══ */
-const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux'];
-localStorage.setItem('navMode', '5iux');
-document.getElementById('brand-title').addEventListener('click', () => {
-  const next = MODES[(MODES.indexOf('5iux') + 1) % MODES.length];
-  localStorage.setItem('navMode', next);
-  window.location.href = '../index.html';
-});
+const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim'];
+const MODE_PATHS = {
+  normal:   '../normal/index.html',
+  webstack: '../webstack/index.html',
+  easy:     '../easy/index.html',
+  nav:      '../nav/index.html',
+  '5iux':   '../5IUX/index.html',
+  kim:    '../kim/index.html',
+};
 
 /* ══ 配置 ══ */
 const WORKER_URL   = 'https://ico.xmynscnq.dpdns.org';

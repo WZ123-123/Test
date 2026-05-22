@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>王五导航 · Kim</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 侧边栏 -->
+<div id="z-sidebar">
+  <div class="z-sidebar-logo">
+    <span class="z-sidebar-logo-icon">🧭</span>
+    <span class="z-sidebar-logo-text" id="z-title" title="点击切换模式">王五导航</span>
+  </div>
+  <div class="z-nav-wrap">
+    <ul id="z-nav"></ul>
+  </div>
+</div>
+
+<!-- 移动端遮罩 -->
+<div id="z-overlay"></div>
+
+<!-- 顶部栏 -->
+<div id="z-topbar">
+  <button id="z-menu-btn" aria-label="菜单">☰</button>
+  <span id="z-title-mobile" title="点击切换模式" style="font-size:1rem;font-weight:900;cursor:pointer;white-space:nowrap;">王五导航</span>
+  <span id="z-quote"></span>
+  <div class="z-search-bar">
+    <input id="z-search-input" type="text" placeholder="搜索 / 筛选站内" autocomplete="off" oninput="filterLinks()" />
+    <button class="z-search-btn" onclick="doSearch()" aria-label="搜索">🔍</button>
+  </div>
+  <button id="z-net-btn">🌐 外网</button>
+  <button id="z-dark-btn" title="切换暗色模式" onclick="toggleDark()">🌙</button>
+</div>
+
+<!-- 主内容 -->
+<div id="z-content">
+  <div id="z-main">
+    <p style="color:#999;text-align:center;padding:3rem;">加载中...</p>
+  </div>
+</div>
+
+<!-- 回顶部 -->
+<button id="z-go-top" title="回到顶部" onclick="window.scrollTo({top:0,behavior:'smooth'})">▲</button>
+
+<script>
+  // 移动端标题也绑定 switchMode（main.js 加载后才有 switchMode，这里用事件委托）
+  document.getElementById('z-title-mobile')?.addEventListener('click', () => {
+    if (typeof switchMode === 'function') switchMode();
+  });
+
+  // 暗色模式（早于 main.js，避免闪烁）
+  (function() {
+    if (localStorage.getItem('darkMode') === '1') {
+      document.body.classList.add('dark');
+      const btn = document.getElementById('z-dark-btn');
+      if (btn) btn.textContent = '☀️';
+    }
+  })();
+
+  function toggleDark() {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('darkMode', isDark ? '1' : '0');
+    const btn = document.getElementById('z-dark-btn');
+    if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+  }
+  window.toggleDark = toggleDark;
+
+  // 回顶部可见性
+  window.addEventListener('scroll', () => {
+    document.getElementById('z-go-top')?.classList.toggle('visible', window.scrollY > 300);
+  });
+
+  // 顶部栏透明
+  (function() {
+    const bar = document.getElementById('z-topbar');
+    function check() { bar?.classList.toggle('at-top', window.scrollY < 10); }
+    window.addEventListener('scroll', check, { passive: true });
+    check();
+  })();
+</script>
+<script src="main.js"></script>
+</body>
+</html>

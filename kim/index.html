@@ -19,17 +19,18 @@ a{text-decoration:none;color:inherit;}
 #topbar{position:fixed;top:0;left:0;right:0;height:40px;z-index:200;background:rgba(0,0,0,0.12);display:flex;align-items:center;padding:0 14px;gap:10px;}
 #site-title{color:#fff;font-size:1rem;font-weight:900;cursor:pointer;letter-spacing:0.05em;user-select:none;margin-right:auto;}
 #site-title:hover{opacity:0.8;}
-#bg-btn{background:none;border:none;cursor:pointer;color:#fff;font-size:1.1rem;opacity:0.85;padding:4px;transition:opacity 0.2s;}
-#bg-btn:hover{opacity:1;}
+#bg-btn{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.4);border-radius:6px;cursor:pointer;color:#fff;font-size:0.8rem;font-weight:600;padding:4px 10px;letter-spacing:0.03em;transition:background 0.2s;white-space:nowrap;}
+#bg-btn:hover{background:rgba(255,255,255,0.3);}
 
 /* 搜索区 */
-#search-area{position:relative;z-index:10;padding:60px 0 24px;text-align:center;}
-#engine-logo{width:210px;height:70px;margin:0 auto 16px;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center;}
-#engine-logo img{max-width:210px;max-height:70px;object-fit:contain;display:block;}
+#search-area{position:relative;z-index:10;padding:90px 0 36px;text-align:center;}
+#engine-logo{width:270px;height:90px;margin:0 auto 28px;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center;}
+#engine-logo img{max-width:270px;max-height:90px;object-fit:contain;display:block;}
 #search-box{display:flex;align-items:center;width:640px;height:44px;margin:0 auto;}
 #search-input{flex:1;height:44px;padding:0 12px;border:1px solid #d7d7d7;border-right:none;border-radius:5px 0 0 5px;font-size:16px;outline:none;background:#fff;}
-#search-btn{width:70px;height:44px;background:#aeaeae;border:1px solid #aeaeae;border-radius:0 5px 5px 0;cursor:pointer;font-size:18px;color:#fff;transition:background 0.2s;}
+#search-btn{width:52px;height:44px;background:#aeaeae;border:1px solid #aeaeae;border-radius:0 5px 5px 0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
 #search-btn:hover{background:#999;}
+#search-btn svg{display:block;}
 
 /* 主白卡 */
 #web-site{position:relative;z-index:10;width:894px;margin:0 auto 60px;background:#fafafa;border-radius:5px;box-shadow:0 0 1px #797979;}
@@ -99,7 +100,7 @@ a{text-decoration:none;color:inherit;}
 
 <div id="topbar">
   <span id="site-title">🧭 王五导航</span>
-  <button id="bg-btn" title="更换背景">🖼</button>
+  <button id="bg-btn">换背景</button>
 </div>
 
 <div id="search-area">
@@ -108,7 +109,9 @@ a{text-decoration:none;color:inherit;}
   </div>
   <div id="search-box">
     <input id="search-input" type="text" placeholder="百度一下" autocomplete="off"/>
-    <button id="search-btn">🔍</button>
+    <button id="search-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
   </div>
 </div>
 

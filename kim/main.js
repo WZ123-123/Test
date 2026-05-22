@@ -239,7 +239,7 @@ async function loadQuote() {
 
 // ── 入口 ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  localStorage.setItem('navMode', 'kim');
+  localStorage.setItem('navMode', '');
 
   // 标题点击切换模式
   document.getElementById('z-title')?.addEventListener('click', switchMode);

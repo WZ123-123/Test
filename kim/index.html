@@ -212,6 +212,8 @@ updateSwitch();
 // ═══════════════════════════════════════════
 // 背景数据
 // ═══════════════════════════════════════════
+const CDN = 'https://cdn.jsdelivr.net/gh/xmynscnq/Test@main/kim/';
+
 const BG_CATS = [
   {id:'dynamic', name:'动态'},
   {id:'scenery', name:'风景'},
@@ -223,52 +225,49 @@ const BG_CATS = [
   {id:'city',    name:'城市'},
 ];
 
-// 动态背景定义（canvas或视频）
-// video字段填写视频路径即可自动切换为视频模式
 const BG_DYNAMIC = [
-  {id:'anim-0', name:'动态1', video:'image/animation/1.webm', previewGrad:'linear-gradient(135deg,#a8edea,#fed6e3,#f5af19)'},
-  {id:'anim-1', name:'动态2', video:'image/animation/2.webm', previewGrad:'linear-gradient(135deg,#1a1a2e,#ff6a88,#ffb347)'},
-  {id:'anim-2', name:'动态3', video:'image/animation/3.webm', previewGrad:'linear-gradient(135deg,#0f1428,#11998e,#38ef7d)'},
-  {id:'anim-3', name:'动态4', video:'image/animation/4.webm', previewGrad:'linear-gradient(135deg,#140a28,#c471ed,#f64f59)'},
+  {id:'anim-0', name:'动态1', video:CDN+'image/animation/1.webm', preview:CDN+'image/animation/img/1.jpg'},
+  {id:'anim-1', name:'动态2', video:CDN+'image/animation/2.webm', preview:CDN+'image/animation/img/2.jpg'},
+  {id:'anim-2', name:'动态3', video:CDN+'image/animation/3.webm', preview:CDN+'image/animation/img/3.jpg'},
+  {id:'anim-3', name:'动态4', video:CDN+'image/animation/4.webm', preview:CDN+'image/animation/img/4.jpg'},
 ];
 
-// 静态图片背景（放图片路径即可）
 const BG_IMAGES = {
   scenery: [
-    {id:'sc-1', name:'风景1', src:'bg/scenery/1.jpg'},
-    {id:'sc-2', name:'风景2', src:'bg/scenery/2.jpg'},
-    {id:'sc-3', name:'风景3', src:'bg/scenery/3.jpg'},
-    {id:'sc-4', name:'风景4', src:'bg/scenery/4.jpg'},
+    {id:'sc-1', name:'风景1', src:CDN+'image/scenery/1.jpg'},
+    {id:'sc-2', name:'风景2', src:CDN+'image/scenery/2.jpg'},
+    {id:'sc-3', name:'风景3', src:CDN+'image/scenery/3.jpg'},
+    {id:'sc-4', name:'风景4', src:CDN+'image/scenery/4.jpg'},
   ],
   elegant: [
-    {id:'el-1', name:'素雅1', src:'bg/elegant/1.jpg'},
-    {id:'el-2', name:'素雅2', src:'bg/elegant/2.jpg'},
-    {id:'el-3', name:'素雅3', src:'bg/elegant/3.jpg'},
-    {id:'el-4', name:'素雅4', src:'bg/elegant/4.jpg'},
+    {id:'el-1', name:'素雅1', src:CDN+'image/elegant/1.jpg'},
+    {id:'el-2', name:'素雅2', src:CDN+'image/elegant/2.jpg'},
+    {id:'el-3', name:'素雅3', src:CDN+'image/elegant/3.jpg'},
+    {id:'el-4', name:'素雅4', src:CDN+'image/elegant/4.jpg'},
   ],
   beauty: [
-    {id:'be-1', name:'唯美1', src:'image/aesthetic/1.png'},
-    {id:'be-2', name:'唯美2', src:'image/aesthetic/2.png'},
-    {id:'be-3', name:'唯美3', src:'image/aesthetic/3.png'},
-    {id:'be-4', name:'唯美4', src:'image/aesthetic/4.png'},
+    {id:'be-1', name:'唯美1', src:CDN+'image/aesthetic/1.png'},
+    {id:'be-2', name:'唯美2', src:CDN+'image/aesthetic/2.png'},
+    {id:'be-3', name:'唯美3', src:CDN+'image/aesthetic/3.png'},
+    {id:'be-4', name:'唯美4', src:CDN+'image/aesthetic/4.png'},
   ],
   still: [
-    {id:'st-1', name:'静物1', src:'bg/still/1.jpg'},
-    {id:'st-2', name:'静物2', src:'bg/still/2.jpg'},
-    {id:'st-3', name:'静物3', src:'bg/still/3.jpg'},
-    {id:'st-4', name:'静物4', src:'bg/still/4.jpg'},
+    {id:'st-1', name:'静物1', src:CDN+'image/still/1.jpg'},
+    {id:'st-2', name:'静物2', src:CDN+'image/still/2.jpg'},
+    {id:'st-3', name:'静物3', src:CDN+'image/still/3.jpg'},
+    {id:'st-4', name:'静物4', src:CDN+'image/still/4.jpg'},
   ],
   star: [
-    {id:'sr-1', name:'星空1', src:'bg/star/1.jpg'},
-    {id:'sr-2', name:'星空2', src:'bg/star/2.jpg'},
-    {id:'sr-3', name:'星空3', src:'bg/star/3.jpg'},
-    {id:'sr-4', name:'星空4', src:'bg/star/4.jpg'},
+    {id:'sr-1', name:'星空1', src:CDN+'image/star/1.jpg'},
+    {id:'sr-2', name:'星空2', src:CDN+'image/star/2.jpg'},
+    {id:'sr-3', name:'星空3', src:CDN+'image/star/3.jpg'},
+    {id:'sr-4', name:'星空4', src:CDN+'image/star/4.jpg'},
   ],
   city: [
-    {id:'cy-1', name:'城市1', src:'bg/city/1.jpg'},
-    {id:'cy-2', name:'城市2', src:'bg/city/2.jpg'},
-    {id:'cy-3', name:'城市3', src:'bg/city/3.jpg'},
-    {id:'cy-4', name:'城市4', src:'bg/city/4.jpg'},
+    {id:'cy-1', name:'城市1', src:CDN+'image/city/1.jpg'},
+    {id:'cy-2', name:'城市2', src:CDN+'image/city/2.jpg'},
+    {id:'cy-3', name:'城市3', src:CDN+'image/city/3.jpg'},
+    {id:'cy-4', name:'城市4', src:CDN+'image/city/4.jpg'},
   ],
 };
 
@@ -294,9 +293,7 @@ function applyBg(id){
 
   const colorLayer = document.getElementById('bg-color');
   const videoEl    = document.getElementById('bg-video');
-  // 先停掉视频
   videoEl.style.opacity = '0';
-  videoEl.style.pointerEvents = 'none';
   videoEl.pause();
   videoEl.src = '';
   colorLayer.style.background = '';
@@ -304,10 +301,14 @@ function applyBg(id){
   // 动态 → 视频
   const dynItem = BG_DYNAMIC.find(b=>b.id===id);
   if(dynItem){
-    colorLayer.style.background = '#000';
+    colorLayer.style.background = '#111';
     videoEl.src = dynItem.video;
-    videoEl.style.opacity = '1';
     videoEl.load();
+    const onReady = () => {
+      videoEl.style.opacity = '1';
+      videoEl.removeEventListener('canplay', onReady);
+    };
+    videoEl.addEventListener('canplay', onReady);
     videoEl.play().catch(()=>{});
     return;
   }
@@ -348,7 +349,7 @@ function buildBgItems(catId){
   grid.innerHTML = '';
   let items = [];
 
-  if(catId==='dynamic') items = BG_DYNAMIC.map(b=>({id:b.id, name:b.name, grad:b.previewGrad, type:'canvas'}));
+  if(catId==='dynamic') items = BG_DYNAMIC.map(b=>({id:b.id, name:b.name, src:b.preview, type:'img'}));
   else if(catId==='pure') items = BG_PURE.map(b=>({id:b.id, name:b.name, grad:b.grad, type:'grad'}));
   else items = (BG_IMAGES[catId]||[]).map(b=>({id:b.id, name:b.name, src:b.src, type:'img'}));
 

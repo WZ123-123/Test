@@ -7,13 +7,14 @@ const LINKS_FILE = '../links.json';
 const DEFAULT_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0yIDEyaDIwIj48L3BhdGg+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+';
 
 // ── 模式切换 ──────────────────────────────────────────────
-const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux'];
+const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim'];
 const MODE_PATHS = {
   normal:   '../normal/index.html',
   webstack: '../webstack/index.html',
   easy:     '../easy/index.html',
   nav:      '../nav/index.html',
   '5iux':   '../5IUX/index.html',
+  kim:    '../kim/index.html',
 };
 function switchMode() {
   const cur  = 'webstack';

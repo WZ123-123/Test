@@ -85,7 +85,7 @@ function injectNetToggleBtn() {
 const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 const BG_API   = isMobile
   ? 'https://imgapi.cn/api.php?zd=mobile&fl=fengjing&gs=images&t='
-  : 'https://imgapi.cn/api.php?fl=suiji&gs=images&t=';
+  : 'https://imgapi.cn/api.php?fl=fengjing&gs=images&t=';
 
 function changeBackground() {
   const url = `${BG_API}${Date.now()}`;

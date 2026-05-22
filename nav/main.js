@@ -3,13 +3,14 @@
    =========================== */
 
 // ── 模式切换 ────────────────────────────────────────────────
-const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux'];
+const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim'];
 const MODE_PATHS = {
   normal:   '../normal/index.html',
   webstack: '../webstack/index.html',
   easy:     '../easy/index.html',
   nav:      '../nav/index.html',
   '5iux':   '../5IUX/index.html',
+  kim:    '../kim/index.html',
 };
 function switchMode() {
   const cur  = 'nav';

@@ -32,7 +32,7 @@ a{text-decoration:none;color:inherit;}
 #search-btn svg{display:block;}
 
 /* 搜索联想词 */
-#suggest-box{position:absolute;top:44px;left:0;right:52px;background:#fff;border:1px solid #d7d7d7;border-top:none;border-radius:0 0 5px 5px;box-shadow:0 4px 12px rgba(0,0,0,0.12);z-index:999;display:none;}
+#suggest-box{position:absolute;top:44px;left:0;right:52px;background:#fff;border:1px solid #d7d7d7;border-top:none;border-radius:0 0 5px 5px;box-shadow:0 4px 12px rgba(0,0,0,0.12);z-index:10000;display:none;}
 #suggest-box.show{display:block;}
 .suggest-item{padding:9px 14px;font-size:15px;color:#333;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .suggest-item:hover,.suggest-item.active{background:#f0f4ff;color:#1677ff;}
@@ -320,16 +320,16 @@ const BG_DYNAMIC = [
 
 const BG_IMAGES = {
   scenery: [
-    {id:'sc-1', name:'风景1', src:CDN+'image/scenery/1.jpg'},
-    {id:'sc-2', name:'风景2', src:CDN+'image/scenery/2.jpg'},
-    {id:'sc-3', name:'风景3', src:CDN+'image/scenery/3.jpg'},
-    {id:'sc-4', name:'风景4', src:CDN+'image/scenery/4.jpg'},
+    {id:'sc-1', name:'风景1', src:CDN+'image/landscape/1.jpg'},
+    {id:'sc-2', name:'风景2', src:CDN+'image/landscape/2.jpg'},
+    {id:'sc-3', name:'风景3', src:CDN+'image/landscape/3.jpg'},
+    {id:'sc-4', name:'风景4', src:CDN+'image/landscape/4.jpg'},
   ],
   elegant: [
-    {id:'el-1', name:'素雅1', src:CDN+'image/elegant/1.jpg'},
-    {id:'el-2', name:'素雅2', src:CDN+'image/elegant/2.jpg'},
-    {id:'el-3', name:'素雅3', src:CDN+'image/elegant/3.jpg'},
-    {id:'el-4', name:'素雅4', src:CDN+'image/elegant/4.jpg'},
+    {id:'el-1', name:'素雅1', src:CDN+'image/minimalist/1.jpg'},
+    {id:'el-2', name:'素雅2', src:CDN+'image/minimalist/2.jpg'},
+    {id:'el-3', name:'素雅3', src:CDN+'image/minimalist/3.jpg'},
+    {id:'el-4', name:'素雅4', src:CDN+'image/minimalist/4.jpg'},
   ],
   beauty: [
     {id:'be-1', name:'唯美1', src:CDN+'image/aesthetic/1.png'},
@@ -338,16 +338,16 @@ const BG_IMAGES = {
     {id:'be-4', name:'唯美4', src:CDN+'image/aesthetic/4.png'},
   ],
   still: [
-    {id:'st-1', name:'静物1', src:CDN+'image/still/1.jpg'},
-    {id:'st-2', name:'静物2', src:CDN+'image/still/2.jpg'},
-    {id:'st-3', name:'静物3', src:CDN+'image/still/3.jpg'},
-    {id:'st-4', name:'静物4', src:CDN+'image/still/4.jpg'},
+    {id:'st-1', name:'静物1', src:CDN+'image/stilllife/1.jpg'},
+    {id:'st-2', name:'静物2', src:CDN+'image/stilllife/2.jpg'},
+    {id:'st-3', name:'静物3', src:CDN+'image/stilllife/3.jpg'},
+    {id:'st-4', name:'静物4', src:CDN+'image/stilllife/4.jpg'},
   ],
   star: [
-    {id:'sr-1', name:'星空1', src:CDN+'image/star/1.jpg'},
-    {id:'sr-2', name:'星空2', src:CDN+'image/star/2.jpg'},
-    {id:'sr-3', name:'星空3', src:CDN+'image/star/3.jpg'},
-    {id:'sr-4', name:'星空4', src:CDN+'image/star/4.jpg'},
+    {id:'sr-1', name:'星空1', src:CDN+'image/starry/1.jpg'},
+    {id:'sr-2', name:'星空2', src:CDN+'image/starry/2.jpg'},
+    {id:'sr-3', name:'星空3', src:CDN+'image/starry/3.jpg'},
+    {id:'sr-4', name:'星空4', src:CDN+'image/starry/4.jpg'},
   ],
   city: [
     {id:'cy-1', name:'城市1', src:CDN+'image/city/1.jpg'},

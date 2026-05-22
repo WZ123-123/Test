@@ -2,86 +2,322 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>王五导航 · Kim</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: '微软雅黑', -apple-system, sans-serif; font-size: 14px;
+           background: #1a1a2e; min-height: 100vh; overflow-x: hidden; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── 背景 ── */
+    #bg-layer {
+      position: fixed; inset: 0; z-index: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+
+    /* ── 顶部导航栏 ── */
+    #topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 40px; z-index: 100;
+      background: rgba(15,25,50,0.15);
+      display: flex; align-items: center; justify-content: flex-end;
+      padding: 0 14px;
+    }
+    #site-title {
+      position: absolute; left: 14px;
+      color: #fff; font-size: 1rem; font-weight: 900;
+      cursor: pointer; letter-spacing: 0.05em; user-select: none;
+    }
+    #site-title:hover { opacity: 0.8; }
+    #net-toggle {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      color: #fff; border-radius: 14px; padding: 3px 12px;
+      font-size: 0.78rem; font-weight: 600; cursor: pointer;
+      backdrop-filter: blur(6px); transition: background 0.2s;
+    }
+    #net-toggle:hover { background: rgba(255,255,255,0.25); }
+
+    /* ── 搜索区 ── */
+    #search-area {
+      position: relative; z-index: 10;
+      padding: 64px 0 28px; text-align: center;
+    }
+    #engine-logo {
+      width: 210px; height: 70px; margin: 0 auto 18px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #engine-logo img { max-width: 210px; max-height: 70px; object-fit: contain; }
+    #search-box {
+      display: flex; align-items: center;
+      width: 640px; height: 44px; margin: 0 auto;
+    }
+    #search-input {
+      flex: 1; height: 44px; padding: 0 12px;
+      border: 1px solid #d7d7d7; border-right: none;
+      border-radius: 5px 0 0 5px; font-size: 16px;
+      outline: none; background: #fff;
+    }
+    #search-btn {
+      width: 70px; height: 44px; background: #aeaeae;
+      border: 1px solid #aeaeae; border-radius: 0 5px 5px 0;
+      cursor: pointer; font-size: 18px; color: #fff;
+      transition: background 0.2s;
+    }
+    #search-btn:hover { background: #999; }
+
+    /* ── 主容器（白色卡片） ── */
+    #web-site {
+      position: relative; z-index: 10;
+      width: 894px; margin: 0 auto 60px;
+      background: #fafafa; border-radius: 5px;
+      box-shadow: 0 0 1px #797979;
+    }
+
+    /* ── 头部：分类标签 ── */
+    #web-site-header {
+      position: relative; width: 100%; height: 55px;
+      background: #fafafa; border-radius: 5px 5px 0 0;
+      box-shadow: 0 1px 4px #e4e4e4;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #cat-tabs {
+      display: flex; align-items: center;
+      height: 36px; overflow: hidden;
+    }
+    .cat-tab {
+      min-width: 88px; height: 34px; line-height: 32px;
+      border: 1px solid #d7d7d7; background: #f5f5f7;
+      font-size: 15px; color: #333; text-align: center;
+      cursor: pointer; user-select: none;
+      transition: background 0.15s;
+      border-right: none; padding: 0 8px;
+      white-space: nowrap;
+    }
+    .cat-tab:first-child { border-radius: 5px 0 0 5px; }
+    .cat-tab:last-child  { border-right: 1px solid #d7d7d7; border-radius: 0 5px 5px 0; }
+    .cat-tab:hover  { background: #c9c9c9; }
+    .cat-tab.active { background: #c9c9c9; color: #fff; border-color: #aeaeae;
+                      box-shadow: inset 1px 1px 8px 1px #aeaeae; }
+
+    /* ── 每行分组 ── */
+    .web-group {
+      display: flex; align-items: center;
+      width: 100%; height: 55px; overflow: hidden;
+    }
+    .web-group:nth-child(odd)  { background: #f5f5f7; }
+    .web-group:nth-child(even) { background: #fafafa; }
+    .web-group:last-child { border-radius: 0 0 5px 5px; }
+
+    /* 分类名 */
+    .web-group-head {
+      flex-shrink: 0; width: 89px; height: 55px;
+      border-right: 1px solid #e4e4e4;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; color: #333; user-select: none;
+    }
+
+    .web-group-spacer { flex-shrink: 0; width: 12px; }
+
+    /* 站点条目 */
+    .web-group-item {
+      flex-shrink: 0; width: 130px; height: 55px;
+      display: flex; align-items: center;
+      cursor: pointer; border-radius: 3px; overflow: hidden;
+      transition: background 0.15s;
+    }
+    .web-group-item:hover { background: rgba(0,0,0,0.05); }
+    .web-group-icon {
+      flex-shrink: 0; width: 24px; height: 24px;
+      margin-left: 8px; border-radius: 5px; overflow: hidden;
+    }
+    .web-group-icon img { width: 24px; height: 24px; object-fit: contain; border-radius: 4px; display: block; }
+    .web-group-name {
+      flex: 1; min-width: 0; margin-left: 6px;
+      font-size: 13px; color: #4d4d4d;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ── 响应式 ── */
+    @media (max-width: 940px) {
+      #search-box { width: 92vw; }
+      #web-site { width: 100%; border-radius: 0; }
+      .web-group-item { width: 110px; }
+    }
+    @media (max-width: 600px) {
+      #engine-logo { width: 140px; height: 46px; margin-bottom: 10px; }
+      #engine-logo img { max-width: 140px; max-height: 46px; }
+      .web-group-head { width: 56px; font-size: 12px; }
+      .web-group-item { width: 90px; }
+      .web-group-name { font-size: 11px; }
+      .cat-tab { min-width: 50px; font-size: 12px; padding: 0 4px; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- 侧边栏 -->
-<div id="z-sidebar">
-  <div class="z-sidebar-logo">
-    <span class="z-sidebar-logo-icon">🧭</span>
-    <span class="z-sidebar-logo-text" id="z-title" title="点击切换模式">王五导航</span>
-  </div>
-  <div class="z-nav-wrap">
-    <ul id="z-nav"></ul>
-  </div>
-</div>
-
-<!-- 移动端遮罩 -->
-<div id="z-overlay"></div>
+<div id="bg-layer"></div>
 
 <!-- 顶部栏 -->
-<div id="z-topbar">
-  <button id="z-menu-btn" aria-label="菜单">☰</button>
-  <span id="z-title-mobile" title="点击切换模式" style="font-size:1rem;font-weight:900;cursor:pointer;white-space:nowrap;">王五导航</span>
-  <span id="z-quote"></span>
-  <div class="z-search-bar">
-    <input id="z-search-input" type="text" placeholder="搜索 / 筛选站内" autocomplete="off" oninput="filterLinks()" />
-    <button class="z-search-btn" onclick="doSearch()" aria-label="搜索">🔍</button>
-  </div>
-  <button id="z-net-btn">🌐 外网</button>
-  <button id="z-dark-btn" title="切换暗色模式" onclick="toggleDark()">🌙</button>
+<div id="topbar">
+  <span id="site-title">🧭 王五导航</span>
+  <button id="net-toggle">🌐 外网</button>
 </div>
 
-<!-- 主内容 -->
-<div id="z-content">
-  <div id="z-main">
-    <p style="color:#999;text-align:center;padding:3rem;">加载中...</p>
+<!-- 搜索区 -->
+<div id="search-area">
+  <div id="engine-logo">
+    <img src="https://www.baidu.com/img/PCtopnew.png" alt="百度"
+         onerror="this.src='https://ico.xmynscnq.dpdns.org/?domain=baidu.com'">
+  </div>
+  <div id="search-box">
+    <input id="search-input" type="text" placeholder="百度一下" autocomplete="off" />
+    <button id="search-btn">🔍</button>
   </div>
 </div>
 
-<!-- 回顶部 -->
-<button id="z-go-top" title="回到顶部" onclick="window.scrollTo({top:0,behavior:'smooth'})">▲</button>
+<!-- 主卡片 -->
+<div id="web-site">
+  <div id="web-site-header">
+    <div id="cat-tabs"></div>
+  </div>
+  <div id="web-site-body">
+    <p style="color:#999;text-align:center;padding:2rem;">加载中...</p>
+  </div>
+</div>
 
 <script>
-  // 移动端标题也绑定 switchMode（main.js 加载后才有 switchMode，这里用事件委托）
-  document.getElementById('z-title-mobile')?.addEventListener('click', () => {
-    if (typeof switchMode === 'function') switchMode();
+const WORKER_URL   = 'https://ico.xmynscnq.dpdns.org';
+const LINKS_FILE   = '../links.json';
+const DEFAULT_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0yIDEyaDIwIj48L3BhdGg+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+';
+
+// ── 模式切换 ──
+const MODES = ['normal','webstack','easy','nav','5iux','kim'];
+const MODE_PATHS = {
+  normal:'../normal/index.html', webstack:'../webstack/index.html',
+  easy:'../easy/index.html',     nav:'../nav/index.html',
+  '5iux':'../5IUX/index.html',   kim:'../kim/index.html',
+};
+function switchMode() {
+  const next = MODES[(MODES.indexOf('kim')+1) % MODES.length];
+  localStorage.setItem('navMode', next);
+  location.href = MODE_PATHS[next];
+}
+document.getElementById('site-title').addEventListener('click', switchMode);
+
+// ── 内外网 ──
+let isIntranet = localStorage.getItem('netMode') === 'intranet';
+let _allData = null;
+
+function getCardUrl(item) { return (isIntranet && item.intranet) ? item.intranet : item.url; }
+function getDomain(url)   { try { return new URL(url).hostname; } catch { return null; } }
+function faviconSrc(url)  { const d = getDomain(url); return d ? `${WORKER_URL}/?domain=${d}` : DEFAULT_ICON; }
+
+function updateNetBtn() {
+  document.getElementById('net-toggle').textContent = isIntranet ? '🏠 内网' : '🌐 外网';
+}
+document.getElementById('net-toggle').addEventListener('click', () => {
+  isIntranet = !isIntranet;
+  localStorage.setItem('netMode', isIntranet ? 'intranet' : 'internet');
+  updateNetBtn();
+  if (_allData) renderContent(_allData);
+});
+updateNetBtn();
+
+// ── 搜索 ──
+document.getElementById('search-btn').addEventListener('click', doSearch);
+document.getElementById('search-input').addEventListener('keydown', e => { if (e.key==='Enter') doSearch(); });
+function doSearch() {
+  const kw = document.getElementById('search-input').value.trim();
+  if (kw) window.open('https://www.baidu.com/s?wd=' + encodeURIComponent(kw), '_blank');
+}
+
+// ── 分类标签 ──
+function renderTabs(sections) {
+  const tabs = document.getElementById('cat-tabs');
+  tabs.innerHTML = '';
+  sections.forEach(({ section }, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'cat-tab';
+    // 去掉emoji只显示文字
+    btn.textContent = section.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+/u, '').trim();
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      const el = document.getElementById('group-' + i);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    if (i === 0) btn.classList.add('active');
+    tabs.appendChild(btn);
   });
+}
 
-  // 暗色模式（早于 main.js，避免闪烁）
-  (function() {
-    if (localStorage.getItem('darkMode') === '1') {
-      document.body.classList.add('dark');
-      const btn = document.getElementById('z-dark-btn');
-      if (btn) btn.textContent = '☀️';
-    }
-  })();
+// ── 渲染内容 ──
+function renderContent(sections) {
+  const body = document.getElementById('web-site-body');
+  body.innerHTML = '';
+  sections.forEach(({ section, items }, i) => {
+    const group = document.createElement('div');
+    group.className = 'web-group';
+    group.id = 'group-' + i;
 
-  function toggleDark() {
-    const isDark = document.body.classList.toggle('dark');
-    localStorage.setItem('darkMode', isDark ? '1' : '0');
-    const btn = document.getElementById('z-dark-btn');
-    if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+    const head = document.createElement('div');
+    head.className   = 'web-group-head';
+    head.textContent = section.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+/u, '').trim();
+    group.appendChild(head);
+
+    const spacer = document.createElement('div');
+    spacer.className = 'web-group-spacer';
+    group.appendChild(spacer);
+
+    items.forEach(item => {
+      const url     = getCardUrl(item);
+      const iconSrc = item.icon || faviconSrc(url);
+      const title   = item.title || '';
+
+      const a = document.createElement('a');
+      a.className = 'web-group-item';
+      a.href      = url;
+      a.target    = '_blank';
+      a.rel       = 'noopener noreferrer';
+      a.title     = item.desc || title;
+
+      const iconWrap = document.createElement('div');
+      iconWrap.className = 'web-group-icon';
+      const img = document.createElement('img');
+      img.src     = iconSrc;
+      img.alt     = title;
+      img.loading = 'lazy';
+      img.onerror = function() { this.src = DEFAULT_ICON; this.onerror = null; };
+      iconWrap.appendChild(img);
+
+      const name = document.createElement('span');
+      name.className   = 'web-group-name';
+      name.textContent = title;
+
+      a.appendChild(iconWrap);
+      a.appendChild(name);
+      group.appendChild(a);
+    });
+
+    body.appendChild(group);
+  });
+}
+
+// ── 入口 ──
+(async () => {
+  localStorage.setItem('navMode', 'kim');
+  try {
+    const res  = await fetch(LINKS_FILE);
+    const data = await res.json();
+    _allData   = data;
+    renderTabs(data);
+    renderContent(data);
+  } catch(e) {
+    document.getElementById('web-site-body').innerHTML =
+      '<p style="color:#999;text-align:center;padding:2rem;">链接数据加载失败</p>';
   }
-  window.toggleDark = toggleDark;
-
-  // 回顶部可见性
-  window.addEventListener('scroll', () => {
-    document.getElementById('z-go-top')?.classList.toggle('visible', window.scrollY > 300);
-  });
-
-  // 顶部栏透明
-  (function() {
-    const bar = document.getElementById('z-topbar');
-    function check() { bar?.classList.toggle('at-top', window.scrollY < 10); }
-    window.addEventListener('scroll', check, { passive: true });
-    check();
-  })();
+})();
 </script>
-<script src="main.js"></script>
 </body>
 </html>

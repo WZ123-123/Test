@@ -24,41 +24,6 @@ function switchMode() {
   window.location.href = MODE_PATHS[next];
 }
 
-// ── 天气 / 格言 ───────────────────────────────────────────
-function getWeatherIcon(c) { return c===0?'☀️':c<=2?'🌤':c===3?'☁️':c<=49?'🌫':c<=59?'🌦':c<=69?'🌧':c<=79?'❄️':c<=84?'🌧':c<=99?'⛈':'🌈'; }
-function getWeatherText(c) { return c===0?'晴':c<=2?'少云':c===3?'阴':c<=49?'雾':c<=59?'毛毛雨':c<=69?'雨':c<=79?'雪':c<=84?'阵雨':c<=99?'雷雨':'未知'; }
-function getWindDir(d) { return ['北','东北','东','东南','南','西南','西','西北'][Math.round(d/45)%8]; }
-
-async function loadHeaderSubtitle() {
-  const el = document.getElementById('daily-quote');
-  if (!el) return;
-  let count = parseInt(sessionStorage.getItem('pageView')||'0') + 1;
-  sessionStorage.setItem('pageView', String(count));
-  if (count % 2 === 1) {
-    el.textContent = '📍 长春'; el.style.opacity = '1';
-    const cached = sessionStorage.getItem('weather_cache');
-    if (cached) {
-      try { const {text,ts}=JSON.parse(cached); if(Date.now()-ts<5*60*1000){ el.textContent=text; return; } } catch{}
-    }
-    try {
-      const res  = await fetch('https://api.open-meteo.com/v1/forecast?latitude=43.8868&longitude=125.3245&current=temperature_2m,weathercode,relative_humidity_2m,winddirection_10m&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FShanghai&forecast_days=1');
-      const data = await res.json();
-      const {temperature_2m:temp,weathercode:code,relative_humidity_2m:humid,winddirection_10m:wd} = data.current;
-      const tmax=Math.round(data.daily.temperature_2m_max[0]), tmin=Math.round(data.daily.temperature_2m_min[0]);
-      const text = `📍 长春  ${getWeatherIcon(code)} ${getWeatherText(code)}  ${Math.round(temp)}°C（今日 ${tmin}~${tmax}°C）  💧${humid}%  💨 ${getWindDir(wd)}风`;
-      sessionStorage.setItem('weather_cache', JSON.stringify({text, ts:Date.now()}));
-      el.textContent = text; el.style.opacity = '1';
-    } catch { el.textContent=''; }
-  } else {
-    try {
-      const res  = await fetch('../quotes.json');
-      const data = await res.json();
-      const q    = data[Math.floor(Math.random()*data.length)];
-      el.textContent = q.from ? `${q.text}　——${q.from}` : q.text;
-    } catch {} finally { el.style.opacity='1'; }
-  }
-}
-
 // ── 图标 ──────────────────────────────────────────────────
 function getDomain(url) { try { return new URL(url).hostname; } catch { return null; } }
 function buildFaviconUrl(domain) { return domain ? `${WORKER_URL}/?domain=${domain}` : DEFAULT_ICON; }
@@ -108,21 +73,27 @@ function toggleModel(id) {
 }
 window.toggleModel = toggleModel;
 
-// ── 快捷导航 ──────────────────────────────────────────────
+// ── 导航（按分类显示全部）────────────────────────────────
 function renderShortcuts(sections) {
-  const grid = document.getElementById('shortcutGrid');
-  if (!grid) return;
-  const items = sections.flatMap(s => s.items).slice(0, 20);
-  grid.innerHTML = items.map(item => {
-    const url  = getCardUrl(item);
-    const icon = item.icon
-      ? `<img src="${item.icon}" onerror="this.parentElement.textContent='${(item.title||'?').charAt(0).toUpperCase()}';this.onerror=null;">`
-      : `<img src="${faviconSrc(url)}" onerror="this.parentElement.textContent='${(item.title||'?').charAt(0).toUpperCase()}';this.onerror=null;">`;
+  const container = document.getElementById('shortcutGrid');
+  if (!container) return;
+  container.innerHTML = sections.map(({ section, items }) => {
+    const cards = items.map(item => {
+      const url  = getCardUrl(item);
+      const icon = item.icon
+        ? `<img src="${item.icon}" onerror="this.parentElement.textContent='${(item.title||'?').charAt(0).toUpperCase()}';this.onerror=null;">`
+        : `<img src="${faviconSrc(url)}" onerror="this.parentElement.textContent='${(item.title||'?').charAt(0).toUpperCase()}';this.onerror=null;">`;
+      return `
+        <a href="${url}" target="_blank" class="shortcut-card" rel="noopener noreferrer">
+          <div class="shortcut-avatar">${icon}</div>
+          <span class="shortcut-name">${item.title||''}</span>
+        </a>`;
+    }).join('');
     return `
-      <a href="${url}" target="_blank" class="shortcut-card" rel="noopener noreferrer">
-        <div class="shortcut-avatar">${icon}</div>
-        <span class="shortcut-name">${item.title||''}</span>
-      </a>`;
+      <div class="shortcut-category">
+        <div class="shortcut-category-title">${section}</div>
+        <div class="shortcut-grid">${cards}</div>
+      </div>`;
   }).join('');
 }
 
@@ -284,7 +255,7 @@ function appendBubble(modelId, text, role, id) {
 
 function buildLoadingCard() {
   return `<div class="ai-card ai-card-loading">
-    <div class="ai-card-meta"><span style="color:#475569;font-size:.7rem;">⏳ 正在检索分析...</span></div>
+    <div class="ai-card-meta"><span style="color:#334155;font-size:.7rem;">⏳ 正在检索分析...</span></div>
     <div class="pulse w3"></div><div class="pulse w2"></div>
   </div>`;
 }
@@ -301,7 +272,7 @@ function buildResultCard(data, index) {
       <span>④ 直达通道</span>
       ${data.link && data.link!=='#'
         ? `<a href="${data.link}" target="_blank" rel="noopener noreferrer">访问网站 ↗</a>`
-        : `<span style="color:#334155;font-size:.72rem;">无法访问</span>`}
+        : `<span style="color:#1e293b;font-size:.72rem;">无法访问</span>`}
     </div>
   </div>`;
 }
@@ -309,7 +280,7 @@ function buildResultCard(data, index) {
 function buildErrorCard(msg, tag) {
   return `<div class="ai-card ai-card-error">
     <div><span class="ai-card-error-tag">${tag}</span></div>
-    <p style="font-size:.82rem;color:#94a3b8;margin:.5rem 0 0;">${msg}</p>
+    <p style="font-size:.82rem;color:#64748b;margin:.5rem 0 0;">${msg}</p>
   </div>`;
 }
 
@@ -317,7 +288,6 @@ function buildErrorCard(msg, tag) {
 document.addEventListener('DOMContentLoaded', async () => {
   localStorage.setItem('navMode', 'ai');
   document.getElementById('site-title')?.addEventListener('click', switchMode);
-  loadHeaderSubtitle();
   renderModels();
   try {
     const res  = await fetch(LINKS_FILE);

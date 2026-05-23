@@ -6,7 +6,7 @@
 </head>
 <body>
 <script>
-const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim'];
+const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim', 'ai'];
 const DEFAULT_MODE = 'normal';
 const params = new URLSearchParams(location.search);
 const urlMode = params.get('mode');
@@ -26,6 +26,8 @@ if (mode === 'webstack') {
   location.replace('5IUX/index.html');
 } else if (mode === 'kim') {
   location.replace('kim/index.html');
+} else if (mode === 'ai') {
+  location.replace('ai/index.html');
 }
 </script>
 </body>

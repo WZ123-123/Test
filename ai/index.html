@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>王五导航 · AI检索</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<video id="bgLayer" autoplay muted playsinline></video>
+<div id="bgOverlay"></div>
+<div class="container">
+  <div class="header-area">
+    <div>
+      <h1 id="site-title" title="点击切换模式" style="cursor:pointer;">AI 检索</h1>
+      <p class="header-subtitle" id="daily-quote" style="opacity:0;transition:opacity 0.4s ease;"></p>
+    </div>
+  </div>
+
+  <!-- AI 搜索区 -->
+  <div class="ai-search-wrapper">
+    <div class="ai-search-box">
+      <span class="ai-search-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+      <input type="text" id="aiSearchInput" autocomplete="off"
+             placeholder="例如：想要一个免费的、能一键生成3D动漫头像的网站..."/>
+      <button onclick="handleSearch()">AI 检索</button>
+    </div>
+    <!-- 模型选择 -->
+    <div class="ai-model-bar">
+      <span class="ai-model-label">参与检索的模型</span>
+      <div id="modelContainer"></div>
+    </div>
+  </div>
+
+  <!-- 结果区 -->
+  <main id="aiResultsSection" class="ai-results hidden"></main>
+
+  <!-- 快捷导航（复用 links.json） -->
+  <section class="shortcut-section">
+    <div class="shortcut-header">
+      <h2><i class="fa-solid fa-star"></i> 常用导航</h2>
+    </div>
+    <div id="shortcutGrid" class="shortcut-grid"></div>
+  </section>
+</div>
+
+<script src="main.js"></script>
+<script>
+  /* 水晶光标（复用 normal） */
+  const cursor = document.createElement('div');
+  cursor.style.cssText = `
+    position:fixed;width:28px;height:28px;border-radius:50%;
+    pointer-events:none;z-index:9999;transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 45%),
+               radial-gradient(circle at 70% 75%,rgba(255,255,255,.15) 0%,transparent 40%);
+    border:1.5px solid rgba(255,255,255,.6);
+    box-shadow:0 0 8px rgba(255,255,255,.2),inset 0 0 6px rgba(255,255,255,.08);
+    backdrop-filter:blur(1px);transition:transform .15s ease,box-shadow .15s ease;
+  `;
+  document.body.appendChild(cursor);
+  let mouseX = innerWidth/2, mouseY = innerHeight/2, glowX = mouseX, glowY = mouseY;
+  document.addEventListener('mousemove', e => { mouseX=e.clientX; mouseY=e.clientY; });
+  if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) cursor.style.display='none';
+  (function animateCursor() {
+    glowX += (mouseX-glowX)*.03; glowY += (mouseY-glowY)*.03;
+    cursor.style.left = glowX+'px'; cursor.style.top = glowY+'px';
+    requestAnimationFrame(animateCursor);
+  })();
+  let _lastClick=0;
+  document.addEventListener('mousedown', () => {
+    const now=Date.now();
+    if (now-_lastClick<350) window.scrollTo({top:0,behavior:'smooth'});
+    _lastClick=now;
+  });
+</script>
+</body>
+</html>

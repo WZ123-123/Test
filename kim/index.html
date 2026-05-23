@@ -161,8 +161,16 @@ const DEFAULT_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53
 // ═══════════════════════════════════════════
 // 模式切换
 // ═══════════════════════════════════════════
-const MODES = ['normal','webstack','easy','nav','5iux','kim'];
-const MODE_PATHS = {normal:'../normal/index.html',webstack:'../webstack/index.html',easy:'../easy/index.html',nav:'../nav/index.html','5iux':'../5IUX/index.html',kim:'../kim/index.html'};
+const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim', 'ai'];
+const MODE_PATHS = {
+  normal:   '../normal/index.html',
+  webstack: '../webstack/index.html',
+  easy:     '../easy/index.html',
+  nav:      '../nav/index.html',
+  '5iux':   '../5IUX/index.html',
+  kim:      '../kim/index.html',
+  ai:       '../ai/index.html',
+};
 function switchMode(){const next=MODES[(MODES.indexOf('kim')+1)%MODES.length];localStorage.setItem('navMode',next);location.href=MODE_PATHS[next];}
 document.getElementById('site-title').addEventListener('click',switchMode);
 

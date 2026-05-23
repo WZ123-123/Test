@@ -2,9 +2,7 @@
    王五导航 · AI检索 · main.js
    =========================== */
 
-// ── 公共常量 ──────────────────────────────────────────────
 const WORKER_URL    = 'https://ico.xmynscnq.dpdns.org';
-const BG_WORKER_URL = 'https://xin88.xmynscnq.dpdns.org';
 const AI_WORKER_URL = 'https://www.scnq.us.ci';
 const LINKS_FILE    = '../links.json';
 const DEFAULT_ICON  = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0yIDEyaDIwIj48L3BhdGg+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+';
@@ -24,27 +22,6 @@ function switchMode() {
   const next = MODES[(MODES.indexOf('ai') + 1) % MODES.length];
   localStorage.setItem('navMode', next);
   window.location.href = MODE_PATHS[next];
-}
-
-// ── 背景视频 ──────────────────────────────────────────────
-const PC_JSON  = '../wallpapers/pc.js';
-const PH_JSON  = '../wallpapers/ph.js';
-const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
-async function changeBackground() {
-  const video = document.getElementById('bgLayer');
-  if (!video) return;
-  const list = await fetch(isMobile ? PH_JSON : PC_JSON).then(r => r.json()).catch(() => null);
-  if (!list?.length) return;
-  const src = `${BG_WORKER_URL}/video/${list[Math.floor(Math.random() * list.length)].trim()}`;
-  video.dataset.currentSrc = src;
-  video.src = src; video.load(); video.play().catch(() => {});
-}
-function reloadBackground() {
-  const video = document.getElementById('bgLayer');
-  const src   = video?.dataset.currentSrc;
-  if (!src) { changeBackground(); return; }
-  video.src = src; video.load(); video.play().catch(() => {});
 }
 
 // ── 天气 / 格言 ───────────────────────────────────────────
@@ -339,27 +316,9 @@ function buildErrorCard(msg, tag) {
 // ── 入口 ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   localStorage.setItem('navMode', 'ai');
-
   document.getElementById('site-title')?.addEventListener('click', switchMode);
-
-  changeBackground();
   loadHeaderSubtitle();
-
-  const video = document.getElementById('bgLayer');
-  let _bgErrorCount=0, _bgPlayedOnce=false;
-  if (video) {
-    video.addEventListener('timeupdate', () => { if(video.duration && video.currentTime>=video.duration-.2){video.currentTime=0;video.play().catch(()=>{});} });
-    video.addEventListener('ended',   () => { video.currentTime=0; video.play().catch(()=>{}); });
-    video.addEventListener('error',   () => { _bgErrorCount++; if(_bgErrorCount<=2) setTimeout(reloadBackground,1000*_bgErrorCount); });
-    video.addEventListener('playing', () => { _bgErrorCount=0; _bgPlayedOnce=true; });
-    document.addEventListener('visibilitychange', () => {
-      if(document.visibilityState==='hidden'){video.pause();return;}
-      setTimeout(()=>{ if(video.ended||video.error||video.readyState<3) reloadBackground(); else video.play().catch(()=>{}); },800);
-    });
-  }
-
   renderModels();
-
   try {
     const res  = await fetch(LINKS_FILE);
     const data = await res.json();

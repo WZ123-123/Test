@@ -134,4 +134,102 @@ body {
 .ai-card-label { font-size: 0.68rem; color: #475569; display: block; margin-bottom: 0.15rem; }
 .ai-card-name { font-size: 1rem; font-weight: 700; color: #e2e8f0; }
 .ai-card-desc { font-size: 0.82rem; color: #94a3b8; line-height: 1.5; margin: 0; }
-.ai-card-fee { font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(6,78,59,.25); color: #34d399; font-weigh
+.ai-card-fee { font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(6,78,59,.25); color: #34d399; font-weight: 600; }
+.ai-card-footer { border-top: 1px solid rgba(51,65,85,.5); padding-top: 0.6rem; display: flex; align-items: center; justify-content: space-between; }
+.ai-card-footer > span { font-size: 0.68rem; color: #334155; }
+.ai-card-footer a { font-size: 0.75rem; color: #818cf8; font-weight: 600; text-decoration: none; }
+.ai-card-footer a:hover { color: #a5b4fc; }
+.ai-card-error { border-top-color: rgba(127,29,29,.6); }
+.ai-card-error .ai-card-error-tag { font-size: 0.65rem; color: #f87171; background: rgba(127,29,29,.25); border: 1px solid rgba(127,29,29,.4); padding: 0.1rem 0.5rem; border-radius: 4px; }
+
+/* ── 对话按钮 ── */
+.ai-dialog-btn {
+  display: none; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 1rem; border-radius: 0.75rem;
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  border: 1px solid; background: none; transition: all .15s;
+}
+.ai-dialog-btn.show { display: inline-flex; }
+.ai-dialog-btn.clarify { border-color: #f43f5e; color: #fda4af; }
+.ai-dialog-btn.clarify:hover { background: rgba(244,63,94,.1); }
+.ai-dialog-btn.explore { border-color: #10b981; color: #6ee7b7; }
+.ai-dialog-btn.explore:hover { background: rgba(16,185,129,.1); }
+
+/* ── 对话面板 ── */
+.ai-dialog-panel {
+  max-height: 0; overflow: hidden;
+  transition: max-height .4s ease;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 1rem;
+}
+.ai-dialog-panel.open { max-height: 600px; }
+.ai-chat-history { padding: 1rem; max-height: 16rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; }
+.ai-chat-input-row { padding: 0.75rem; border-top: 1px solid rgba(51,65,85,.5); display: flex; gap: 0.5rem; }
+.ai-chat-input-row input {
+  flex: 1; background: rgba(15,17,23,.8); border: 1px solid #1e293b;
+  border-radius: 0.75rem; padding: 0.5rem 0.75rem;
+  color: #f1f5f9; font-size: 0.85rem; outline: none;
+}
+.ai-chat-input-row input:focus { border-color: #6366f1; }
+.ai-chat-input-row button {
+  background: #6366f1; border: none; color: #fff;
+  padding: 0.5rem 1rem; border-radius: 0.75rem;
+  font-size: 0.85rem; font-weight: 600; cursor: pointer;
+}
+.chat-bubble { display: flex; }
+.chat-bubble.user { justify-content: flex-end; }
+.chat-bubble.ai   { justify-content: flex-start; }
+.bubble-inner { padding: 0.5rem 0.75rem; font-size: 0.82rem; max-width: 75%; line-height: 1.5; }
+.bubble-inner.ai-style {
+  background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.2);
+  border-radius: 0 0.75rem 0.75rem 0.75rem;
+}
+.bubble-inner.user-style {
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 0.75rem 0 0.75rem 0.75rem;
+}
+.bubble-tag { font-size: 0.65rem; font-weight: 700; color: #818cf8; display: block; margin-bottom: 0.2rem; }
+
+/* ── 导航分类 ── */
+.shortcut-section { margin-top: 1rem; }
+.shortcut-category { margin-bottom: 2rem; }
+.shortcut-category-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(51,65,85,.6);
+}
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 0.75rem;
+}
+.shortcut-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(51,65,85,.6);
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.4rem;
+  display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+  text-decoration: none; transition: background .15s, border-color .15s;
+}
+.shortcut-card:hover { background: rgba(99,102,241,.08); border-color: rgba(99,102,241,.3); }
+.shortcut-avatar {
+  width: 2.2rem; height: 2.2rem; border-radius: 0.5rem;
+  background: rgba(30,32,48,.8);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1rem; color: #818cf8;
+  overflow: hidden;
+}
+.shortcut-avatar img { width: 100%; height: 100%; object-fit: contain; border-radius: 0.5rem; }
+.shortcut-name { font-size: 0.68rem; color: #94a3b8; text-align: center; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── loading pulse ── */
+.ai-card-loading .pulse { height: 0.5rem; background: rgba(51,65,85,.6); border-radius: 4px; margin-bottom: 0.5rem; animation: pulse 1.5s ease infinite; }
+.ai-card-loading .pulse.w3 { width: 75%; }
+.ai-card-loading .pulse.w2 { width: 50%; }
+@keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:.8} }

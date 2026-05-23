@@ -10,10 +10,7 @@
 <body>
 <div class="container">
   <div class="header-area">
-    <div>
-      <h1 id="site-title" title="点击切换模式" style="cursor:pointer;">AI 检索</h1>
-      <p class="header-subtitle" id="daily-quote" style="opacity:0;transition:opacity 0.4s ease;"></p>
-    </div>
+    <h1 id="site-title" title="点击切换模式">AI 检索</h1>
   </div>
   <div class="ai-search-wrapper">
     <div class="ai-search-box">
@@ -29,39 +26,9 @@
   </div>
   <main id="aiResultsSection" class="ai-results hidden"></main>
   <section class="shortcut-section">
-    <div class="shortcut-header">
-      <h2>⭐ 常用导航</h2>
-    </div>
-    <div id="shortcutGrid" class="shortcut-grid"></div>
+    <div id="shortcutGrid"></div>
   </section>
 </div>
 <script src="main.js"></script>
-<script>
-  const cursor = document.createElement('div');
-  cursor.style.cssText = `
-    position:fixed;width:28px;height:28px;border-radius:50%;
-    pointer-events:none;z-index:9999;transform:translate(-50%,-50%);
-    background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 45%),
-               radial-gradient(circle at 70% 75%,rgba(255,255,255,.15) 0%,transparent 40%);
-    border:1.5px solid rgba(255,255,255,.6);
-    box-shadow:0 0 8px rgba(255,255,255,.2),inset 0 0 6px rgba(255,255,255,.08);
-    backdrop-filter:blur(1px);transition:transform .15s ease,box-shadow .15s ease;
-  `;
-  document.body.appendChild(cursor);
-  let mouseX = innerWidth/2, mouseY = innerHeight/2, glowX = mouseX, glowY = mouseY;
-  document.addEventListener('mousemove', e => { mouseX=e.clientX; mouseY=e.clientY; });
-  if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) cursor.style.display='none';
-  (function animateCursor() {
-    glowX += (mouseX-glowX)*.03; glowY += (mouseY-glowY)*.03;
-    cursor.style.left = glowX+'px'; cursor.style.top = glowY+'px';
-    requestAnimationFrame(animateCursor);
-  })();
-  let _lastClick=0;
-  document.addEventListener('mousedown', () => {
-    const now=Date.now();
-    if (now-_lastClick<350) window.scrollTo({top:0,behavior:'smooth'});
-    _lastClick=now;
-  });
-</script>
 </body>
 </html>

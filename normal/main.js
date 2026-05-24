@@ -296,7 +296,9 @@ function getDomain(url) {
   try { return new URL(url).hostname; } catch { return null; }
 }
 function faviconSrc(url)    { return buildFaviconUrl(getDomain(url)); }
-function engineFavicon(e)   { return buildFaviconUrl(e.domain); }
+function engineFavicon(e) {
+  return e.icon ? e.icon : buildFaviconUrl(e.domain);
+}
 
 function renderSearchTabs() {
   const tabsEl = document.getElementById('searchTabs');

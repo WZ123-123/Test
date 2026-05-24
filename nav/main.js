@@ -310,7 +310,7 @@ function renderCards(sections) {
       if (item.intranet) { a.dataset.url = item.url; a.dataset.intranet = item.intranet; }
       const img = document.createElement('img');
       img.className = 'favicon'; img.loading = 'lazy';
-      img.src = faviconSrc(item.url);
+      img.src = item.icon ? item.icon : faviconSrc(item.url);
       img.onerror = function () {
         const domain = getDomain(item.url);
         if (domain && !this.dataset.fallbackTried) {

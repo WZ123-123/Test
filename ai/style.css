@@ -318,3 +318,19 @@ body {
   font-size: max(16px, 0.85rem);
 }
 }
+.net-mode-btn {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.9rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(100,116,139,.4);
+  background: rgba(30,32,48,.8);
+  color: #64748b;
+  cursor: pointer;
+  transition: all .2s;
+}
+.net-mode-btn.active {
+  border-color: #10b981;
+  color: #6ee7b7;
+  background: rgba(16,185,129,.08);
+}

@@ -33,6 +33,26 @@ function faviconSrc(url) { return buildFaviconUrl(getDomain(url)); }
 let isIntranet = localStorage.getItem('netMode') === 'intranet';
 function getCardUrl(item) { return (isIntranet && item.intranet) ? item.intranet : item.url; }
 
+function toggleNetMode() {
+  isIntranet = !isIntranet;
+  localStorage.setItem('netMode', isIntranet ? 'intranet' : 'internet');
+  updateNetBtn();
+  fetch(LINKS_FILE).then(r => r.json()).then(data => renderShortcuts(data)).catch(() => {});
+}
+
+function updateNetBtn() {
+  const btn = document.getElementById('netModeBtn');
+  if (!btn) return;
+  if (isIntranet) {
+    btn.textContent = '🏠 内网';
+    btn.classList.add('active');
+  } else {
+    btn.textContent = '🌐 外网';
+    btn.classList.remove('active');
+  }
+}
+window.toggleNetMode = toggleNetMode;
+
 // ── AI 模型配置 ───────────────────────────────────────────
 const ALL_MODELS = [
   { id: 'gemini', name: 'Gemini 2.5 Flash',  checked: true },
@@ -288,6 +308,7 @@ function buildErrorCard(msg, tag) {
 document.addEventListener('DOMContentLoaded', async () => {
   localStorage.setItem('navMode', 'ai');
   document.getElementById('site-title')?.addEventListener('click', switchMode);
+  updateNetBtn();
   renderModels();
   try {
     const res  = await fetch(LINKS_FILE);

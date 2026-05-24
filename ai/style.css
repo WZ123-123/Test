@@ -310,4 +310,10 @@ body {
   .ai-chat-history {
     max-height: 12rem;
   }
+  .ai-search-box input {
+  font-size: max(16px, 0.95rem);
+}
+.ai-chat-input-row input {
+  font-size: max(16px, 0.85rem);
+}
 }

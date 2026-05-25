@@ -354,25 +354,9 @@ h1::after{
 @media(max-width:900px){.link-container{grid-template-columns:repeat(3,minmax(0,1fr));}}
 
 @media(max-width:600px){
-  /* 天气保留在左上角，格言隐藏节省空间 */
-  #widget-bl{display:none;}
-  /* 手机端天气组件略微缩小 */
-  #widget-tl{top:0.6rem;left:0.6rem;}
-  #weather-widget{padding:7px 10px;min-width:110px;max-width:160px;}
-  #weather-icon{font-size:1.1rem;}
-  #weather-temp{font-size:1rem;}
-  #weather-desc{font-size:0.62rem;}
-  /* 手机端行内天气隐藏（天气已在左上角显示） */
+  /* 手机端隐藏天气、格言、音乐播放器 */
+  #widget-tl,#widget-bl,#widget-br{display:none;}
   #weather-inline{display:none !important;}
-
-  /* 播放器右下，折叠后紧凑 */
-  #widget-br{bottom:0.6rem;right:0.6rem;align-items:flex-end;}
-  #music-widget{min-width:0;max-width:190px;padding:8px 10px;}
-  #music-cover{width:30px;height:30px;}
-  #music-title{font-size:0.7rem;}
-  #music-artist{display:none;}
-  #music-time{display:none;}
-  #music-vol-row{display:none;}
 
   /* ── Tab：单行横向滚动，大小介于PC和引擎按钮之间 ── */
   .search-tabs{

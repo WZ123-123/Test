@@ -348,6 +348,12 @@ function bindTouchTooltip() {
     card.addEventListener('touchstart', () => {
       clearActive();
       timer = setTimeout(() => {
+        // 长按时把 info-popup 内容改为 desc 描述
+        const popup = card.querySelector('.info-popup');
+        if (popup) {
+          const desc = card.dataset.desc || '';
+          popup.textContent = desc || card.querySelector('.title')?.textContent || '';
+        }
         card.classList.add('touch-active'); activeCard = card;
         setTimeout(clearActive, 2000);
       }, 500);

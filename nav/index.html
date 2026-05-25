@@ -11,9 +11,6 @@
 <div id="bgLayer"></div>
 <div id="bgOverlay"></div>
 
-<!-- 夜间模式切换 -->
-<button id="dark-toggle" title="切换夜间模式">🌙</button>
-
 <!-- 左上：天气 -->
 <div class="widget-corner" id="widget-tl">
   <div class="widget-box" id="weather-widget">
@@ -58,7 +55,6 @@
     <div id="music-vol-row">
       <span id="music-vol-icon">🔈</span>
       <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.7">
-      <!-- 榜单选择 -->
       <select id="music-sort">
         <option value="热歌榜">热歌榜</option>
         <option value="新歌榜">新歌榜</option>
@@ -74,31 +70,35 @@
 
 <div class="container">
   <div class="header-area">
-    <span class="header-icon">🧭</span>
+    <!-- 左图标：☀️ 白天 / 🌙 点击切夜间 -->
+    <span class="header-icon" id="icon-sun" title="切换夜间模式" style="cursor:pointer;">☀️</span>
     <div>
       <h1 id="site-title" title="点击切换模式" style="cursor:pointer;">王五导航</h1>
     </div>
-    <span class="header-icon">✦</span>
+    <!-- 右图标：🌙 夜间 / ⭐ 点击切白天 -->
+    <span class="header-icon" id="icon-moon" title="切换夜间模式" style="cursor:pointer;">🌙</span>
   </div>
+
   <div class="search-wrapper">
     <div class="search-tabs" id="searchTabs"></div>
+
+    <!-- 搜索框：去掉左侧引擎触发按钮 -->
     <div class="search-box">
-      <button class="engine-trigger" id="engineTrigger" aria-label="切换搜索引擎">
-        <img id="search-engine-icon" src="" alt="">
-        <span class="engine-name" id="engineName"></span>
-        <span class="engine-arrow" id="engineArrow">▾</span>
-      </button>
-      <div class="search-divider"></div>
-      <input type="text" id="searchInput" placeholder="搜索网页 / 定位站内网站" autocomplete="off" oninput="filterLinks()" />
+      <input type="text" id="searchInput" placeholder="搜索网页 / 定位站内网站" autocomplete="off" oninput="filterLinks(); handleSugInput(this.value)" />
       <button class="clear-btn" id="clearBtn" aria-label="清空" style="display:none;" onclick="clearSearch()">✕</button>
       <button class="search-submit-btn" onclick="doSearch()" aria-label="搜索">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
       </button>
+      <!-- 联想词下拉 -->
+      <ul id="sug-list"></ul>
     </div>
-    <div class="engine-list" id="enginePanel" style="display:none;"></div>
+
+    <!-- 引擎列表（搜索框下方） -->
+    <div class="engine-list" id="enginePanel"></div>
   </div>
+
   <div id="main-content"></div>
 </div>
 
@@ -108,15 +108,19 @@
 <script>
 /* ===== 夜间模式 ===== */
 (function(){
-  const btn = document.getElementById('dark-toggle');
-  const DARK_KEY = 'nav_dark_mode';
+  const sunEl  = document.getElementById('icon-sun');
+  const moonEl = document.getElementById('icon-moon');
+  const KEY    = 'nav_dark_mode';
+
   function applyDark(on){
     document.body.classList.toggle('dark-mode', on);
-    btn.textContent = on ? '☀️' : '🌙';
-    localStorage.setItem(DARK_KEY, on ? '1' : '0');
+    sunEl.textContent  = on ? '🌤' : '☀️';
+    moonEl.textContent = on ? '⭐' : '🌙';
+    localStorage.setItem(KEY, on ? '1' : '0');
   }
-  btn.addEventListener('click', () => applyDark(!document.body.classList.contains('dark-mode')));
-  applyDark(localStorage.getItem(DARK_KEY) === '1');
+  sunEl.addEventListener('click',  () => applyDark(!document.body.classList.contains('dark-mode')));
+  moonEl.addEventListener('click', () => applyDark(!document.body.classList.contains('dark-mode')));
+  applyDark(localStorage.getItem(KEY) === '1');
 })();
 
 /* ===== 天气 ===== */
@@ -148,73 +152,150 @@
   document.getElementById('quote-widget').addEventListener('click', show);
 })();
 
+/* ===== 百度联想词（原生 JSONP） ===== */
+(function(){
+  const input   = document.getElementById('searchInput');
+  const sugList = document.getElementById('sug-list');
+  let timer = null;
+  let cbIdx = 0;
+
+  function hideSug(){ sugList.innerHTML=''; sugList.style.display='none'; }
+
+  window.handleSugInput = function(val){
+    clearTimeout(timer);
+    if(!val.trim()){ hideSug(); return; }
+    timer = setTimeout(()=> fetchSug(val), 200);
+  };
+
+  function fetchSug(kw){
+    const cbName = '__baiduSug' + (cbIdx++);
+    const script  = document.createElement('script');
+
+    window[cbName] = function(data){
+      delete window[cbName];
+      document.head.removeChild(script);
+      renderSug(data.s || []);
+    };
+
+    script.onerror = function(){
+      delete window[cbName];
+      try{ document.head.removeChild(script); }catch{}
+      hideSug();
+    };
+
+    script.src = `https://suggestion.baidu.com/su?wd=${encodeURIComponent(kw)}&cb=${cbName}`;
+    document.head.appendChild(script);
+  }
+
+  function renderSug(list){
+    sugList.innerHTML = '';
+    const items = list.slice(0, 4); // 只显示4条
+    if(!items.length){ hideSug(); return; }
+    items.forEach(word => {
+      const li = document.createElement('li');
+      li.textContent = word;
+      li.addEventListener('mousedown', e=>{
+        e.preventDefault();
+        input.value = word;
+        hideSug();
+        doSearch();
+      });
+      sugList.appendChild(li);
+    });
+    sugList.style.display = 'block';
+  }
+
+  // 点击外部关闭
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('.search-box')) hideSug();
+  });
+
+  // 键盘 Esc 关闭
+  input.addEventListener('keydown', e=>{
+    if(e.key === 'Escape') hideSug();
+    if(e.key === 'Enter')  hideSug();
+  });
+})();
+
 /* ===== 音乐播放器 ===== */
 (function(){
-  /* ----------------------------------------------------------------
-     自定义歌单（优先播放，填写后走本地列表；留空则走随机接口）
-     格式：{ name, artist, cover, url }
-  ---------------------------------------------------------------- */
+  /* 自定义歌单（优先，留空走随机接口） */
   const CUSTOM_PLAYLIST = [
-    // 示例：
-    // { name: '歌曲名', artist: '歌手', cover: '封面URL', url: '音频URL' },
+    // { name:'歌曲名', artist:'歌手', cover:'封面URL', url:'音频URL' },
   ];
 
-  const UOMG_API = 'https://api.uomg.com/api/rand.music?format=json&sort=';
+  const audio       = document.getElementById('bg-audio');
+  const playBtn     = document.getElementById('music-play');
+  const prevBtn     = document.getElementById('music-prev');
+  const nextBtn     = document.getElementById('music-next');
+  const titleEl     = document.getElementById('music-title');
+  const artistEl    = document.getElementById('music-artist');
+  const coverEl     = document.getElementById('music-cover');
+  const progressBar = document.getElementById('music-progress-bar');
+  const progressWrap= document.getElementById('music-progress-wrap');
+  const timeEl      = document.getElementById('music-time');
+  const volInput    = document.getElementById('music-volume');
+  const volIcon     = document.getElementById('music-vol-icon');
+  const sortSelect  = document.getElementById('music-sort');
+  const listBtn     = document.getElementById('music-list-btn');
+  const listPanel   = document.getElementById('music-list-panel');
 
-  const audio      = document.getElementById('bg-audio');
-  const playBtn    = document.getElementById('music-play');
-  const prevBtn    = document.getElementById('music-prev');
-  const nextBtn    = document.getElementById('music-next');
-  const titleEl    = document.getElementById('music-title');
-  const artistEl   = document.getElementById('music-artist');
-  const coverEl    = document.getElementById('music-cover');
-  const progressBar= document.getElementById('music-progress-bar');
-  const progressWrap=document.getElementById('music-progress-wrap');
-  const timeEl     = document.getElementById('music-time');
-  const volInput   = document.getElementById('music-volume');
-  const volIcon    = document.getElementById('music-vol-icon');
-  const sortSelect = document.getElementById('music-sort');
-  const listBtn    = document.getElementById('music-list-btn');
-  const listPanel  = document.getElementById('music-list-panel');
-
-  // 运行时歌单（自定义 + 随机拉取的历史）
   let playlist = [...CUSTOM_PLAYLIST];
-  let cur = 0;
-  let muted = false;
-  let loading = false;
+  let cur      = 0;
+  let muted    = false;
+  let loading  = false;
   const useCustom = CUSTOM_PLAYLIST.length > 0;
 
   function fmt(s){ const m=Math.floor(s/60),sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec; }
 
-  /* 从 uomg 随机拉一首 */
-  async function fetchRandom(){
-    const sort = sortSelect.value;
-    const res  = await fetch(UOMG_API + encodeURIComponent(sort));
-    const data = await res.json();
-    if(data.code !== 1) throw new Error('接口返回异常');
-    return {
-      name:   data.data.name,
-      artist: '',
-      cover:  data.data.picurl || '',
-      url:    data.data.url
-    };
+  /* uomg 随机接口——用 JSONP 避免跨域 */
+  function fetchRandom(){
+    return new Promise((resolve, reject)=>{
+      const cbName = '__uomgMusic' + Date.now();
+      const script  = document.createElement('script');
+      const sort    = encodeURIComponent(sortSelect.value);
+      const timeout = setTimeout(()=>{
+        delete window[cbName];
+        try{ document.head.removeChild(script); }catch{}
+        reject(new Error('timeout'));
+      }, 8000);
+
+      window[cbName] = function(data){
+        clearTimeout(timeout);
+        delete window[cbName];
+        try{ document.head.removeChild(script); }catch{}
+        if(data && data.code === 1 && data.data){
+          resolve({ name: data.data.name, artist:'', cover: data.data.picurl||'', url: data.data.url });
+        } else {
+          reject(new Error('接口返回异常'));
+        }
+      };
+
+      script.onerror = function(){
+        clearTimeout(timeout);
+        delete window[cbName];
+        try{ document.head.removeChild(script); }catch{}
+        reject(new Error('script error'));
+      };
+
+      script.src = `https://api.uomg.com/api/rand.music?sort=${sort}&format=jsonp&callback=${cbName}`;
+      document.head.appendChild(script);
+    });
   }
 
-  /* 渲染歌单列表面板 */
   function renderList(){
-    listPanel.innerHTML = '';
-    playlist.forEach((t, i)=>{
-      const div = document.createElement('div');
-      div.className = 'music-list-item' + (i===cur?' active':'');
-      div.innerHTML = `<img class="music-list-item-cover" src="${t.cover||''}" onerror="this.style.display='none'" alt=""><span class="music-list-item-name">${t.name||'音轨'+(i+1)}</span>`;
-      div.addEventListener('click', ()=>{ cur=i; playTrack(playlist[i]); renderList(); });
+    listPanel.innerHTML='';
+    playlist.forEach((t,i)=>{
+      const div=document.createElement('div');
+      div.className='music-list-item'+(i===cur?' active':'');
+      div.innerHTML=`<img class="music-list-item-cover" src="${t.cover||''}" onerror="this.style.display='none'" alt=""><span class="music-list-item-name">${t.name||'音轨'+(i+1)}</span>`;
+      div.addEventListener('click',()=>{ cur=i; playTrack(playlist[i]); renderList(); });
       listPanel.appendChild(div);
     });
   }
 
-  /* 播放指定 track 对象 */
   function playTrack(t){
-    audio.src = t.url;
+    audio.src=t.url;
     titleEl.textContent  = t.name   || '未知歌曲';
     artistEl.textContent = t.artist || '';
     if(t.cover){ coverEl.src=t.cover; coverEl.style.display='block'; }
@@ -223,47 +304,35 @@
     audio.play().catch(()=>{});
   }
 
-  /* 加载指定索引（仅自定义模式） */
   function loadIndex(i){
-    cur = (i + playlist.length) % playlist.length;
+    cur=(i+playlist.length)%playlist.length;
     playTrack(playlist[cur]);
     renderList();
   }
 
-  /* 下一曲：自定义走列表，随机走接口 */
   async function nextTrack(){
     if(loading) return;
-    if(useCustom){
-      loadIndex(cur + 1);
-    } else {
-      loading = true;
-      titleEl.textContent  = '加载中…';
-      artistEl.textContent = '';
-      try {
-        const t = await fetchRandom();
-        playlist.push(t);
-        cur = playlist.length - 1;
-        playTrack(t);
-        renderList();
-      } catch(e){
-        titleEl.textContent = '加载失败，重试中…';
-        setTimeout(nextTrack, 2000);
-      } finally { loading = false; }
-    }
+    if(useCustom){ loadIndex(cur+1); return; }
+    loading=true;
+    titleEl.textContent='加载中…'; artistEl.textContent='';
+    try{
+      const t = await fetchRandom();
+      playlist.push(t); cur=playlist.length-1;
+      playTrack(t); renderList();
+    } catch(e){
+      titleEl.textContent='加载失败，重试中…';
+      setTimeout(nextTrack, 2000);
+    } finally{ loading=false; }
   }
 
-  /* 上一曲 */
   function prevTrack(){
-    if(useCustom){
-      loadIndex(cur - 1);
-    } else {
-      if(cur > 0){ cur--; playTrack(playlist[cur]); renderList(); }
-      else { nextTrack(); }
-    }
+    if(useCustom){ loadIndex(cur-1); return; }
+    if(cur>0){ cur--; playTrack(playlist[cur]); renderList(); }
+    else{ nextTrack(); }
   }
 
   function togglePlay(){
-    if(!audio.src){ nextTrack(); return; }
+    if(!audio.src || audio.src===window.location.href){ nextTrack(); return; }
     audio.paused ? audio.play() : audio.pause();
   }
 
@@ -272,37 +341,33 @@
   audio.addEventListener('ended', ()=> nextTrack());
   audio.addEventListener('timeupdate', ()=>{
     if(audio.duration) progressBar.style.width=(audio.currentTime/audio.duration*100)+'%';
-    timeEl.textContent = fmt(audio.currentTime) + (audio.duration?' / '+fmt(audio.duration):'');
+    timeEl.textContent=fmt(audio.currentTime)+(audio.duration?' / '+fmt(audio.duration):'');
   });
 
   progressWrap.addEventListener('click', e=>{
     if(!audio.duration) return;
-    const r = progressWrap.getBoundingClientRect();
-    audio.currentTime = ((e.clientX-r.left)/r.width) * audio.duration;
+    const r=progressWrap.getBoundingClientRect();
+    audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;
   });
 
-  volInput.value = audio.volume = 0.7;
-  volInput.addEventListener('input', ()=>{ audio.volume=parseFloat(volInput.value); muted=audio.volume===0; volIcon.textContent=muted?'🔇':'🔈'; });
-  volIcon.addEventListener('click', ()=>{ muted=!muted; audio.volume=muted?0:parseFloat(volInput.value)||0.7; volIcon.textContent=muted?'🔇':'🔈'; });
+  volInput.value=audio.volume=0.7;
+  volInput.addEventListener('input',()=>{ audio.volume=parseFloat(volInput.value); muted=audio.volume===0; volIcon.textContent=muted?'🔇':'🔈'; });
+  volIcon.addEventListener('click',()=>{ muted=!muted; audio.volume=muted?0:parseFloat(volInput.value)||0.7; volIcon.textContent=muted?'🔇':'🔈'; });
 
   playBtn.addEventListener('click', togglePlay);
   prevBtn.addEventListener('click', prevTrack);
   nextBtn.addEventListener('click', nextTrack);
+  sortSelect.addEventListener('change', ()=>{ if(!useCustom) nextTrack(); });
 
-  listBtn.addEventListener('click', ()=>{
+  listBtn.addEventListener('click',()=>{
     listPanel.classList.toggle('open');
-    listBtn.textContent = listPanel.classList.contains('open') ? '▲ 收起列表' : '▤ 歌单列表';
+    listBtn.textContent=listPanel.classList.contains('open')?'▲ 收起列表':'▤ 歌单列表';
   });
 
-  sortSelect.addEventListener('change', ()=>{
-    if(!useCustom) nextTrack();
-  });
-
-  /* 初始化 */
   if(useCustom){
     titleEl.textContent  = CUSTOM_PLAYLIST[0].name   || '音轨 1';
     artistEl.textContent = CUSTOM_PLAYLIST[0].artist || '';
-    if(CUSTOM_PLAYLIST[0].cover){ coverEl.src=CUSTOM_PLAYLIST[0].cover; }
+    if(CUSTOM_PLAYLIST[0].cover) coverEl.src=CUSTOM_PLAYLIST[0].cover;
     renderList();
   } else {
     titleEl.textContent  = '点击 ▶ 开始播放';

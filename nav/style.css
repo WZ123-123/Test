@@ -366,11 +366,21 @@ h1::after{
   #music-time{display:none;}
   #music-vol-row{display:none;}
 
-  /* 搜索 Tab 缩小单行滚动 */
-  .search-tabs{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;width:100%;scrollbar-width:none;padding-bottom:2px;}
-  .search-tabs::-webkit-scrollbar{display:none;}
-  .search-tab{flex-shrink:0;padding:4px 9px;font-size:0.72rem;border-radius:16px;}
-  .tab-label{font-size:0.72rem;}
+  /* ── 修复①：Search Tab 居中 + 尺寸更合理 ── */
+  .search-tabs {
+    flex-wrap: wrap !important;           /* 允许换行 */
+    overflow-x: unset !important;         /* 取消横向滚动 */
+    justify-content: center !important;   /* 居中 */
+    gap: 6px !important;
+    padding-bottom: 0 !important;
+  }
+  .search-tab {
+    flex-shrink: 0;
+    padding: 7px 14px !important;         /* 比原来 4px 9px 更大 */
+    font-size: 0.82rem !important;        /* 比原来 0.72rem 更大 */
+    border-radius: 20px !important;
+  }
+  .tab-label { font-size: 0.82rem !important; }
 
   /* 引擎按钮缩小 */
   .engine-list{flex-wrap:wrap;justify-content:center;gap:4px;}
@@ -386,7 +396,23 @@ h1::after{
   .card img.favicon{width:36px;height:36px;border-radius:10px;padding:3px;}
   .card-info{align-items:center;}
   .card .title{font-size:0.72rem;text-align:center;}
-  .card .desc{display:none;}  /* 描述隐藏，长按通过 tooltip 显示 */
+  .card .desc{display:none;}
+
+  /* ── 修复②：城市点击热区扩大，兼容移动端 ── */
+  #weather-city {
+    display: inline-block;
+    min-width: 44px;
+    padding: 3px 6px;
+    -webkit-tap-highlight-color: rgba(124,111,247,0.25);
+    cursor: pointer;
+  }
+  /* 修复 iOS input font-size < 16px 导致自动缩放 */
+  #weather-city-input {
+    font-size: 16px !important;
+    width: 80px !important;
+    padding: 3px 6px !important;
+    -webkit-appearance: none;
+  }
 
   .container{padding:0.75rem 0.75rem 4rem;}
   .net-toggle-btn{top:0.5rem;right:0.5rem;font-size:0.72rem;padding:0.25rem 0.6rem;}

@@ -74,11 +74,11 @@
 
 <div class="container">
   <div class="header-area">
-    <span class="header-icon" id="icon-sun" title="切换夜间模式" style="cursor:pointer;">☀️</span>
+    <img class="header-gif" id="icon-left"  title="切换夜间模式" style="cursor:pointer;" alt="">
     <div>
       <h1 id="site-title" title="点击切换模式" style="cursor:pointer;">王五导航</h1>
     </div>
-    <span class="header-icon" id="icon-moon" title="切换夜间模式" style="cursor:pointer;">🌙</span>
+    <img class="header-gif" id="icon-right" title="切换夜间模式" style="cursor:pointer;" alt="">
   </div>
 
   <!-- 标题下方天气行（移动端显示） -->
@@ -107,19 +107,56 @@
 
 <script src="main.js"></script>
 <script>
-/* ===== 夜间模式 ===== */
+/* ===== GIF图标 + 夜间模式 ===== */
 (function(){
-  const sunEl = document.getElementById('icon-sun');
-  const moonEl = document.getElementById('icon-moon');
+  const GIF_DIR = './gif/';
+  const GIFS = [
+    'A girl with a flag+Shadow.gif',
+    'Cute Mascot Jumping Character.gif',
+    'Glowing Fish Loader.gif',
+    'Happy Character Throwing Ball.gif',
+    'Loader cat.gif',
+    'Running Cat.gif',
+    'Spin.gif',
+    'Sushi.gif',
+    'boxer lottie.gif',
+    'loading.gif',
+  ];
+
+  const leftEl  = document.getElementById('icon-left');
+  const rightEl = document.getElementById('icon-right');
   const KEY = 'nav_dark_mode';
-  function applyDark(on){
+
+  // 每次刷新随机选两个不同的gif
+  function pickTwo() {
+    const idx1 = Math.floor(Math.random() * GIFS.length);
+    let idx2;
+    do { idx2 = Math.floor(Math.random() * GIFS.length); } while (idx2 === idx1);
+    return [GIFS[idx1], GIFS[idx2]];
+  }
+
+  // 日间：彩色gif，夜间：gif加深色滤镜变冷色调
+  function applyDark(on) {
     document.body.classList.toggle('dark-mode', on);
-    sunEl.textContent  = on ? '🌤' : '☀️';
-    moonEl.textContent = on ? '⭐' : '🌙';
+    // 夜间模式给gif加蓝紫色调滤镜
+    const filter = on
+      ? 'brightness(0.7) saturate(0.6) hue-rotate(200deg)'
+      : 'none';
+    leftEl.style.filter  = filter;
+    rightEl.style.filter = filter;
     localStorage.setItem(KEY, on ? '1' : '0');
   }
-  sunEl.addEventListener('click',  () => applyDark(!document.body.classList.contains('dark-mode')));
-  moonEl.addEventListener('click', () => applyDark(!document.body.classList.contains('dark-mode')));
+
+  function toggle() { applyDark(!document.body.classList.contains('dark-mode')); }
+  leftEl.addEventListener('click',  toggle);
+  rightEl.addEventListener('click', toggle);
+
+  // 初始化：设置gif
+  const [g1, g2] = pickTwo();
+  leftEl.src  = GIF_DIR + encodeURIComponent(g1);
+  rightEl.src = GIF_DIR + encodeURIComponent(g2);
+
+  // 应用已保存的模式
   applyDark(localStorage.getItem(KEY) === '1');
 })();
 

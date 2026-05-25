@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   injectNetToggleBtn();
   updateNetToggleBtn();
 
-  document.getElementById('engineTrigger').addEventListener('click', toggleEnginePanel);
+  
   document.getElementById('searchInput').addEventListener('keydown', e => {
     if (e.key === 'Enter')  doSearch();
     if (e.key === 'Escape') closeEnginePanel();
@@ -412,4 +412,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('main-content').innerHTML =
       '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:2rem;">链接数据加载失败，请检查 links.json 文件。</p>';
   }
+});
+
+/* nav 模式引擎面板始终显示，覆盖 toggleEnginePanel */
+document.addEventListener('DOMContentLoaded', () => {
+  const panel = document.getElementById('enginePanel');
+  if (panel) { panel.style.display = 'flex'; }
 });

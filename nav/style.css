@@ -369,12 +369,13 @@ h1::after{
   /* 搜索 Tab 缩小单行滚动 */
   .search-tabs{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;width:100%;scrollbar-width:none;padding-bottom:2px;}
   .search-tabs::-webkit-scrollbar{display:none;}
-  .search-tab{flex-shrink:0;padding:5px 10px;font-size:0.78rem;}
+  .search-tab{flex-shrink:0;padding:4px 9px;font-size:0.72rem;border-radius:16px;}
+  .tab-label{font-size:0.72rem;}
 
   /* 引擎按钮缩小 */
-  .engine-list{flex-wrap:wrap;justify-content:center;gap:5px;}
-  .engine-btn{padding:3px 8px;font-size:0.7rem;gap:3px;}
-  .engine-btn img{width:12px;height:12px;}
+  .engine-list{flex-wrap:wrap;justify-content:center;gap:4px;}
+  .engine-btn{padding:3px 7px;font-size:0.68rem;gap:3px;border-radius:12px;}
+  .engine-btn img{width:11px;height:11px;}
 
   /* 卡片：图标+名称，每行3个，去掉描述 */
   .link-container{grid-template-columns:repeat(3,minmax(0,1fr));gap:0.45rem;}

@@ -625,3 +625,70 @@ body.dark-mode .search-tab {
   flex-shrink: 0;
 }
 #music-sort option { background: #1a1535; color: #fff; }
+
+/* ===== 夜间模式 ===== */
+body.dark-mode #bgOverlay { background: rgba(0,0,0,0.55); }
+body.dark-mode .section   { background: rgba(5,3,18,0.72); }
+body.dark-mode .card      { background: rgba(255,255,255,0.04); }
+body.dark-mode .widget-box{ background: rgba(5,3,18,0.8); border-color: rgba(124,111,247,0.3); }
+body.dark-mode .search-box{ background: rgba(5,3,18,0.7); }
+body.dark-mode .search-tab{ background: rgba(5,3,18,0.5); }
+
+/* ===== 天气城市 ===== */
+#weather-right { display:flex; flex-direction:column; line-height:1.2; }
+#weather-city  { font-size:0.68rem; color:rgba(255,255,255,0.45); }
+
+/* ===== 搜索框加长 ===== */
+.search-box { max-width: 860px; }
+
+/* 去掉引擎触发按钮相关，搜索框内无分隔线 */
+.search-divider { display: none; }
+
+/* ===== 联想词下拉 ===== */
+#sug-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  background: rgba(10,8,30,0.95);
+  border: 1px solid rgba(124,111,247,0.35);
+  border-radius: 12px;
+  list-style: none;
+  padding: 6px;
+  z-index: 9999;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+#sug-list li {
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: rgba(255,255,255,0.8);
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#sug-list li:hover { background: var(--primary-dim); color: #fff; }
+
+/* ===== 榜单选择 ===== */
+#music-sort {
+  background: rgba(124,111,247,0.15);
+  border: 1px solid rgba(124,111,247,0.3);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.68rem;
+  font-family: inherit;
+  padding: 2px 4px;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+}
+#music-sort option { background: #1a1535; color: #fff; }
+
+/* ===== 移动端联想词适配 ===== */
+@media (max-width: 600px) {
+  #sug-list li { padding: 8px 12px; font-size: 0.85rem; }
+}

@@ -171,19 +171,21 @@
     await fetchWeather(43.8868, 125.3245, '长春').catch(()=>{ descEl.textContent='获取失败'; });
   }
 
-  /* ── 修复②：城市点击编辑，同时绑 click + touchend，兼容移动端 ── */
+  /* ── 城市点击编辑：用 pointerup 统一处理鼠标和触摸，彻底解决移动端延迟 ── */
   function openCityEdit() {
-    inputEl.value = cityEl.textContent;
+    inputEl.value = cityEl.textContent.trim();
     cityEl.style.display = 'none';
     inputEl.style.display = 'inline-block';
-    // 延迟 focus，兼容 iOS Safari 的虚拟键盘弹出时序
-    setTimeout(() => inputEl.focus(), 50);
+    // 必须延迟 focus，iOS Safari 键盘需要在用户手势回调结束后弹出
+    setTimeout(() => { inputEl.focus(); inputEl.select(); }, 80);
   }
-  cityEl.addEventListener('click', openCityEdit);
-  cityEl.addEventListener('touchend', function(e) {
-    e.preventDefault(); // 阻止 300ms 延迟 & ghost click
+  // pointerup 在触屏和鼠标都能可靠触发，无需区分设备
+  cityEl.addEventListener('pointerup', function(e) {
+    e.preventDefault();
     openCityEdit();
   });
+  // 降级兼容旧设备
+  cityEl.addEventListener('click', openCityEdit);
 
   async function confirmCity(){
     const name = inputEl.value.trim();
@@ -271,7 +273,39 @@
     // { name:'歌曲名', artist:'歌手', cover:'封面URL', url:'音频URL' },
   ];
 
-  const MUSIC_API = 'https://a.aa.cab/wy_rege.api';
+  // 多个随机音乐API，依次尝试
+  const MUSIC_APIS = [
+    {
+      url: 'https://api.uomg.com/api/rand.music?sort=热歌榜&format=json',
+      parse: d => ({
+        name:   d.data?.name   || '未知歌曲',
+        artist: d.data?.artistsname || '',
+        cover:  (d.data?.picurl || '').replace(/^http:\/\//, 'https://'),
+        audio:  (d.data?.url   || '').replace(/^http:\/\//, 'https://'),
+      }),
+      check: d => d.code === 1 && d.data?.url,
+    },
+    {
+      url: 'https://api.uomg.com/api/rand.music?sort=新歌榜&format=json',
+      parse: d => ({
+        name:   d.data?.name   || '未知歌曲',
+        artist: d.data?.artistsname || '',
+        cover:  (d.data?.picurl || '').replace(/^http:\/\//, 'https://'),
+        audio:  (d.data?.url   || '').replace(/^http:\/\//, 'https://'),
+      }),
+      check: d => d.code === 1 && d.data?.url,
+    },
+    {
+      url: 'https://api.uomg.com/api/rand.music?sort=飙升榜&format=json',
+      parse: d => ({
+        name:   d.data?.name   || '未知歌曲',
+        artist: d.data?.artistsname || '',
+        cover:  (d.data?.picurl || '').replace(/^http:\/\//, 'https://'),
+        audio:  (d.data?.url   || '').replace(/^http:\/\//, 'https://'),
+      }),
+      check: d => d.code === 1 && d.data?.url,
+    },
+  ];
 
   const audio        = document.getElementById('bg-audio');
   const playBtn      = document.getElementById('music-play');
@@ -312,13 +346,20 @@
   function fmt(s){ const m=Math.floor(s/60),sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec; }
 
   async function fetchRandom(){
-    const res  = await fetch(MUSIC_API);
-    const data = await res.json();
-    if(!data || data.code !== 0 || !data.data) throw new Error('接口异常');
-    const d = data.data;
-    const musicUrl = (d.url||'').replace(/^http:\/\//, 'https://');
-    const coverUrl = (d.pic||'').replace(/^http:\/\//, 'https://');
-    return { name: d.name||'未知歌曲', artist: d.singer||'', cover: coverUrl, url: musicUrl };
+    // 随机打乱API顺序，负载均衡
+    const apis = [...MUSIC_APIS].sort(() => Math.random() - 0.5);
+    let lastErr;
+    for (const api of apis) {
+      try {
+        const res  = await fetch(api.url, { signal: AbortSignal.timeout(6000) });
+        const data = await res.json();
+        if (!api.check(data)) continue;
+        const t = api.parse(data);
+        if (!t.audio) continue;
+        return { name: t.name, artist: t.artist, cover: t.cover, url: t.audio };
+      } catch(e) { lastErr = e; }
+    }
+    throw lastErr || new Error('所有音乐接口均失败');
   }
 
   function renderList(){

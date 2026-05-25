@@ -81,6 +81,8 @@
     <span class="header-icon" id="icon-moon" title="切换夜间模式" style="cursor:pointer;">🌙</span>
   </div>
 
+  <!-- 标题下方天气行（移动端显示） -->
+  <div id="weather-inline" style="display:none;text-align:center;margin:-0.8rem 0 1rem;font-size:0.8rem;color:rgba(255,255,255,0.7);"></div>
   <div class="search-wrapper">
     <div class="search-tabs" id="searchTabs"></div>
     <div class="search-box">
@@ -195,7 +197,26 @@
   inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter') confirmCity(); if(e.key==='Escape'){ inputEl.style.display='none'; cityEl.style.display='inline'; } });
   inputEl.addEventListener('blur', confirmCity);
 
-  init();
+  function syncInlineWeather(){
+    const el = document.getElementById('weather-inline');
+    if(!el) return;
+    if(window.innerWidth <= 600){
+      el.style.display = 'block';
+      el.textContent = iconEl.textContent + ' ' + tempEl.textContent + '  ' + cityEl.textContent + '  ' + descEl.textContent;
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  // 天气加载完后同步
+  const origFetch = fetchWeather;
+  fetchWeather = async function(...args){
+    await origFetch(...args);
+    syncInlineWeather();
+  };
+
+  window.addEventListener('resize', syncInlineWeather);
+  init().then(syncInlineWeather).catch(()=>{});
 })();
 
 /* ===== 格言 ===== */
@@ -270,6 +291,13 @@
 
   let playlist = [...CUSTOM_PLAYLIST];
   let cur=0, muted=false, loading=false;
+
+  /* 移动端默认折叠 */
+  if(window.innerWidth <= 600){
+    collapsed = true;
+    musicBody.style.display = 'none';
+    collapseBtn.textContent = '▲';
+  }
   const useCustom = CUSTOM_PLAYLIST.length > 0;
 
   /* 折叠/展开（移动端） */

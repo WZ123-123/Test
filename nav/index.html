@@ -11,12 +11,8 @@
 <div id="bgLayer"></div>
 <div id="bgOverlay"></div>
 
-<!-- 左上：时钟 + 天气 -->
+<!-- 左上：天气 -->
 <div class="widget-corner" id="widget-tl">
-  <div class="widget-box" id="clock-widget">
-    <div id="clock-time">00:00:00</div>
-    <div id="clock-date"></div>
-  </div>
   <div class="widget-box" id="weather-widget">
     <div id="weather-main">
       <span id="weather-icon">🌤</span>
@@ -37,21 +33,28 @@
 <!-- 右下：音乐播放器 -->
 <div class="widget-corner" id="widget-br">
   <div class="widget-box" id="music-widget">
-    <div id="music-title">未播放</div>
+    <div id="music-cover-row">
+      <img id="music-cover" src="" alt="封面">
+      <div id="music-meta">
+        <div id="music-title">未播放</div>
+        <div id="music-artist"></div>
+      </div>
+    </div>
     <div id="music-controls">
       <button class="music-btn" id="music-prev" title="上一首">⏮</button>
       <button class="music-btn" id="music-play" title="播放/暂停">▶</button>
       <button class="music-btn" id="music-next" title="下一首">⏭</button>
-      <div id="music-progress-wrap" title="进度">
+      <div id="music-progress-wrap">
         <div id="music-progress-bar"></div>
       </div>
+      <span id="music-time">0:00</span>
     </div>
-    <div id="music-volume-wrap">
-      <span id="music-volume-icon">🔈</span>
+    <div id="music-vol-row">
+      <span id="music-vol-icon">🔈</span>
       <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.7">
     </div>
-    <button id="music-add-btn">＋ 添加音乐链接</button>
-    <input type="text" id="music-url-input" placeholder="粘贴音频URL后回车" style="display:none;">
+    <button id="music-list-btn">▤ 歌单列表</button>
+    <div id="music-list-panel"></div>
   </div>
 </div>
 
@@ -60,7 +63,6 @@
     <span class="header-icon">🧭</span>
     <div>
       <h1 id="site-title" title="点击切换模式" style="cursor:pointer;">王五导航</h1>
-      <p class="header-subtitle">导航 · 搜索 · 直达</p>
     </div>
     <span class="header-icon">✦</span>
   </div>
@@ -68,7 +70,7 @@
     <div class="search-tabs" id="searchTabs"></div>
     <div class="search-box">
       <button class="engine-trigger" id="engineTrigger" aria-label="切换搜索引擎">
-        <img id="search-engine-icon" src="" alt="搜索引擎图标">
+        <img id="search-engine-icon" src="" alt="">
         <span class="engine-name" id="engineName"></span>
         <span class="engine-arrow" id="engineArrow">▾</span>
       </button>
@@ -77,8 +79,7 @@
       <button class="clear-btn" id="clearBtn" aria-label="清空" style="display:none;" onclick="clearSearch()">✕</button>
       <button class="search-submit-btn" onclick="doSearch()" aria-label="搜索">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
       </button>
     </div>
@@ -91,155 +92,123 @@
 
 <script src="main.js"></script>
 <script>
-/* ===== 时钟 ===== */
-(function() {
-  const timeEl = document.getElementById('clock-time');
-  const dateEl = document.getElementById('clock-date');
-  const days = ['周日','周一','周二','周三','周四','周五','周六'];
-  function tick() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2,'0');
-    const m = String(now.getMinutes()).padStart(2,'0');
-    const s = String(now.getSeconds()).padStart(2,'0');
-    timeEl.textContent = `${h}:${m}:${s}`;
-    const mo = now.getMonth()+1, d = now.getDate(), w = days[now.getDay()];
-    dateEl.textContent = `${mo}月${d}日 ${w}`;
-  }
-  tick();
-  setInterval(tick, 1000);
-})();
-
 /* ===== 天气 ===== */
-(function() {
-  const iconEl = document.getElementById('weather-icon');
-  const tempEl = document.getElementById('weather-temp');
-  const descEl = document.getElementById('weather-desc');
-  function getWeatherIcon(c) {
-    if(c===0) return '☀️'; if(c<=2) return '🌤'; if(c===3) return '☁️';
-    if(c<=49) return '🌫'; if(c<=59) return '🌦'; if(c<=69) return '🌧';
-    if(c<=79) return '❄️'; if(c<=84) return '🌧'; if(c<=99) return '⛈'; return '🌈';
-  }
-  function getWeatherText(c) {
-    if(c===0) return '晴'; if(c<=2) return '少云'; if(c===3) return '阴';
-    if(c<=49) return '雾'; if(c<=59) return '毛毛雨'; if(c<=69) return '雨';
-    if(c<=79) return '雪'; if(c<=84) return '阵雨'; if(c<=99) return '雷雨'; return '未知';
-  }
-  const cached = sessionStorage.getItem('wx_cache');
-  if(cached) {
-    try {
-      const {icon,temp,desc,ts} = JSON.parse(cached);
-      if(Date.now()-ts < 5*60*1000) { iconEl.textContent=icon; tempEl.textContent=temp; descEl.textContent=desc; return; }
-    } catch{}
-  }
+(function(){
+  const iconEl=document.getElementById('weather-icon');
+  const tempEl=document.getElementById('weather-temp');
+  const descEl=document.getElementById('weather-desc');
+  function wIcon(c){if(c===0)return'☀️';if(c<=2)return'🌤';if(c===3)return'☁️';if(c<=49)return'🌫';if(c<=59)return'🌦';if(c<=69)return'🌧';if(c<=79)return'❄️';if(c<=84)return'🌧';if(c<=99)return'⛈';return'🌈';}
+  function wText(c){if(c===0)return'晴';if(c<=2)return'少云';if(c===3)return'阴';if(c<=49)return'雾';if(c<=59)return'毛毛雨';if(c<=69)return'雨';if(c<=79)return'雪';if(c<=84)return'阵雨';if(c<=99)return'雷雨';return'未知';}
+  const cached=sessionStorage.getItem('wx2');
+  if(cached){try{const o=JSON.parse(cached);if(Date.now()-o.ts<5*60*1000){iconEl.textContent=o.icon;tempEl.textContent=o.temp;descEl.textContent=o.desc;return;}}catch{}}
   fetch('https://api.open-meteo.com/v1/forecast?latitude=43.8868&longitude=125.3245&current=temperature_2m,weathercode,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FShanghai&forecast_days=1')
-    .then(r=>r.json()).then(data=>{
-      const code = data.current.weathercode;
-      const temp = Math.round(data.current.temperature_2m);
-      const tmax = Math.round(data.daily.temperature_2m_max[0]);
-      const tmin = Math.round(data.daily.temperature_2m_min[0]);
-      const humid = data.current.relative_humidity_2m;
-      const icon = getWeatherIcon(code);
-      const desc = `${getWeatherText(code)}  ${tmin}~${tmax}°C  💧${humid}%`;
-      iconEl.textContent = icon;
-      tempEl.textContent = temp+'°C';
-      descEl.textContent = desc;
-      sessionStorage.setItem('wx_cache', JSON.stringify({icon,temp:temp+'°C',desc,ts:Date.now()}));
-    }).catch(()=>{ descEl.textContent='获取失败'; });
+    .then(r=>r.json()).then(d=>{
+      const code=d.current.weathercode,t=Math.round(d.current.temperature_2m);
+      const tmax=Math.round(d.daily.temperature_2m_max[0]),tmin=Math.round(d.daily.temperature_2m_min[0]);
+      const humid=d.current.relative_humidity_2m;
+      const icon=wIcon(code),desc=`${wText(code)}  ${tmin}~${tmax}°C  💧${humid}%`;
+      iconEl.textContent=icon;tempEl.textContent=t+'°C';descEl.textContent=desc;
+      sessionStorage.setItem('wx2',JSON.stringify({icon,temp:t+'°C',desc,ts:Date.now()}));
+    }).catch(()=>{descEl.textContent='获取失败';});
 })();
 
 /* ===== 格言 ===== */
-(function() {
-  let quotes = [];
-  let idx = -1;
-  const textEl = document.getElementById('quote-text');
-  const fromEl = document.getElementById('quote-from');
-  function showNext() {
-    if(!quotes.length) return;
-    let ni; do { ni=Math.floor(Math.random()*quotes.length); } while(ni===idx&&quotes.length>1);
-    idx=ni;
-    const q=quotes[idx];
-    textEl.textContent = q.text||'';
-    fromEl.textContent = q.from ? '——'+q.from : '';
-  }
-  fetch('../quotes.json').then(r=>r.json()).then(data=>{ quotes=data; showNext(); }).catch(()=>{ textEl.textContent=''; });
-  document.getElementById('quote-widget').addEventListener('click', showNext);
+(function(){
+  let quotes=[],idx=-1;
+  const tEl=document.getElementById('quote-text'),fEl=document.getElementById('quote-from');
+  function show(){if(!quotes.length)return;let ni;do{ni=Math.floor(Math.random()*quotes.length);}while(ni===idx&&quotes.length>1);idx=ni;const q=quotes[idx];tEl.textContent=q.text||'';fEl.textContent=q.from?'——'+q.from:'';}
+  fetch('../quotes.json').then(r=>r.json()).then(d=>{quotes=d;show();}).catch(()=>{tEl.textContent='';});
+  document.getElementById('quote-widget').addEventListener('click',show);
 })();
 
 /* ===== 音乐播放器 ===== */
-(function() {
-  const audio = document.getElementById('bg-audio');
-  const playBtn = document.getElementById('music-play');
-  const prevBtn = document.getElementById('music-prev');
-  const nextBtn = document.getElementById('music-next');
-  const titleEl = document.getElementById('music-title');
-  const progressBar = document.getElementById('music-progress-bar');
-  const progressWrap = document.getElementById('music-progress-wrap');
-  const volumeInput = document.getElementById('music-volume');
-  const addBtn = document.getElementById('music-add-btn');
-  const urlInput = document.getElementById('music-url-input');
+(function(){
+  /* ---- 在此处配置歌单 ---- */
+  const PLAYLIST = [
+    /* 示例：
+    {
+      name: '歌曲名',
+      artist: '艺术家',
+      cover: '封面图片URL（可选）',
+      url: '音频文件URL'
+    },
+    */
+  ];
+  /* ---- 配置结束 ---- */
 
-  let playlist = JSON.parse(localStorage.getItem('nav_playlist')||'[]');
-  let current = 0;
+  const audio=document.getElementById('bg-audio');
+  const playBtn=document.getElementById('music-play');
+  const prevBtn=document.getElementById('music-prev');
+  const nextBtn=document.getElementById('music-next');
+  const titleEl=document.getElementById('music-title');
+  const artistEl=document.getElementById('music-artist');
+  const coverEl=document.getElementById('music-cover');
+  const progressBar=document.getElementById('music-progress-bar');
+  const progressWrap=document.getElementById('music-progress-wrap');
+  const timeEl=document.getElementById('music-time');
+  const volInput=document.getElementById('music-volume');
+  const volIcon=document.getElementById('music-vol-icon');
+  const listBtn=document.getElementById('music-list-btn');
+  const listPanel=document.getElementById('music-list-panel');
 
-  function savePlaylist() { localStorage.setItem('nav_playlist', JSON.stringify(playlist)); }
+  let cur=0, muted=false;
 
-  function loadTrack(i) {
-    if(!playlist.length) { titleEl.textContent='未播放'; return; }
-    current = (i+playlist.length)%playlist.length;
-    const track = playlist[current];
-    audio.src = track.url;
-    titleEl.textContent = track.name||'音轨 '+(current+1);
-    audio.load();
-    audio.play().catch(()=>{});
-    playBtn.textContent='⏸';
+  function fmt(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
+
+  function renderList(){
+    listPanel.innerHTML='';
+    PLAYLIST.forEach((t,i)=>{
+      const div=document.createElement('div');
+      div.className='music-list-item'+(i===cur?' active':'');
+      div.innerHTML=`<img class="music-list-item-cover" src="${t.cover||''}" onerror="this.style.display='none'" alt=""><span class="music-list-item-name">${t.name||'音轨'+(i+1)}</span>`;
+      div.addEventListener('click',()=>{loadTrack(i);});
+      listPanel.appendChild(div);
+    });
   }
 
-  function togglePlay() {
-    if(!playlist.length) return;
-    if(audio.paused) { audio.play(); playBtn.textContent='⏸'; }
-    else { audio.pause(); playBtn.textContent='▶'; }
+  function loadTrack(i){
+    if(!PLAYLIST.length)return;
+    cur=(i+PLAYLIST.length)%PLAYLIST.length;
+    const t=PLAYLIST[cur];
+    audio.src=t.url;
+    titleEl.textContent=t.name||'音轨'+(cur+1);
+    artistEl.textContent=t.artist||'';
+    if(t.cover){coverEl.src=t.cover;coverEl.style.display='block';}
+    else{coverEl.src='';coverEl.style.display='none';}
+    audio.load();audio.play().catch(()=>{});
+    renderList();
   }
 
-  audio.addEventListener('timeupdate', ()=>{
-    if(audio.duration) progressBar.style.width=(audio.currentTime/audio.duration*100)+'%';
-  });
-  audio.addEventListener('ended', ()=>loadTrack(current+1));
-  audio.addEventListener('pause', ()=>playBtn.textContent='▶');
-  audio.addEventListener('play',  ()=>playBtn.textContent='⏸');
+  function togglePlay(){
+    if(!PLAYLIST.length)return;
+    if(audio.paused){audio.play();} else{audio.pause();}
+  }
 
-  progressWrap.addEventListener('click', e=>{
-    if(!audio.duration) return;
-    const r = progressWrap.getBoundingClientRect();
-    audio.currentTime = ((e.clientX-r.left)/r.width)*audio.duration;
-  });
-
-  volumeInput.value = audio.volume = 0.7;
-  volumeInput.addEventListener('input', ()=>{ audio.volume=volumeInput.value; });
-
-  playBtn.addEventListener('click', togglePlay);
-  prevBtn.addEventListener('click', ()=>loadTrack(current-1));
-  nextBtn.addEventListener('click', ()=>loadTrack(current+1));
-
-  addBtn.addEventListener('click', ()=>{
-    urlInput.style.display = urlInput.style.display==='none'?'block':'none';
-    if(urlInput.style.display==='block') setTimeout(()=>urlInput.focus(),50);
+  audio.addEventListener('play',()=>{playBtn.textContent='⏸';coverEl.classList.add('spinning');});
+  audio.addEventListener('pause',()=>{playBtn.textContent='▶';coverEl.classList.remove('spinning');});
+  audio.addEventListener('ended',()=>loadTrack(cur+1));
+  audio.addEventListener('timeupdate',()=>{
+    if(audio.duration){progressBar.style.width=(audio.currentTime/audio.duration*100)+'%';}
+    timeEl.textContent=fmt(audio.currentTime)+(audio.duration?' / '+fmt(audio.duration):'');
   });
 
-  urlInput.addEventListener('keydown', e=>{
-    if(e.key==='Enter') {
-      const url = urlInput.value.trim();
-      if(!url) return;
-      const name = url.split('/').pop().split('?')[0]||'音乐';
-      playlist.push({url,name});
-      savePlaylist();
-      urlInput.value='';
-      urlInput.style.display='none';
-      if(playlist.length===1) loadTrack(0);
-    }
-    if(e.key==='Escape') { urlInput.style.display='none'; }
+  progressWrap.addEventListener('click',e=>{
+    if(!audio.duration)return;
+    const r=progressWrap.getBoundingClientRect();
+    audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;
   });
 
-  if(playlist.length) { titleEl.textContent=playlist[0].name||'音轨 1'; }
+  volInput.value=audio.volume=0.7;
+  volInput.addEventListener('input',()=>{audio.volume=volInput.value;muted=audio.volume===0;volIcon.textContent=muted?'🔇':'🔈';});
+  volIcon.addEventListener('click',()=>{muted=!muted;audio.volume=muted?0:parseFloat(volInput.value)||0.7;volIcon.textContent=muted?'🔇':'🔈';});
+
+  playBtn.addEventListener('click',togglePlay);
+  prevBtn.addEventListener('click',()=>loadTrack(cur-1));
+  nextBtn.addEventListener('click',()=>loadTrack(cur+1));
+  listBtn.addEventListener('click',()=>{listPanel.classList.toggle('open');listBtn.textContent=listPanel.classList.contains('open')?'▲ 收起列表':'▤ 歌单列表';});
+
+  if(PLAYLIST.length){titleEl.textContent=PLAYLIST[0].name||'音轨 1';artistEl.textContent=PLAYLIST[0].artist||'';if(PLAYLIST[0].cover){coverEl.src=PLAYLIST[0].cover;}renderList();}
+  else{titleEl.textContent='暂无歌曲';artistEl.textContent='在 main.js 中配置 PLAYLIST';}
 })();
 </script>
 </body>

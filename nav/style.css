@@ -561,3 +561,67 @@ h1::after {
   .link-container { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }
   .card img.favicon { width: 28px; height: 28px; }
 }
+
+/* ===== 夜间模式按钮 ===== */
+#dark-toggle {
+  position: fixed;
+  top: 1rem; left: 50%; transform: translateX(-50%);
+  z-index: 999;
+  background: rgba(10,8,30,0.55);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  color: #fff; font-size: 1rem;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s;
+  font-family: inherit;
+}
+#dark-toggle:hover { background: rgba(124,111,247,0.35); border-color: var(--primary); }
+
+/* ===== 夜间模式 ===== */
+body.dark-mode #bgOverlay {
+  background: rgba(0,0,0,0.55);
+}
+body.dark-mode .section {
+  background: rgba(5,3,18,0.72);
+}
+body.dark-mode .card {
+  background: rgba(255,255,255,0.04);
+}
+body.dark-mode .widget-box {
+  background: rgba(5,3,18,0.8);
+  border-color: rgba(124,111,247,0.3);
+}
+body.dark-mode .search-box {
+  background: rgba(5,3,18,0.7);
+}
+body.dark-mode .search-tab {
+  background: rgba(5,3,18,0.5);
+}
+
+/* ===== 天气城市 ===== */
+#weather-right {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+#weather-city {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ===== 榜单选择 ===== */
+#music-sort {
+  background: rgba(124,111,247,0.15);
+  border: 1px solid rgba(124,111,247,0.3);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.68rem;
+  font-family: inherit;
+  padding: 2px 4px;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+}
+#music-sort option { background: #1a1535; color: #fff; }

@@ -20,12 +20,6 @@ function switchMode() {
   window.location.href = MODE_PATHS[next];
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  localStorage.setItem('navMode', 'nav');
-  const title = document.getElementById('site-title');
-  if (title) title.addEventListener('click', switchMode);
-});
-
 // ── 图标配置 ────────────────────────────────────────────────
 const FAVICON_PROVIDER = 'duckduckgo';
 const PROXY = '';
@@ -106,7 +100,7 @@ const SEARCH_CATEGORIES = [
       { name: '百度',       url: 'https://www.baidu.com/s?wd=',           domain: 'baidu.com' },
       { name: 'Google',     url: 'https://www.google.com/search?q=',      domain: 'google.com' },
       { name: 'Brave',      url: 'https://search.brave.com/search?q=',    domain: 'search.brave.com' },
-      { name: '搜狗',       url: 'https://www.sogou.com/web?query=',      domain: 'sogou.com' },
+      { name: '搜狗',       url: 'https://www.sogou.com/web?query=',       domain: 'sogou.com' },
       { name: 'Bing',       url: 'https://www.bing.com/search?q=',        domain: 'bing.com' },
       { name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=',            domain: 'duckduckgo.com' },
       { name: '360',        url: 'https://www.so.com/s?q=',               domain: 'so.com' },
@@ -138,7 +132,7 @@ const SEARCH_CATEGORIES = [
     id: 'music', label: '音乐', icon: '🎵',
     engines: [
       { name: 'QQ音乐', url: 'https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=', domain: 'y.qq.com' },
-      { name: '网易云', url: 'https://music.163.com/#/search/m/?s=',                                                    domain: 'music.163.com' },
+      { name: '网易云', url: 'https://music.163.com/#/search/m/?s=',     domain: 'music.163.com' },
     ]
   },
   {
@@ -154,65 +148,44 @@ const SEARCH_CATEGORIES = [
   {
     id: 'job', label: '求职', icon: '💼',
     engines: [
-      { name: '智联招聘', url: 'https://sou.zhaopin.com/?jl=530&kw=',                         domain: 'zhaopin.com' },
-      { name: 'BOSS直聘', url: 'https://www.zhipin.com/web/geek/job?query=',                  domain: 'zhipin.com' },
-      { name: '猎聘',     url: 'https://www.liepin.com/zhaopin/?key=',                        domain: 'liepin.com' },
-      { name: '前程无忧', url: 'https://search.51job.com/list/000000,000000,0000,00,9,99,',   domain: '51job.com' },
-      { name: '拉勾网',   url: 'https://www.lagou.com/wn/jobs?kd=',                           domain: 'lagou.com' },
+      { name: '智联招聘', url: 'https://sou.zhaopin.com/?jl=530&kw=',                        domain: 'zhaopin.com' },
+      { name: 'BOSS直聘', url: 'https://www.zhipin.com/web/geek/job?query=',                 domain: 'zhipin.com' },
+      { name: '猎聘',     url: 'https://www.liepin.com/zhaopin/?key=',                       domain: 'liepin.com' },
+      { name: '前程无忧', url: 'https://search.51job.com/list/000000,000000,0000,00,9,99,',  domain: '51job.com' },
+      { name: '拉勾网',   url: 'https://www.lagou.com/wn/jobs?kd=',                          domain: 'lagou.com' },
     ]
   },
 ];
 
 let currentCategoryId = 'engine';
 let currentEngine     = SEARCH_CATEGORIES[0].engines[0];
-let enginePanelOpen   = false;
 
 function getDomain(url) {
   try { return new URL(url).hostname; } catch { return null; }
 }
 function faviconSrc(url)  { return buildFaviconUrl(getDomain(url)); }
-function engineFavicon(e) {
-  return e.icon ? e.icon : buildFaviconUrl(e.domain);
-}
+function engineFavicon(e) { return e.icon ? e.icon : buildFaviconUrl(e.domain); }
 
+// ── 分类 Tab ─────────────────────────────────────────────────
 function renderSearchTabs() {
   const tabsEl = document.getElementById('searchTabs');
+  if (!tabsEl) return;
   tabsEl.innerHTML = '';
   SEARCH_CATEGORIES.forEach(cat => {
     const btn = document.createElement('button');
     btn.className = 'search-tab' + (cat.id === currentCategoryId ? ' active' : '');
     btn.innerHTML = `<span class="tab-icon">${cat.icon}</span><span class="tab-label">${cat.label}</span>`;
-    btn.onclick = () => { selectCategory(cat.id); if (enginePanelOpen) renderEnginePanel(); };
+    btn.onclick = () => { selectCategory(cat.id); };
     tabsEl.appendChild(btn);
   });
 }
 
-function updateSearchBoxEngine() {
-  const icon   = document.getElementById('search-engine-icon');
-  const nameEl = document.getElementById('engineName');
-  icon.src = engineFavicon(currentEngine);
-  icon.onerror = () => { icon.src = DEFAULT_ICON; icon.onerror = null; };
-  nameEl.textContent = currentEngine.name;
-}
-
-function selectCategory(catId) {
-  currentCategoryId = catId;
-  const cat = SEARCH_CATEGORIES.find(c => c.id === catId);
-  currentEngine = cat.engines[0];
-  renderSearchTabs();
-  updateSearchBoxEngine();
-}
-
-function selectEngine(engine) {
-  currentEngine = engine;
-  updateSearchBoxEngine();
-  renderEnginePanel();
-  document.getElementById('searchInput').focus();
-}
-
+// ── 引擎面板（始终显示在搜索框下方）────────────────────────
 function renderEnginePanel() {
   const panel = document.getElementById('enginePanel');
+  if (!panel) return;
   panel.innerHTML = '';
+  panel.style.display = 'flex';
   const cat = SEARCH_CATEGORIES.find(c => c.id === currentCategoryId);
   if (!cat) return;
   cat.engines.forEach(engine => {
@@ -230,33 +203,34 @@ function renderEnginePanel() {
     };
     const label = document.createElement('span');
     label.textContent = engine.name;
-    btn.appendChild(img); btn.appendChild(label);
+    btn.appendChild(img);
+    btn.appendChild(label);
     btn.onclick = () => selectEngine(engine);
     panel.appendChild(btn);
   });
 }
 
-function toggleEnginePanel() { enginePanelOpen ? closeEnginePanel() : openEnginePanel(); }
-
-function openEnginePanel() {
-  enginePanelOpen = true;
+function selectCategory(catId) {
+  currentCategoryId = catId;
+  const cat = SEARCH_CATEGORIES.find(c => c.id === catId);
+  currentEngine = cat.engines[0];
+  renderSearchTabs();
   renderEnginePanel();
-  document.getElementById('enginePanel').style.display = 'flex';
-  document.getElementById('engineArrow').style.transform = 'rotate(180deg)';
 }
 
-function closeEnginePanel() {
-  enginePanelOpen = false;
-  document.getElementById('enginePanel').style.display = 'none';
-  document.getElementById('engineArrow').style.transform = '';
+function selectEngine(engine) {
+  currentEngine = engine;
+  renderEnginePanel();
+  document.getElementById('searchInput')?.focus();
 }
 
+// ── 搜索 ─────────────────────────────────────────────────────
 function clearSearch() {
   const input    = document.getElementById('searchInput');
   const clearBtn = document.getElementById('clearBtn');
-  input.value    = '';
-  clearBtn.style.display = 'none';
-  input.focus();
+  if (input)    input.value = '';
+  if (clearBtn) clearBtn.style.display = 'none';
+  input?.focus();
   filterLinks();
 }
 window.clearSearch = clearSearch;
@@ -264,18 +238,18 @@ window.clearSearch = clearSearch;
 function syncClearBtn() {
   const input    = document.getElementById('searchInput');
   const clearBtn = document.getElementById('clearBtn');
-  clearBtn.style.display = input.value.length > 0 ? 'flex' : 'none';
+  if (clearBtn) clearBtn.style.display = input?.value.length > 0 ? 'flex' : 'none';
 }
 
 function doSearch() {
-  const kw = document.getElementById('searchInput').value.trim();
+  const kw = document.getElementById('searchInput')?.value.trim();
   if (kw) window.open(currentEngine.url + encodeURIComponent(kw), '_blank');
 }
 window.doSearch = doSearch;
 
 function filterLinks() {
   syncClearBtn();
-  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const query = document.getElementById('searchInput')?.value.toLowerCase().trim() ?? '';
   document.querySelectorAll('.card').forEach(card => {
     if (!query) { card.classList.remove('hidden'); return; }
     const title    = card.querySelector('.title')?.innerText.toLowerCase() ?? '';
@@ -290,14 +264,15 @@ function filterLinks() {
 }
 window.filterLinks = filterLinks;
 
-// ── 工具：从 section 字段提取纯文字（去掉开头 emoji）────────
+// ── 分区标题去 emoji ─────────────────────────────────────────
 function sectionLabel(s) {
   return s.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u{20E3}\uFE0F\u{1F1E0}-\u{1F1FF}]+/gu, '').trim();
 }
 
-// ── 渲染卡片：左大图标 + 右侧上标题下描述 ───────────────────
+// ── 渲染卡片 ─────────────────────────────────────────────────
 function renderCards(sections) {
   const main = document.getElementById('main-content');
+  if (!main) return;
   main.innerHTML = '';
   sections.forEach(({ section, items }) => {
     const sec = document.createElement('div');
@@ -305,7 +280,7 @@ function renderCards(sections) {
 
     const h2 = document.createElement('h2');
     h2.className   = 'section-title';
-    h2.textContent = sectionLabel(section);  // 去掉 emoji，只显示文字
+    h2.textContent = sectionLabel(section);
     sec.appendChild(h2);
 
     const grid = document.createElement('div');
@@ -320,7 +295,6 @@ function renderCards(sections) {
       a.rel          = 'noopener noreferrer';
       if (item.intranet) { a.dataset.url = item.url; a.dataset.intranet = item.intranet; }
 
-      // 左侧大图标
       const img = document.createElement('img');
       img.className = 'favicon';
       img.loading   = 'lazy';
@@ -333,7 +307,6 @@ function renderCards(sections) {
         } else { this.src = DEFAULT_ICON; this.onerror = null; }
       };
 
-      // 右侧信息列：上标题 + 下描述
       const info = document.createElement('div');
       info.className = 'card-info';
 
@@ -348,7 +321,6 @@ function renderCards(sections) {
       info.appendChild(titleEl);
       info.appendChild(descEl);
 
-      // tooltip
       const popup = document.createElement('div');
       popup.className   = 'info-popup';
       popup.textContent = getDomain(getCardUrl(item)) ?? getCardUrl(item);
@@ -390,17 +362,23 @@ function bindTouchTooltip() {
 
 /* ── 入口 ── */
 document.addEventListener('DOMContentLoaded', async () => {
+  localStorage.setItem('navMode', 'nav');
+
+  const title = document.getElementById('site-title');
+  if (title) title.addEventListener('click', switchMode);
+
   changeBackground();
   renderSearchTabs();
-  updateSearchBoxEngine();
+  renderEnginePanel();
   injectNetToggleBtn();
   updateNetToggleBtn();
 
-  
-  document.getElementById('searchInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter')  doSearch();
-    if (e.key === 'Escape') closeEnginePanel();
-  });
+  const input = document.getElementById('searchInput');
+  if (input) {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doSearch();
+    });
+  }
 
   try {
     const res  = await fetch(LINKS_FILE);
@@ -409,13 +387,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderCards(data);
   } catch (err) {
     console.error('加载 links.json 失败：', err);
-    document.getElementById('main-content').innerHTML =
-      '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:2rem;">链接数据加载失败，请检查 links.json 文件。</p>';
+    const el = document.getElementById('main-content');
+    if (el) el.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:2rem;">链接数据加载失败，请检查 links.json 文件。</p>';
   }
-});
-
-/* nav 模式引擎面板始终显示，覆盖 toggleEnginePanel */
-document.addEventListener('DOMContentLoaded', () => {
-  const panel = document.getElementById('enginePanel');
-  if (panel) { panel.style.display = 'flex'; }
 });

@@ -137,15 +137,13 @@
   applyDark(localStorage.getItem(KEY) === '1');
 })();
 
-/* ===== 天气（支持自定义城市） ===== */
+/* ===== 天气（支持自定义城市，搜索选择） ===== */
 (function(){
   const iconEl  = document.getElementById('weather-icon');
   const tempEl  = document.getElementById('weather-temp');
   const descEl  = document.getElementById('weather-desc');
   const cityEl  = document.getElementById('weather-city');
   const inputEl = document.getElementById('weather-city-input');
-  const CITY_KEY = 'nav_weather_city';
-  const COORD_KEY = 'nav_weather_coord';
 
   function wIcon(c){if(c===0)return'☀️';if(c<=2)return'🌤';if(c===3)return'☁️';if(c<=49)return'🌫';if(c<=59)return'🌦';if(c<=69)return'🌧';if(c<=79)return'❄️';if(c<=84)return'🌧';if(c<=99)return'⛈';return'🌈';}
   function wText(c){if(c===0)return'晴';if(c<=2)return'少云';if(c===3)return'阴';if(c<=49)return'雾';if(c<=59)return'毛毛雨';if(c<=69)return'雨';if(c<=79)return'雪';if(c<=84)return'阵雨';if(c<=99)return'雷雨';return'未知';}
@@ -162,59 +160,115 @@
     sessionStorage.setItem('wx_nav', JSON.stringify({icon, temp:t+'°C', desc, city:cityName, ts:Date.now()}));
   }
 
-  async function geocodeCity(name){
-    descEl.textContent = '定位中…';
-    const res  = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=zh&format=json`);
-    const data = await res.json();
-    if(!data.results || !data.results.length) throw new Error('城市未找到');
-    const r = data.results[0];
-    const coord = { lat: r.latitude, lon: r.longitude, name: r.name };
-    localStorage.setItem(CITY_KEY, r.name);
-    localStorage.setItem(COORD_KEY, JSON.stringify(coord));
-    return coord;
-  }
-
   async function init(){
     const cached = sessionStorage.getItem('wx_nav');
     if(cached){ try{ const o=JSON.parse(cached); if(Date.now()-o.ts<5*60*1000){ iconEl.textContent=o.icon; tempEl.textContent=o.temp; descEl.textContent=o.desc; cityEl.textContent=o.city||'长春'; return; } }catch{} }
-    const savedCoord = localStorage.getItem(COORD_KEY);
-    const savedCity  = localStorage.getItem(CITY_KEY) || '长春';
+    const savedCoord = localStorage.getItem('nav_weather_coord');
+    const savedCity  = localStorage.getItem('nav_weather_city') || '长春';
     if(savedCoord){
       try{ const c=JSON.parse(savedCoord); await fetchWeather(c.lat, c.lon, c.name||savedCity); return; }catch{}
     }
     await fetchWeather(43.8868, 125.3245, '长春').catch(()=>{ descEl.textContent='获取失败'; });
   }
 
-  /* ── 城市点击编辑：用 pointerup 统一处理鼠标和触摸，彻底解决移动端延迟 ── */
-  function openCityEdit() {
-    inputEl.value = cityEl.textContent.trim();
-    cityEl.style.display = 'none';
-    inputEl.style.display = 'inline-block';
-    // 必须延迟 focus，iOS Safari 键盘需要在用户手势回调结束后弹出
-    setTimeout(() => { inputEl.focus(); inputEl.select(); }, 80);
-  }
-  // pointerup 在触屏和鼠标都能可靠触发，无需区分设备
-  cityEl.addEventListener('pointerup', function(e) {
-    e.preventDefault();
-    openCityEdit();
-  });
-  // 降级兼容旧设备
-  cityEl.addEventListener('click', openCityEdit);
+  function showCityEditor(){
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:9999;
+      background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);
+      display:flex;align-items:center;justify-content:center;
+    `;
+    overlay.innerHTML = `
+      <div style="background:rgba(10,8,30,0.95);border:1px solid rgba(124,111,247,0.4);
+        border-radius:14px;padding:1.5rem 2rem;min-width:320px;max-width:400px;width:90%;color:#fff;font-family:inherit;">
+        <p style="margin:0 0 1rem;font-size:1rem;font-weight:600;">📍 修改天气城市</p>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="citySearchInput" placeholder="输入城市名搜索…"
+            style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid rgba(124,111,247,0.4);
+            background:rgba(124,111,247,0.1);color:#fff;font-size:0.9rem;box-sizing:border-box;">
+          <button id="citySearchBtn" style="padding:8px 14px;border-radius:8px;border:none;
+            background:#7c6ff7;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;">搜索</button>
+        </div>
+        <div id="cityResults" style="margin-bottom:1rem;max-height:200px;overflow-y:auto;"></div>
+        <div id="citySelected" style="font-size:0.8rem;color:rgba(255,255,255,0.45);margin-bottom:1rem;min-height:1.2em;"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button id="cityCancelBtn" style="padding:6px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);
+            background:transparent;color:#fff;cursor:pointer;font-family:inherit;">取消</button>
+          <button id="citySaveBtn" style="padding:6px 16px;border-radius:8px;border:none;
+            background:#7c6ff7;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;opacity:0.4;" disabled>保存</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
 
-  async function confirmCity(){
-    const name = inputEl.value.trim();
-    inputEl.style.display = 'none';
-    cityEl.style.display  = 'inline';
-    if(!name) return;
-    try{
+    let selectedCity = null;
+    const searchInput = overlay.querySelector('#citySearchInput');
+    const searchBtn   = overlay.querySelector('#citySearchBtn');
+    const resultsEl   = overlay.querySelector('#cityResults');
+    const selectedEl  = overlay.querySelector('#citySelected');
+    const saveBtn     = overlay.querySelector('#citySaveBtn');
+
+    async function doSearch(){
+      const q = searchInput.value.trim();
+      if(!q) return;
+      resultsEl.innerHTML = '<p style="font-size:0.85rem;color:rgba(255,255,255,0.45);margin:0;">搜索中…</p>';
+      try{
+        const res  = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=10&language=zh&format=json`);
+        const data = await res.json();
+        if(!data.results || !data.results.length){
+          resultsEl.innerHTML = '<p style="font-size:0.85rem;color:rgba(255,255,255,0.45);margin:0;">未找到相关城市，请换个关键词</p>';
+          return;
+        }
+        resultsEl.innerHTML = '';
+        data.results.forEach(city => {
+          const label = [city.name, city.admin1, city.country].filter(Boolean).join('，');
+          const btn = document.createElement('button');
+          btn.textContent = label;
+          btn.style.cssText = `
+            display:block;width:100%;text-align:left;padding:8px 10px;margin-bottom:4px;
+            border-radius:8px;border:1px solid rgba(124,111,247,0.2);
+            background:rgba(124,111,247,0.08);color:#fff;cursor:pointer;
+            font-family:inherit;font-size:0.85rem;transition:background 0.15s;
+          `;
+          btn.addEventListener('mouseover', () => btn.style.background = 'rgba(124,111,247,0.3)');
+          btn.addEventListener('mouseout',  () => btn.style.background = selectedCity?.name === city.name ? 'rgba(124,111,247,0.25)' : 'rgba(124,111,247,0.08)');
+          btn.addEventListener('click', () => {
+            selectedCity = { name: city.name, lat: city.latitude, lon: city.longitude };
+            selectedEl.textContent = `已选：${label}（${city.latitude.toFixed(4)}, ${city.longitude.toFixed(4)}）`;
+            saveBtn.disabled = false;
+            saveBtn.style.opacity = '1';
+            resultsEl.querySelectorAll('button').forEach(b => b.style.background = 'rgba(124,111,247,0.08)');
+            btn.style.background = 'rgba(124,111,247,0.25)';
+          });
+          resultsEl.appendChild(btn);
+        });
+      } catch {
+        resultsEl.innerHTML = '<p style="font-size:0.85rem;color:rgba(255,255,255,0.45);margin:0;">搜索失败，请检查网络</p>';
+      }
+    }
+
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('keydown', e => { if(e.key === 'Enter') doSearch(); });
+    overlay.querySelector('#cityCancelBtn').onclick = () => overlay.remove();
+    saveBtn.onclick = () => {
+      if(!selectedCity) return;
+      localStorage.setItem('nav_weather_city',  selectedCity.name);
+      localStorage.setItem('nav_weather_coord', JSON.stringify(selectedCity));
       sessionStorage.removeItem('wx_nav');
-      const coord = await geocodeCity(name);
-      await fetchWeather(coord.lat, coord.lon, coord.name);
-    } catch(e){ descEl.textContent='城市未找到'; cityEl.textContent=localStorage.getItem(CITY_KEY)||'长春'; }
+      overlay.remove();
+      fetchWeather(selectedCity.lat, selectedCity.lon, selectedCity.name)
+        .catch(() => { descEl.textContent = '获取失败'; });
+    };
+    overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
+    setTimeout(() => searchInput.focus(), 80);
   }
 
-  inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter') confirmCity(); if(e.key==='Escape'){ inputEl.style.display='none'; cityEl.style.display='inline'; } });
-  inputEl.addEventListener('blur', confirmCity);
+  /* 点击城市名打开弹窗，不再用内联输入框 */
+  cityEl.addEventListener('pointerup', e => { e.preventDefault(); showCityEditor(); });
+  cityEl.addEventListener('click', showCityEditor);
+
+  /* 隐藏原来的内联输入框，不再用它 */
+  if(inputEl) inputEl.style.display = 'none';
 
   function syncInlineWeather(){
     const el = document.getElementById('weather-inline');
@@ -226,13 +280,6 @@
       el.style.display = 'none';
     }
   }
-
-  const origFetch = fetchWeather;
-  fetchWeather = async function(...args){
-    await origFetch(...args);
-    syncInlineWeather();
-  };
-
   window.addEventListener('resize', syncInlineWeather);
   init().then(syncInlineWeather).catch(()=>{});
 })();

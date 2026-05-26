@@ -603,3 +603,4 @@ body.night-mode #bgOverlay {
   display: block;
   margin: 0 auto;
 }
+#cityResults button:hover { background: rgba(76,175,80,0.15) !important; }

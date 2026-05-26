@@ -82,20 +82,41 @@
   }
   animateCursor();
   // 双击回顶部
-  let _lastClick = 0;
-  document.addEventListener('mousedown', () => {
-    const now = Date.now();
-    if (now - _lastClick < 350) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      cursor.style.transform = 'translate(-50%, -50%) scale(1.8)';
-      cursor.style.boxShadow = '0 0 24px rgba(255,255,255,0.8), inset 0 0 10px rgba(255,255,255,0.3)';
-      setTimeout(() => {
-        cursor.style.transform = 'translate(-50%, -50%) scale(1)';
-        cursor.style.boxShadow = '0 0 8px rgba(255,255,255,0.2), inset 0 0 6px rgba(255,255,255,0.08)';
-      }, 300);
-    }
-    _lastClick = now;
-  });
+let _lastClick = 0;
+// 长按切换夜间模式
+let _pressTimer = null;
+document.addEventListener('mousedown', () => {
+  const now = Date.now();
+  if (now - _lastClick < 350) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    cursor.style.transform = 'translate(-50%, -50%) scale(1.8)';
+    cursor.style.boxShadow = '0 0 24px rgba(255,255,255,0.8), inset 0 0 10px rgba(255,255,255,0.3)';
+    setTimeout(() => {
+      cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+      cursor.style.boxShadow = '0 0 8px rgba(255,255,255,0.2), inset 0 0 6px rgba(255,255,255,0.08)';
+    }, 300);
+  }
+  _lastClick = now;
+  _pressTimer = setTimeout(() => {
+    const on = document.body.classList.toggle('night-mode');
+    localStorage.setItem('night', on ? '1' : '0');
+    cursor.style.transform = 'translate(-50%, -50%) scale(2)';
+    cursor.style.boxShadow = on
+      ? '0 0 24px rgba(50,50,80,0.9), inset 0 0 10px rgba(50,50,80,0.5)'
+      : '0 0 24px rgba(255,220,80,0.9), inset 0 0 10px rgba(255,220,80,0.4)';
+    setTimeout(() => {
+      cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+      cursor.style.boxShadow = '0 0 8px rgba(255,255,255,0.2), inset 0 0 6px rgba(255,255,255,0.08)';
+    }, 400);
+  }, 600);
+});
+document.addEventListener('mouseup', () => {
+  clearTimeout(_pressTimer);
+});
+// 初始化夜间模式
+if (localStorage.getItem('night') === '1') {
+  document.body.classList.add('night-mode');
+}
 </script>
 </body>
 </html>

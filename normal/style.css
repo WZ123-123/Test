@@ -599,3 +599,7 @@ body.night-mode #bgOverlay {
   background: rgba(0, 0, 0, 0.55);
   transition: background 0.4s ease;
 }
+#site-title {
+  display: block;
+  margin: 0 auto;
+}

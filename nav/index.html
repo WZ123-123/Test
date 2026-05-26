@@ -248,38 +248,17 @@
 
 /* ===== 音乐播放器 ===== */
 (function(){
-  // 使用 Pixabay 免版权音乐直链，无跨域问题，稳定可播放
+  const BASE_M = 'https://raw.githubusercontent.com/xmynscnq/profile/main/musics/';
+  const BASE_C = 'https://raw.githubusercontent.com/xmynscnq/profile/main/pics/music-bg/';
   const CUSTOM_PLAYLIST = [
-    {
-      name: 'Inspiring Cinematic',
-      artist: 'Pixabay',
-      cover: '',
-      url: 'https://cdn.pixabay.com/audio/2023/10/30/audio_0625d0c52b.mp3',
-    },
-    {
-      name: 'Lofi Study',
-      artist: 'Pixabay',
-      cover: '',
-      url: 'https://cdn.pixabay.com/audio/2024/02/15/audio_29e37ad994.mp3',
-    },
-    {
-      name: 'Chill Background',
-      artist: 'Pixabay',
-      cover: '',
-      url: 'https://cdn.pixabay.com/audio/2023/06/08/audio_29e37ad994.mp3',
-    },
-    {
-      name: 'Ambient Piano',
-      artist: 'Pixabay',
-      cover: '',
-      url: 'https://cdn.pixabay.com/audio/2022/10/25/audio_946bc0e067.mp3',
-    },
-    {
-      name: 'Corporate Background',
-      artist: 'Pixabay',
-      cover: '',
-      url: 'https://cdn.pixabay.com/audio/2022/08/02/audio_884fe92c21.mp3',
-    },
+    { name:'乌鸦之歌',            artist:'',            cover: BASE_C+'乌鸦之歌.jpg',        url: BASE_M+'乌鸦之歌.mp3' },
+    { name:'兰亭序',              artist:'周杰伦',       cover: BASE_C+'兰亭序.webp',          url: BASE_M+'兰亭序-周杰伦.mp3' },
+    { name:'菊花台',              artist:'周杰伦',       cover: BASE_C+'菊花台.webp',          url: BASE_M+'周杰伦-菊花台.m4a' },
+    { name:'孤夜',                artist:'',            cover: BASE_C+'孤夜.jpg',             url: BASE_M+'孤夜.mp3' },
+    { name:'征尘别',              artist:'',            cover: BASE_C+'征尘别.jpg',           url: BASE_M+'征尘别.mp3' },
+    { name:'把悲伤留给自己',       artist:'陈升',        cover: BASE_C+'把悲伤留给自己.jpg',    url: BASE_M+'把悲伤留给自己-陈升.mp3' },
+    { name:'月になんて',           artist:'OLEDICKFOGGY',cover: BASE_C+'成为月亮.jpg',         url: BASE_M+'月になんて-OLEDICKFOGGY.mp3' },
+    { name:'未唱给苏小姐的歌',     artist:'',            cover: BASE_C+'未唱给苏小姐的歌.jpg', url: BASE_M+'未唱给苏小姐的歌.mp3' },
   ];
 
   const audio        = document.getElementById('bg-audio');
@@ -359,14 +338,26 @@
     audio.play().catch(()=>{});
   }
 
-  function loadIndex(i){
-    cur=(i+playlist.length)%playlist.length;
-    playTrack(playlist[cur]); renderList();
+  function loadIndex(i, autoplay = true){
+    cur = (i + playlist.length) % playlist.length;
+    const t = playlist[cur];
+    if(!autoplay){
+      // 仅更新UI，不播放
+      titleEl.textContent  = t.name   || '未知歌曲';
+      artistEl.textContent = t.artist || '';
+      if(t.cover){ coverEl.src = t.cover; coverEl.style.display = 'block'; }
+      else        { coverEl.src = '';     coverEl.style.display = 'none';  }
+      audio.src = t.url;
+      audio.load();
+      renderList();
+    } else {
+      playTrack(t); renderList();
+    }
   }
 
   async function nextTrack(){
     if(loading) return;
-    if(useCustom){ loadIndex(cur+1); return; }
+    if(useCustom){ loadIndex(cur+1, true); return; }
     loading=true;
     titleEl.textContent='加载中…'; artistEl.textContent='';
     coverEl.style.display='none';
@@ -381,7 +372,7 @@
   }
 
   function prevTrack(){
-    if(useCustom){ loadIndex(cur-1); return; }
+    if(useCustom){ loadIndex(cur-1, true); return; }
     if(cur>0){ cur--; playTrack(playlist[cur]); renderList(); }
     else nextTrack();
   }
@@ -417,10 +408,7 @@
   });
 
   if(useCustom){
-    titleEl.textContent  = CUSTOM_PLAYLIST[0].name || '音轨 1';
-    artistEl.textContent = CUSTOM_PLAYLIST[0].artist || '';
-    if(CUSTOM_PLAYLIST[0].cover) coverEl.src = CUSTOM_PLAYLIST[0].cover;
-    renderList();
+    loadIndex(0, false); // 预加载第一首，显示封面，不自动播放
   }
 })();
 </script>

@@ -230,16 +230,19 @@
             background:rgba(124,111,247,0.08);color:#fff;cursor:pointer;
             font-family:inherit;font-size:0.85rem;transition:background 0.15s;
           `;
-          btn.addEventListener('mouseover', () => btn.style.background = 'rgba(124,111,247,0.3)');
-          btn.addEventListener('mouseout',  () => btn.style.background = selectedCity?.name === city.name ? 'rgba(124,111,247,0.25)' : 'rgba(124,111,247,0.08)');
+          
           btn.addEventListener('click', () => {
-            selectedCity = { name: city.name, lat: city.latitude, lon: city.longitude };
-            selectedEl.textContent = `已选：${label}（${city.latitude.toFixed(4)}, ${city.longitude.toFixed(4)}）`;
-            saveBtn.disabled = false;
-            saveBtn.style.opacity = '1';
-            resultsEl.querySelectorAll('button').forEach(b => b.style.background = 'rgba(124,111,247,0.08)');
-            btn.style.background = 'rgba(124,111,247,0.25)';
-          });
+  selectedCity = { name: city.name, lat: city.latitude, lon: city.longitude };
+  selectedEl.textContent = `已选：${label}（${city.latitude.toFixed(4)}, ${city.longitude.toFixed(4)}）`;
+  saveBtn.disabled = false;
+  saveBtn.style.opacity = '1';
+  resultsEl.querySelectorAll('button').forEach(b => {
+    btn.style.background = 'rgba(124,111,247,0.25)';
+    btn.style.border = '1px solid rgba(124,111,247,0.6)';
+  });
+  btn.style.background = 'rgba(76,175,80,0.25)';
+  btn.style.border = '1px solid rgba(76,175,80,0.6)';
+});
           resultsEl.appendChild(btn);
         });
       } catch {

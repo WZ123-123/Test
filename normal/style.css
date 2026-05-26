@@ -283,21 +283,21 @@ h1::after {
 
 /* ===== 搜索提交按钮 ===== */
 .search-submit-btn {
-  background: var(--primary);
+  background: transparent;
   border: none;
   width: 38px;
   height: 38px;
   border-radius: 50%;
   cursor: pointer;
-  color: #fff;
+  color: #4CAF50;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background 0.2s, transform 0.15s;
+  transition: color 0.2s, transform 0.15s;
   font-size: 1rem;
 }
-.search-submit-btn:active { transform: scale(0.93); background: #388E3C; }
+.search-submit-btn:active { transform: scale(0.93); color: #388E3C; }
 
 /* ===== 引擎内联面板 ===== */
 .engine-list {

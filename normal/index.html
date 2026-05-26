@@ -13,7 +13,7 @@
 <div class="container">
   <div class="header-area">
     <div>
-      <h1 id="site-title" title="点击切换模式" style="cursor:pointer;">王五导航</h1>
+      <img id="site-title" src="logo.png" alt="王五导航" title="点击切换模式" style="cursor:pointer; height:60px; display:block;">
       <p class="header-subtitle" id="daily-quote" style="opacity:0;transition:opacity 0.4s ease;">沉舟侧畔千帆过，病树前头万木春。</p>
     </div>
   </div>
@@ -29,11 +29,11 @@
       <input type="text" id="searchInput" placeholder="搜索网页 / 定位站内网站" autocomplete="off" oninput="filterLinks()" />
       <button class="clear-btn" id="clearBtn" aria-label="清空" style="display:none;" onclick="clearSearch()">✕</button>
       <button class="search-submit-btn" onclick="doSearch()" aria-label="搜索">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-      </button>
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8"/>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+</button>
     </div>
     <div class="engine-list" id="enginePanel" style="display:none;"></div>
   </div>

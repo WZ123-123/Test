@@ -573,39 +573,80 @@ document.addEventListener('DOMContentLoaded', async () => {
   `;
   overlay.innerHTML = `
     <div style="background:rgba(20,20,20,0.95);border:1px solid rgba(255,255,255,0.15);
-      border-radius:14px;padding:1.5rem 2rem;min-width:300px;color:#fff;font-family:inherit;">
+      border-radius:14px;padding:1.5rem 2rem;min-width:320px;max-width:400px;width:90%;color:#fff;font-family:inherit;">
       <p style="margin:0 0 1rem;font-size:1rem;font-weight:600;">📍 修改天气城市</p>
-      <input id="cityNameInput" placeholder="城市名（如：长春）" value="${saved?.name||''}"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);
-        background:rgba(255,255,255,0.08);color:#fff;font-size:0.9rem;margin-bottom:8px;box-sizing:border-box;">
-      <input id="cityLatInput" placeholder="纬度（如：43.8868）" value="${saved?.lat||''}"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);
-        background:rgba(255,255,255,0.08);color:#fff;font-size:0.9rem;margin-bottom:8px;box-sizing:border-box;">
-      <input id="cityLonInput" placeholder="经度（如：125.3245）" value="${saved?.lon||''}"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);
-        background:rgba(255,255,255,0.08);color:#fff;font-size:0.9rem;margin-bottom:1rem;box-sizing:border-box;">
-      <p style="margin:0 0 1rem;font-size:0.75rem;color:rgba(255,255,255,0.45);">
-        经纬度可在 <a href="https://www.latlong.net" target="_blank" style="color:#a8f5ab;">latlong.net</a> 查询
-      </p>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input id="citySearchInput" placeholder="输入城市名搜索…" value="${saved?.name||''}"
+          style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);
+          background:rgba(255,255,255,0.08);color:#fff;font-size:0.9rem;box-sizing:border-box;">
+        <button id="citySearchBtn" style="padding:8px 14px;border-radius:8px;border:none;
+          background:#4CAF50;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;">搜索</button>
+      </div>
+      <div id="cityResults" style="margin-bottom:1rem;max-height:200px;overflow-y:auto;"></div>
+      <div id="citySelected" style="font-size:0.8rem;color:rgba(255,255,255,0.45);margin-bottom:1rem;min-height:1.2em;"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button id="cityCancelBtn" style="padding:6px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);
           background:transparent;color:#fff;cursor:pointer;font-family:inherit;">取消</button>
         <button id="citySaveBtn" style="padding:6px 16px;border-radius:8px;border:none;
-          background:#4CAF50;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">保存</button>
+          background:#4CAF50;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;opacity:0.4;" disabled>保存</button>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
-  overlay.querySelector('#cityCancelBtn').onclick = () => overlay.remove();
-  overlay.querySelector('#citySaveBtn').onclick = () => {
-    const name = overlay.querySelector('#cityNameInput').value.trim();
-    const lat  = parseFloat(overlay.querySelector('#cityLatInput').value);
-    const lon  = parseFloat(overlay.querySelector('#cityLonInput').value);
-    if (!name || isNaN(lat) || isNaN(lon)) {
-      alert('请填写完整的城市名和经纬度');
-      return;
+
+  let selectedCity = null;
+
+  const searchInput = overlay.querySelector('#citySearchInput');
+  const searchBtn   = overlay.querySelector('#citySearchBtn');
+  const resultsEl   = overlay.querySelector('#cityResults');
+  const selectedEl  = overlay.querySelector('#citySelected');
+  const saveBtn     = overlay.querySelector('#citySaveBtn');
+
+  async function doSearch() {
+    const q = searchInput.value.trim();
+    if (!q) return;
+    resultsEl.innerHTML = '<p style="font-size:0.85rem;color:rgba(255,255,255,0.45);margin:0;">搜索中…</p>';
+    try {
+      const res  = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=10&language=zh&format=json`);
+      const data = await res.json();
+      if (!data.results || data.results.length === 0) {
+        resultsEl.innerHTML = '<p style="font-size:0.85rem;color:rgba(255,255,255,0.45);margin:0;">未找到相关城市，请换个关键词</p>';
+        return;
+      }
+      resultsEl.innerHTML = '';
+      data.results.forEach(city => {
+        const label = [city.name, city.admin1, city.country].filter(Boolean).join('，');
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.style.cssText = `
+          display:block;width:100%;text-align:left;padding:8px 10px;margin-bottom:4px;
+          border-radius:8px;border:1px solid rgba(255,255,255,0.1);
+          background:rgba(255,255,255,0.05);color:#fff;cursor:pointer;
+          font-family:inherit;font-size:0.85rem;transition:background 0.15s;
+        `;
+        btn.addEventListener('mouseover', () => btn.style.background = 'rgba(76,175,80,0.25)');
+        btn.addEventListener('mouseout',  () => btn.style.background = selectedCity?.name === city.name ? 'rgba(76,175,80,0.2)' : 'rgba(255,255,255,0.05)');
+        btn.addEventListener('click', () => {
+          selectedCity = { name: city.name, lat: city.latitude, lon: city.longitude };
+          selectedEl.textContent = `已选：${label}（${city.latitude.toFixed(4)}, ${city.longitude.toFixed(4)}）`;
+          saveBtn.disabled = false;
+          saveBtn.style.opacity = '1';
+          resultsEl.querySelectorAll('button').forEach(b => b.style.background = 'rgba(255,255,255,0.05)');
+          btn.style.background = 'rgba(76,175,80,0.2)';
+        });
+        resultsEl.appendChild(btn);
+      });
+    } catch {
+      resultsEl.innerHTML = '<p style="font-size:0.85rem;color:rgba(255,255,255,0.45);margin:0;">搜索失败，请检查网络</p>';
     }
-    localStorage.setItem('weather_city', JSON.stringify({ name, lat, lon }));
+  }
+
+  searchBtn.addEventListener('click', doSearch);
+  searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+  overlay.querySelector('#cityCancelBtn').onclick = () => overlay.remove();
+  saveBtn.onclick = () => {
+    if (!selectedCity) return;
+    localStorage.setItem('weather_city', JSON.stringify(selectedCity));
     sessionStorage.clear();
     overlay.remove();
     const el = document.getElementById('daily-quote');

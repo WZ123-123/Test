@@ -7,7 +7,7 @@ const AI_WORKER_URL = 'https://www.scnq.us.ci';
 const LINKS_FILE    = '../links.json';
 const DEFAULT_ICON  = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0yIDEyaDIwIj48L3BhdGg+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+';
 
-// ── 模式切换 ──────────────────────────────────────────────
+// ── 模式配置 ──────────────────────────────────────────────
 const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim', 'ai'];
 const MODE_PATHS = {
   normal:   '../normal/index.html',
@@ -18,10 +18,175 @@ const MODE_PATHS = {
   kim:      '../kim/index.html',
   ai:       '../ai/index.html',
 };
-function switchMode() {
-  const next = MODES[(MODES.indexOf('ai') + 1) % MODES.length];
-  localStorage.setItem('navMode', next);
-  window.location.href = MODE_PATHS[next];
+const MODE_META = {
+  normal:   { label: 'Normal',   desc: '暗黑风格',  icon: '🌙', color: '#00ff88' },
+  webstack: { label: 'WebStack', desc: '侧栏导航',  icon: '📐', color: '#1677ff' },
+  easy:     { label: 'Easy',     desc: '极简搜索',  icon: '🔲', color: '#aaaaaa' },
+  nav:      { label: 'Nav',      desc: '渐变主题',  icon: '🌊', color: '#a78bfa' },
+  '5iux':   { label: '5IUX',    desc: '亮色简洁',  icon: '✨', color: '#667eea' },
+  kim:      { label: 'Kim',      desc: '极彩背景',  icon: '🎨', color: '#f472b6' },
+  ai:       { label: 'AI',       desc: 'AI 助手',   icon: '🤖', color: '#f59e0b' },
+};
+const CURRENT_MODE = 'ai';
+
+// ── 模式菜单 ──────────────────────────────────────────────
+let _modeMenuOpen = false;
+let _modeMenuEl   = null;
+
+function buildModeMenu() {
+  if (_modeMenuEl) return _modeMenuEl;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    #__mode-menu {
+      position: fixed;
+      z-index: 99999;
+      display: none;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(15, 15, 30, 0.75);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(245,158,11,0.08);
+      max-width: 380px;
+    }
+    #__mode-menu.open { display: flex; }
+    #__mode-menu.layout-below {
+      flex-direction: column;
+      max-width: 210px;
+    }
+    #__mode-menu-title {
+      width: 100%;
+      padding: 0 3px 7px;
+      font-size: 10px; font-weight: 700;
+      color: rgba(245,158,11,0.5);
+      letter-spacing: 0.14em; text-transform: uppercase;
+      border-bottom: 1px solid rgba(245,158,11,0.15);
+      margin-bottom: 2px;
+    }
+    #__mode-menu.layout-below #__mode-menu-title { display: none; }
+    .__mc {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 10px; border-radius: 10px;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: background 0.14s, border-color 0.14s;
+      cursor: pointer;
+    }
+    #__mode-menu:not(.layout-below) .__mc {
+      flex-direction: column; align-items: center;
+      gap: 4px; padding: 10px 8px;
+      min-width: 62px; max-width: 62px;
+    }
+    .__mc:hover {
+      background: rgba(245,158,11,0.12);
+      border-color: rgba(245,158,11,0.25);
+    }
+    .__mc.cur {
+      background: rgba(245,158,11,0.18);
+      border-color: rgba(245,158,11,0.45);
+    }
+    .__mc-icon { font-size: 18px; line-height: 1; }
+    .__mc-body { display: flex; flex-direction: column; gap: 2px; }
+    #__mode-menu:not(.layout-below) .__mc-body { align-items: center; }
+    .__mc-label {
+      font-size: 11.5px; font-weight: 700;
+      color: rgba(255,255,255,0.88); line-height: 1;
+    }
+    .__mc.cur .__mc-label { color: #fcd34d; }
+    .__mc-desc { font-size: 10px; color: rgba(255,255,255,0.38); line-height: 1; }
+    #__mode-menu.layout-below .__mc-check {
+      margin-left: auto; font-size: 11px; color: #f59e0b;
+    }
+    #__mode-menu:not(.layout-below) .__mc-check { display: none; }
+    .__mc-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    #__mode-menu:not(.layout-below) .__mc-dot { display: none; }
+  `;
+  document.head.appendChild(style);
+
+  const menu = document.createElement('div');
+  menu.id = '__mode-menu';
+
+  const titleBar = document.createElement('div');
+  titleBar.id = '__mode-menu-title';
+  titleBar.textContent = '切换模式';
+  menu.appendChild(titleBar);
+
+  MODES.forEach(key => {
+    const m = MODE_META[key];
+    const a = document.createElement('a');
+    a.href      = MODE_PATHS[key];
+    a.className = '__mc' + (key === CURRENT_MODE ? ' cur' : '');
+    a.innerHTML = `
+      <div class="__mc-icon">${m.icon}</div>
+      <div class="__mc-dot" style="background:${m.color}"></div>
+      <div class="__mc-body">
+        <div class="__mc-label">${m.label}</div>
+        <div class="__mc-desc">${m.desc}</div>
+      </div>
+      <div class="__mc-check">${key === CURRENT_MODE ? '✓' : ''}</div>
+    `;
+    menu.appendChild(a);
+  });
+
+  document.body.appendChild(menu);
+  _modeMenuEl = menu;
+  return menu;
+}
+
+function positionModeMenu() {
+  const titleEl = document.getElementById('site-title');
+  const menu    = _modeMenuEl;
+  if (!titleEl || !menu) return;
+
+  const rect   = titleEl.getBoundingClientRect();
+  const mobile = window.innerWidth < 768;
+  const GAP    = 12;
+
+  menu.classList.toggle('layout-below', mobile);
+
+  if (mobile) {
+    const menuW = Math.min(210, window.innerWidth - 24);
+    let left = rect.left + rect.width / 2 - menuW / 2;
+    left = Math.max(12, Math.min(left, window.innerWidth - menuW - 12));
+    menu.style.top      = (rect.bottom + GAP + window.scrollY) + 'px';
+    menu.style.left     = left + 'px';
+    menu.style.right    = 'auto';
+    menu.style.maxWidth = menuW + 'px';
+  } else {
+    menu.style.top      = (rect.top + window.scrollY + rect.height / 2 - 55) + 'px';
+    menu.style.left     = (rect.right + GAP) + 'px';
+    menu.style.right    = 'auto';
+    menu.style.maxWidth = '380px';
+    requestAnimationFrame(() => {
+      const mw = menu.offsetWidth;
+      if (rect.right + GAP + mw > window.innerWidth - 12) {
+        menu.style.left = Math.max(12, rect.left - GAP - mw) + 'px';
+      }
+    });
+  }
+}
+
+function openModeMenu() {
+  buildModeMenu();
+  _modeMenuOpen = true;
+  positionModeMenu();
+  _modeMenuEl.classList.add('open');
+}
+function closeModeMenu() {
+  _modeMenuOpen = false;
+  if (_modeMenuEl) _modeMenuEl.classList.remove('open');
+}
+function toggleModeMenu(e) {
+  e.stopPropagation();
+  _modeMenuOpen ? closeModeMenu() : openModeMenu();
 }
 
 // ── 图标 ──────────────────────────────────────────────────
@@ -39,17 +204,11 @@ function toggleNetMode() {
   updateNetBtn();
   fetch(LINKS_FILE).then(r => r.json()).then(data => renderShortcuts(data)).catch(() => {});
 }
-
 function updateNetBtn() {
   const btn = document.getElementById('netModeBtn');
   if (!btn) return;
-  if (isIntranet) {
-    btn.textContent = '🏠 内网';
-    btn.classList.add('active');
-  } else {
-    btn.textContent = '🌐 外网';
-    btn.classList.remove('active');
-  }
+  btn.textContent = isIntranet ? '🏠 内网' : '🌐 外网';
+  btn.classList.toggle('active', isIntranet);
 }
 window.toggleNetMode = toggleNetMode;
 
@@ -75,7 +234,6 @@ function safeParseJSON(text) {
   }
 }
 
-// ── 渲染模型选择 ──────────────────────────────────────────
 function renderModels() {
   const container = document.getElementById('modelContainer');
   if (!container) return;
@@ -93,7 +251,6 @@ function toggleModel(id) {
 }
 window.toggleModel = toggleModel;
 
-// ── 导航（按分类显示全部）────────────────────────────────
 function renderShortcuts(sections) {
   const container = document.getElementById('shortcutGrid');
   if (!container) return;
@@ -117,7 +274,6 @@ function renderShortcuts(sections) {
   }).join('');
 }
 
-// ── AI 检索主逻辑 ─────────────────────────────────────────
 function handleSearch() {
   const query = document.getElementById('aiSearchInput').value.trim();
   if (!query) return;
@@ -172,13 +328,10 @@ function createModelSection(model, query) {
   return div;
 }
 
-// ── 处理模型响应（推荐 or 解答）─────────────────────────
 function handleModelResponse(data, modelId) {
   const cardsEl = document.getElementById(`cards-${modelId}`);
   const btn     = document.getElementById(`dialog-btn-${modelId}`);
   const btnT    = document.getElementById(`dialog-btn-text-${modelId}`);
-
-  // 解答模式：显示文字气泡，不替换卡片
   if (data.type === 'answer' && data.answer) {
     conversations[modelId].push({ role:'assistant', content: data.answer });
     appendBubble(modelId, data.answer, 'ai');
@@ -187,16 +340,11 @@ function handleModelResponse(data, modelId) {
     btnT.textContent = '🔍 继续探索';
     return;
   }
-
-  // 推荐模式：更新卡片列表
   const siteNames = (data.sites||[]).map(s=>s.siteName).join('、');
   conversations[modelId].push({ role:'assistant', content: data.needsClarification
     ? `我已推荐了以下网站：${siteNames}。但我还需要了解：${data.question}`
     : `我已推荐了以下网站：${siteNames}。` });
-
-  if (cardsEl) {
-    cardsEl.innerHTML = (data.sites||[]).map((item, i) => buildResultCard(item, i + 1)).join('');
-  }
+  if (cardsEl) cardsEl.innerHTML = (data.sites||[]).map((item, i) => buildResultCard(item, i + 1)).join('');
   btn.classList.add('show');
   if (data.needsClarification) {
     btn.className = 'ai-dialog-btn show clarify';
@@ -293,7 +441,6 @@ function buildLoadingCard() {
     <div class="pulse w3"></div><div class="pulse w2"></div>
   </div>`;
 }
-
 function buildResultCard(data, index) {
   const hasLink = data.link && data.link !== '#';
   return `<div class="ai-card">
@@ -311,7 +458,6 @@ function buildResultCard(data, index) {
     </div>
   </div>`;
 }
-
 function buildErrorCard(msg, tag) {
   return `<div class="ai-card ai-card-error">
     <div><span class="ai-card-error-tag">${tag}</span></div>
@@ -322,7 +468,18 @@ function buildErrorCard(msg, tag) {
 // ── 入口 ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   localStorage.setItem('navMode', 'ai');
-  document.getElementById('site-title')?.addEventListener('click', switchMode);
+
+  // 绑定标题点击 → 模式菜单
+  const titleEl = document.getElementById('site-title');
+  if (titleEl) titleEl.addEventListener('click', toggleModeMenu);
+
+  // 点空白关闭
+  document.addEventListener('click', (e) => {
+    if (_modeMenuEl && !_modeMenuEl.contains(e.target)) closeModeMenu();
+  });
+  window.addEventListener('resize', () => { if (_modeMenuOpen) positionModeMenu(); });
+  window.addEventListener('scroll', () => { if (_modeMenuOpen) positionModeMenu(); }, { passive: true });
+
   updateNetBtn();
   renderModels();
   try {

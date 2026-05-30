@@ -14,16 +14,97 @@ html, body{ width:100%; height:100%; overflow:hidden;
 .bg-media{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none; display:block; }
 #background-container::after{ content:""; position:absolute; inset:0; background:rgba(0,0,0,0.35); z-index:1; }
 
-.main-wrapper{ position:relative; z-index:2; width:100%; height:100%;
-  display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px; }
+.main-wrapper{
+  position:relative; z-index:2; width:100%; height:100%;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  padding:20px;
+  /* 整体上移：把默认居中点往上偏 */
+  margin-top:-80px;
+}
 
 .site-title{
   font-size:4rem; font-weight:300; color:#fff; letter-spacing:8px;
   margin-bottom:2.5rem; text-shadow:0 6px 18px rgba(0,0,0,0.5);
   cursor:pointer; transition:opacity 0.2s;
+  position:relative; /* 供菜单定位参考 */
 }
 .site-title:hover{ opacity:0.8; }
 
+/* ── 模式切换菜单 ── */
+#__mode-menu{
+  position:fixed;
+  z-index:99999;
+  display:none;
+  flex-direction:row;
+  flex-wrap:wrap;
+  gap:6px;
+  padding:14px;
+  border-radius:20px;
+  background:rgba(12,12,12,0.55);
+  backdrop-filter:blur(28px) saturate(160%);
+  -webkit-backdrop-filter:blur(28px) saturate(160%);
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow:0 16px 48px rgba(0,0,0,0.55);
+  max-width:400px;
+}
+#__mode-menu.open{ display:flex; }
+#__mode-menu.layout-below{
+  flex-direction:column;
+  max-width:200px;
+}
+/* PC横排时的小标题 */
+#__mode-menu-title{
+  width:100%;
+  padding:0 2px 8px;
+  font-size:10px; font-weight:600;
+  color:rgba(255,255,255,0.28);
+  letter-spacing:0.12em; text-transform:uppercase;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  margin-bottom:2px;
+}
+#__mode-menu.layout-below #__mode-menu-title{ display:none; }
+
+.__mc{
+  display:flex; align-items:center; gap:9px;
+  padding:8px 10px; border-radius:12px;
+  text-decoration:none;
+  border:1px solid transparent;
+  transition:background 0.15s, border-color 0.15s;
+  cursor:pointer;
+}
+/* PC横排：图标在上，文字在下 */
+#__mode-menu:not(.layout-below) .__mc{
+  flex-direction:column; align-items:center;
+  gap:4px; padding:10px 8px;
+  min-width:64px; max-width:64px;
+}
+.__mc:hover{
+  background:rgba(255,255,255,0.1);
+  border-color:rgba(255,255,255,0.18);
+}
+.__mc.cur{
+  background:rgba(255,255,255,0.14);
+  border-color:rgba(255,255,255,0.3);
+}
+.__mc-icon{ font-size:18px; line-height:1; }
+.__mc-body{ display:flex; flex-direction:column; gap:1px; }
+#__mode-menu:not(.layout-below) .__mc-body{ align-items:center; }
+.__mc-label{
+  font-size:11.5px; font-weight:600;
+  color:rgba(255,255,255,0.9); line-height:1;
+}
+.__mc.cur .__mc-label{ color:#fff; }
+.__mc-desc{ font-size:10px; color:rgba(255,255,255,0.38); line-height:1; }
+#__mode-menu.layout-below .__mc-check{
+  margin-left:auto; font-size:11px; color:rgba(255,255,255,0.55);
+}
+#__mode-menu:not(.layout-below) .__mc-check{ display:none; }
+.__mc-dot{
+  width:5px; height:5px; border-radius:50%; flex-shrink:0; margin-top:1px;
+}
+#__mode-menu:not(.layout-below) .__mc-dot{ display:none; }
+
+/* ── 搜索框 ── */
 .search-box-container{
   position:relative; width:100%; max-width:700px;
   display:flex; align-items:center; padding:6px 10px 6px 14px;
@@ -75,6 +156,7 @@ html, body{ width:100%; height:100%; overflow:hidden;
 @keyframes fadeIn{ from{ opacity:0; transform:translateY(-10px); } to{ opacity:1; transform:translateY(0); } }
 
 @media (max-width:768px){
+  .main-wrapper{ margin-top:-50px; }
   .site-title{ font-size:2.8rem; letter-spacing:5px; }
   .search-box-container{ border-radius:24px; }
   .engine-selector{ font-size:.88rem; }
@@ -85,7 +167,7 @@ html, body{ width:100%; height:100%; overflow:hidden;
 <body>
 <div id="background-container"></div>
 <div class="main-wrapper">
-  <h1 class="site-title" id="site-title">王五导航</h1>
+  <h1 class="site-title" id="site-title">SPACE</h1>
   <div class="search-box-container">
     <div class="engine-selector" id="engine-selector">
       <span id="current-engine-icon-slot"></span>
@@ -110,7 +192,7 @@ html, body{ width:100%; height:100%; overflow:hidden;
 </div>
 
 <script>
-// ── 模式切换 ────────────────────────────────────────────────
+// ── 模式配置 ────────────────────────────────────────────────
 const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim', 'ai'];
 const MODE_PATHS = {
   normal:   '../normal/index.html',
@@ -121,17 +203,112 @@ const MODE_PATHS = {
   kim:      '../kim/index.html',
   ai:       '../ai/index.html',
 };
-function switchMode() {
-  const cur  = 'easy';
-  const next = MODES[(MODES.indexOf(cur) + 1) % MODES.length];
-  localStorage.setItem('navMode', next);
-  window.location.href = MODE_PATHS[next];
-}
-document.getElementById('site-title').addEventListener('click', switchMode);
+const MODE_META = {
+  normal:   { label: 'Normal',   desc: '暗黑风格',  icon: '🌙', color: '#00ff88' },
+  webstack: { label: 'WebStack', desc: '侧栏导航',  icon: '📐', color: '#1677ff' },
+  easy:     { label: 'Easy',     desc: '极简搜索',  icon: '🔲', color: '#aaaaaa' },
+  nav:      { label: 'Nav',      desc: '渐变主题',  icon: '🌊', color: '#a78bfa' },
+  '5iux':   { label: '5IUX',    desc: '亮色简洁',  icon: '✨', color: '#667eea' },
+  kim:      { label: 'Kim',      desc: '极彩背景',  icon: '🎨', color: '#f472b6' },
+  ai:       { label: 'AI',       desc: 'AI 助手',   icon: '🤖', color: '#f59e0b' },
+};
+const CURRENT_MODE = 'easy';
 
-// ── 配置 ────────────────────────────────────────────────────
+// ── 模式菜单 ────────────────────────────────────────────────
+let _modeMenuOpen = false;
+let _modeMenuEl   = null;
+
+function buildModeMenu() {
+  if (_modeMenuEl) return _modeMenuEl;
+
+  const menu = document.createElement('div');
+  menu.id = '__mode-menu';
+
+  const titleBar = document.createElement('div');
+  titleBar.id = '__mode-menu-title';
+  titleBar.textContent = '切换模式';
+  menu.appendChild(titleBar);
+
+  MODES.forEach(key => {
+    const m = MODE_META[key];
+    const a = document.createElement('a');
+    a.href      = MODE_PATHS[key];
+    a.className = '__mc' + (key === CURRENT_MODE ? ' cur' : '');
+    a.innerHTML = `
+      <div class="__mc-icon">${m.icon}</div>
+      <div class="__mc-dot" style="background:${m.color}"></div>
+      <div class="__mc-body">
+        <div class="__mc-label">${m.label}</div>
+        <div class="__mc-desc">${m.desc}</div>
+      </div>
+      <div class="__mc-check">${key === CURRENT_MODE ? '✓' : ''}</div>
+    `;
+    menu.appendChild(a);
+  });
+
+  document.body.appendChild(menu);
+  _modeMenuEl = menu;
+  return menu;
+}
+
+function positionModeMenu() {
+  const titleEl = document.getElementById('site-title');
+  const menu    = _modeMenuEl;
+  if (!titleEl || !menu) return;
+
+  const rect   = titleEl.getBoundingClientRect();
+  const mobile = window.innerWidth < 768;
+  const GAP    = 14;
+
+  menu.classList.toggle('layout-below', mobile);
+
+  if (mobile) {
+    const menuW = Math.min(200, window.innerWidth - 24);
+    let left = rect.left + rect.width / 2 - menuW / 2;
+    left = Math.max(12, Math.min(left, window.innerWidth - menuW - 12));
+    menu.style.top      = (rect.bottom + GAP + window.scrollY) + 'px';
+    menu.style.left     = left + 'px';
+    menu.style.right    = 'auto';
+    menu.style.maxWidth = menuW + 'px';
+  } else {
+    // PC：标题右侧，与标题垂直居中对齐
+    menu.style.top      = (rect.top + window.scrollY + rect.height / 2 - 55) + 'px';
+    menu.style.left     = (rect.right + GAP) + 'px';
+    menu.style.right    = 'auto';
+    menu.style.maxWidth = '400px';
+
+    requestAnimationFrame(() => {
+      const mw = menu.offsetWidth;
+      if (rect.right + GAP + mw > window.innerWidth - 12) {
+        menu.style.left = Math.max(12, rect.left - GAP - mw) + 'px';
+      }
+    });
+  }
+}
+
+function openModeMenu() {
+  buildModeMenu();
+  _modeMenuOpen = true;
+  positionModeMenu();
+  _modeMenuEl.classList.add('open');
+}
+
+function closeModeMenu() {
+  _modeMenuOpen = false;
+  if (_modeMenuEl) _modeMenuEl.classList.remove('open');
+}
+
+function toggleModeMenu(e) {
+  e.stopPropagation();
+  _modeMenuOpen ? closeModeMenu() : openModeMenu();
+}
+
+document.addEventListener('click', () => closeModeMenu());
+window.addEventListener('resize', () => { if (_modeMenuOpen) positionModeMenu(); });
+
+// ── 页面配置 ────────────────────────────────────────────────
 const CONFIG = {
-  title: "王五导航",
+  title: "SPACE",
   background: {
     type: "image",
     url: "https://images.wallpaperscraft.com/image/single/photographer_camera_dark_133781_1280x720.jpg"
@@ -153,7 +330,6 @@ const CONFIG = {
 let currentEngine = CONFIG.categories[0].engines[0];
 
 function initPage() {
-  document.getElementById("site-title").innerText = CONFIG.title;
   initBackground();
   initDropdown();
   updateCurrentEngine(currentEngine);
@@ -183,7 +359,9 @@ function initDropdown() {
     category.engines.forEach(engine => {
       const item = document.createElement("div");
       item.className = "engine-item";
-      item.innerHTML = engine.icon ? `<img src="${engine.icon}" class="engine-icon" onerror="this.style.display='none'"><span>${engine.name}</span>` : `<span>${engine.name}</span>`;
+      item.innerHTML = engine.icon
+        ? `<img src="${engine.icon}" class="engine-icon" onerror="this.style.display='none'"><span>${engine.name}</span>`
+        : `<span>${engine.name}</span>`;
       item.addEventListener("click", e => {
         e.stopPropagation();
         updateCurrentEngine(engine);
@@ -201,7 +379,9 @@ function updateCurrentEngine(engine) {
   currentEngine = engine;
   document.getElementById("current-engine-name").innerText = engine.name;
   const slot = document.getElementById("current-engine-icon-slot");
-  slot.innerHTML = engine.icon ? `<img src="${engine.icon}" class="engine-icon" onerror="this.style.display='none'">` : "";
+  slot.innerHTML = engine.icon
+    ? `<img src="${engine.icon}" class="engine-icon" onerror="this.style.display='none'">`
+    : "";
 }
 
 function triggerSearch() {
@@ -226,6 +406,9 @@ searchBtn.addEventListener("click", e => { e.stopPropagation(); triggerSearch();
 searchInput.addEventListener("keydown", e => { if (e.key === "Enter") triggerSearch(); });
 engineSelector.addEventListener("click", e => { e.stopPropagation(); dropdown.classList.toggle("show"); });
 document.addEventListener("click", () => { dropdown.classList.remove("show"); });
+
+// 标题点击绑定模式菜单
+document.getElementById('site-title').addEventListener('click', toggleModeMenu);
 
 window.addEventListener("DOMContentLoaded", () => {
   localStorage.setItem('navMode', 'easy');

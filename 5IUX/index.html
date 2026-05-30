@@ -20,8 +20,94 @@
     .navbar-light .navbar-nav .nav-link { color: #fff; }
     .navbar-light .navbar-nav .active .nav-link { color: #fff; }
     .navbar-light .navbar-nav .nav-link:hover { color: #fff; }
-    .navbar-brand-text { color: #fff; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.05em; cursor: pointer; }
-    .navbar-brand-text:hover { color: #fff; }
+
+    /* ── 品牌标题 ── */
+    .navbar-brand-text {
+      color: #fff; font-size: 1.1rem; font-weight: 900;
+      letter-spacing: 0.05em; cursor: pointer;
+      user-select: none; flex-shrink: 0;
+    }
+    .navbar-brand-text:hover { color: rgba(255,255,255,0.85); }
+
+    /* ── 模式切换区（navbar 内横排） ── */
+    #mode-switcher {
+      display: none; /* JS 控制 open 状态 */
+      align-items: center;
+      gap: 4px;
+      margin-left: 10px;
+      flex-wrap: nowrap;
+    }
+    #mode-switcher.open { display: flex; }
+
+    .mode-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      white-space: nowrap; flex-shrink: 0;
+      background: rgba(255,255,255,0.82);
+      border: 1px solid rgba(255,255,255,0.6);
+      backdrop-filter: blur(8px);
+      transition: background 0.15s, transform 0.1s;
+      color: #333;
+    }
+    .mode-pill:hover {
+      background: rgba(255,255,255,1);
+      transform: translateY(-1px);
+      color: #111;
+    }
+    .mode-pill.cur {
+      background: rgba(255,255,255,1);
+      border-color: rgba(255,255,255,0.9);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .mode-pill .pill-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .mode-pill .pill-check {
+      font-size: 10px; color: #666; margin-left: 1px;
+    }
+
+    /* ── 手机端：下拉列表 ── */
+    #mode-menu-mobile {
+      display: none;
+      position: fixed;
+      z-index: 99999;
+      top: 0; left: 0; /* JS 动态设置 */
+      flex-direction: column;
+      gap: 5px; padding: 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.15);
+      min-width: 160px;
+    }
+    #mode-menu-mobile.open { display: flex; }
+    .mode-mobile-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 9px;
+      text-decoration: none; cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.12s;
+    }
+    .mode-mobile-item:hover { background: rgba(0,0,0,0.05); }
+    .mode-mobile-item.cur {
+      background: rgba(0,0,0,0.06);
+      border-color: rgba(0,0,0,0.1);
+    }
+    .mode-mobile-item .mi-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .mode-mobile-item .mi-label {
+      font-size: 12px; font-weight: 700; color: #222; line-height: 1;
+    }
+    .mode-mobile-item .mi-desc {
+      font-size: 10px; color: #888; line-height: 1; margin-top: 1px;
+    }
+    .mode-mobile-item .mi-check {
+      margin-left: auto; font-size: 11px; color: #555;
+    }
 
     #search { width:100%; margin:0; padding:0 0 10px; position:relative; z-index:2000; }
     #search form { position:relative; }
@@ -88,6 +174,8 @@
       .site-icon-wrap { width: 30px; height: 30px; padding: 5px; border-radius: 5px; }
       .site-icon-wrap img { width: 20px; height: 20px; }
       .site-name { font-size: 12px; }
+      /* 手机端隐藏横排胶囊，改用下拉 */
+      #mode-switcher { display: none !important; }
     }
     @media screen and (min-width: 1200px) { .mylist li.site-item { min-width: 132px; } }
     @media screen and (min-width: 992px) and (max-width: 1200px) { .mylist li.site-item { min-width: 110px; } }
@@ -109,8 +197,16 @@
 
 <button id="net-toggle">🌐 外网</button>
 
+<!-- 手机端下拉菜单（独立于 navbar，fixed 定位） -->
+<div id="mode-menu-mobile"></div>
+
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="position:absolute;z-index:10000;">
+  <!-- 品牌标题 -->
   <a class="navbar-brand navbar-brand-text" id="brand-title" href="#">🧭 王五导航</a>
+
+  <!-- PC 端横排胶囊（navbar 内） -->
+  <div id="mode-switcher"></div>
+
   <button class="navbar-toggler" style="border:none;outline:none;"
     type="button" data-toggle="collapse" data-target="#navbarsMain">
     <i class="fas fa-bars" style="color:#fff;"></i>
@@ -143,7 +239,7 @@
 <script src="js/bootstrap.bundle.min.js"></script>
 <script src="js/sou.js"></script>
 <script>
-/* ══ 模式切换 ══ */
+/* ══ 模式配置 ══ */
 const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim', 'ai'];
 const MODE_PATHS = {
   normal:   '../normal/index.html',
@@ -154,6 +250,108 @@ const MODE_PATHS = {
   kim:      '../kim/index.html',
   ai:       '../ai/index.html',
 };
+const MODE_META = {
+  normal:   { label: 'Normal',   desc: '暗黑风格',  icon: '🌙', color: '#00c97a' },
+  webstack: { label: 'WebStack', desc: '侧栏导航',  icon: '📐', color: '#1677ff' },
+  easy:     { label: 'Easy',     desc: '极简搜索',  icon: '🔲', color: '#aaaaaa' },
+  nav:      { label: 'Nav',      desc: '渐变主题',  icon: '🌊', color: '#a78bfa' },
+  '5iux':   { label: '5IUX',    desc: '亮色简洁',  icon: '✨', color: '#667eea' },
+  kim:      { label: 'Kim',      desc: '极彩背景',  icon: '🎨', color: '#f472b6' },
+  ai:       { label: 'AI',       desc: 'AI 助手',   icon: '🤖', color: '#f59e0b' },
+};
+const CURRENT_MODE = '5iux';
+
+/* ══ 模式切换菜单 ══ */
+let _menuOpen = false;
+const isMobileWidth = () => window.innerWidth < 768;
+
+function buildMenus() {
+  /* PC 横排胶囊 */
+  const sw = document.getElementById('mode-switcher');
+  sw.innerHTML = '';
+  MODES.forEach(key => {
+    const m = MODE_META[key];
+    const a = document.createElement('a');
+    a.href = MODE_PATHS[key];
+    a.className = 'mode-pill' + (key === CURRENT_MODE ? ' cur' : '');
+    a.innerHTML = `
+      <span class="pill-dot" style="background:${m.color}"></span>
+      ${m.icon} ${m.label}
+      ${key === CURRENT_MODE ? '<span class="pill-check">✓</span>' : ''}
+    `;
+    sw.appendChild(a);
+  });
+
+  /* 手机竖列菜单 */
+  const mm = document.getElementById('mode-menu-mobile');
+  mm.innerHTML = '';
+  MODES.forEach(key => {
+    const m = MODE_META[key];
+    const a = document.createElement('a');
+    a.href = MODE_PATHS[key];
+    a.className = 'mode-mobile-item' + (key === CURRENT_MODE ? ' cur' : '');
+    a.innerHTML = `
+      <span class="mi-dot" style="background:${m.color}"></span>
+      <span class="mi-icon" style="font-size:14px">${m.icon}</span>
+      <span style="display:flex;flex-direction:column;gap:1px">
+        <span class="mi-label">${m.label}</span>
+        <span class="mi-desc">${m.desc}</span>
+      </span>
+      <span class="mi-check">${key === CURRENT_MODE ? '✓' : ''}</span>
+    `;
+    mm.appendChild(a);
+  });
+}
+
+function positionMobileMenu() {
+  const titleEl = document.getElementById('brand-title');
+  const mm = document.getElementById('mode-menu-mobile');
+  if (!titleEl || !mm) return;
+  const rect = titleEl.getBoundingClientRect();
+  const menuW = Math.min(180, window.innerWidth - 24);
+  let left = rect.left;
+  left = Math.max(12, Math.min(left, window.innerWidth - menuW - 12));
+  mm.style.top     = (rect.bottom + 8) + 'px';
+  mm.style.left    = left + 'px';
+  mm.style.width   = menuW + 'px';
+}
+
+function openMenu() {
+  _menuOpen = true;
+  if (isMobileWidth()) {
+    positionMobileMenu();
+    document.getElementById('mode-menu-mobile').classList.add('open');
+  } else {
+    document.getElementById('mode-switcher').classList.add('open');
+  }
+}
+
+function closeMenu() {
+  _menuOpen = false;
+  document.getElementById('mode-switcher').classList.remove('open');
+  document.getElementById('mode-menu-mobile').classList.remove('open');
+}
+
+function toggleMenu(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  _menuOpen ? closeMenu() : openMenu();
+}
+
+document.addEventListener('click', (e) => {
+  const sw = document.getElementById('mode-switcher');
+  const mm = document.getElementById('mode-menu-mobile');
+  const title = document.getElementById('brand-title');
+  if (!sw.contains(e.target) && !mm.contains(e.target) && e.target !== title) {
+    closeMenu();
+  }
+});
+
+window.addEventListener('resize', () => {
+  if (_menuOpen) {
+    closeMenu();
+  }
+});
 
 /* ══ 配置 ══ */
 const WORKER_URL   = 'https://ico.xmynscnq.dpdns.org';
@@ -223,13 +421,10 @@ document.getElementById('net-toggle').addEventListener('click', () => {
   if (window._allData) renderLinks(window._allData);
 });
 updateNetBtn();
-document.getElementById('brand-title').addEventListener('click', function(e) {
-  e.preventDefault();
-  const cur  = '5iux';
-  const next = MODES[(MODES.indexOf(cur) + 1) % MODES.length];
-  localStorage.setItem('navMode', next);
-  window.location.href = MODE_PATHS[next];
-});
+
+/* 标题点击触发菜单 */
+document.getElementById('brand-title').addEventListener('click', toggleMenu);
+
 function renderLinks(data) {
   const main = document.getElementById('content');
   if (!main) return;
@@ -255,6 +450,7 @@ function renderLinks(data) {
 }
 
 (async () => {
+  buildMenus();
   renderEngines();
   try {
     const res  = await fetch(LINKS_FILE);

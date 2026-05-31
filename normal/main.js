@@ -645,7 +645,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadHeaderSubtitle();
 
   const video = document.getElementById('bgLayer');
-  let _bgErrorCount = 0, _bgPlayedOnce = false;
+  let _bgErrorCount = 0, _bgSwitchCount = 0, _bgPlayedOnce = false;
 
   if (video) {
     video.addEventListener('timeupdate', () => {
@@ -655,11 +655,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     video.addEventListener('ended', () => { video.currentTime = 0; video.play().catch(() => {}); });
     video.addEventListener('error', () => {
-      _bgErrorCount++;
-      if (_bgErrorCount <= 2) setTimeout(reloadBackground, 1000 * _bgErrorCount);
-      else console.warn(`[BG] 连续失败 ${_bgErrorCount} 次，已放弃加载背景视频`);
-    });
-    video.addEventListener('playing', () => { _bgErrorCount = 0; _bgPlayedOnce = true; clearTimeout(stallTimer); });
+  _bgErrorCount++;
+  if (_bgErrorCount <= 2) {
+    setTimeout(reloadBackground, 1000 * _bgErrorCount);
+  } else {
+    _bgErrorCount = 0;
+    _bgSwitchCount++;
+    if (_bgSwitchCount <= 5) {
+      setTimeout(changeBackground, 1000);
+    } else {
+      _bgSwitchCount = 0;
+      console.warn('[BG] 多次换视频均失败，60秒后重试');
+      setTimeout(changeBackground, 60000);
+    }
+  }
+});
+    video.addEventListener('playing', () => { _bgErrorCount = 0; _bgSwitchCount = 0; _bgPlayedOnce = true; clearTimeout(stallTimer); });
     let stallTimer = null;
     video.addEventListener('waiting', () => {
       stallTimer = setTimeout(() => { if (video.readyState < 2 && _bgErrorCount <= 2) reloadBackground(); }, 5000);

@@ -382,6 +382,9 @@ function reloadBackground() {
 const LINKS_FILE  = '../links.json';
 const DEFAULT_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0yIDEyaDIwIj48L3BhdGg+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+';
 
+const PROTECTED_PASSWORD_HASH =
+'e5b560baff2258b7f00c54fb2871e3c45a575af15affb7d5b93a9ac3cba1f772';
+
 /* ── 搜索分类数据 ── */
 const SEARCH_CATEGORIES = [
 {
@@ -451,6 +454,17 @@ const SEARCH_CATEGORIES = [
 let currentCategoryId = 'engine';
 let currentEngine     = SEARCH_CATEGORIES[0].engines[0];
 let enginePanelOpen   = false;
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(str)
+  );
+
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 function getDomain(url) {
   try { return new URL(url).hostname; } catch { return null; }
@@ -588,7 +602,7 @@ if (isProtected) {
 
     h2.style.cursor = 'pointer';
 
-    h2.addEventListener('click', () => {
+    h2.addEventListener('click', async () => {
 
         if (sessionStorage.getItem(section) === 'ok') {
             grid.style.display =
@@ -598,17 +612,20 @@ if (isProtected) {
 
         const pwd = prompt('请输入访问密码');
 
-        if (pwd === '123456') {
+if (!pwd) return;
 
-            sessionStorage.setItem(section, 'ok');
+const hash = await sha256(pwd);
 
-            grid.style.display = 'grid';
+if (hash === PROTECTED_PASSWORD_HASH) {
 
-        } else {
+    sessionStorage.setItem(section, 'ok');
+    grid.style.display = 'grid';
 
-            alert('密码错误');
+} else {
 
-        }
+    alert('密码错误');
+
+}
     });
 }
     items.forEach(item => {

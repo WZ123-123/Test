@@ -507,7 +507,7 @@ function renderSidebar(sections) {
     const a = document.createElement('a');
     a.href = '#' + sectionId(section);
     a.className = 'nav-smooth';
-    a.innerHTML = `<span class="sidebar-emoji">${sectionEmoji(section)}</span><span class="menu-label">${sectionLabel(section)}</span>${isProtected ? '<span style="margin-left:auto;font-size:0.75rem;opacity:0.5;">🔒</span>' : ''}`;
+    a.innerHTML = `<span class="sidebar-emoji">${sectionEmoji(section)}</span><span class="menu-label">${sectionLabel(section)}</span>`;
     li.appendChild(a);
     menu.appendChild(li);
   });

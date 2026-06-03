@@ -1,357 +1,248 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>我的导航</title>
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/links-nav.css">
-</head>
-<body>
+/* ============================================================
+   mode-menu.js — 模式切换菜单
+   点击 #site-title 呼出，风格与桌面主题（毛玻璃亮色）一致
+   ============================================================ */
 
-<div id="wallpaper" class="default-bg">
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-  <div class="orb orb3"></div>
-</div>
+const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim', 'ai'];
 
-<div id="pages-wrap">
-  <div class="page" data-page="0">
-    <div id="page-header">
-      <div id="site-title">我的导航</div>
-      <div id="search-wrap">
-        <input id="search-input" type="text" placeholder="搜索网页，Enter 跳转...">
-        <button id="search-clear">✕</button>
-        <button id="search-btn">搜索</button>
-      </div>
-    </div>
-    <div class="grid-area" id="grid-area"></div>
-  </div>
-</div>
+const MODE_PATHS = {
+  normal:   '../normal/index.html',
+  webstack: '../webstack/index.html',
+  easy:     '../easy/index.html',
+  nav:      '../nav/index.html',
+  '5iux':   '../5IUX/index.html',
+  kim:      '../kim/index.html',
+  ai:       '../ai/index.html',
+};
 
-<div id="page-bottom">
-  <div id="minimized-bar"></div>
-  <div id="page-dots">
-    <div class="page-dot active"></div>
-    <button id="add-page-btn" title="新增页面">+</button>
-  </div>
-</div>
+const MODE_META = {
+  normal:   { label: 'Normal',   desc: '暗黑风格',  icon: '🌙', color: '#6366f1' },
+  webstack: { label: 'WebStack', desc: '侧栏导航',  icon: '📐', color: '#3b82f6' },
+  easy:     { label: 'Easy',     desc: '极简搜索',  icon: '🔲', color: '#94a3b8' },
+  nav:      { label: 'Nav',      desc: '渐变主题',  icon: '🌊', color: '#8b5cf6' },
+  '5iux':   { label: '5IUX',    desc: '亮色简洁',  icon: '✨', color: '#e8714a' },
+  kim:      { label: 'Kim',      desc: '极彩背景',  icon: '🎨', color: '#ec4899' },
+  ai:       { label: 'AI',       desc: 'AI 助手',   icon: '🤖', color: '#f59e0b' },
+};
 
-<div id="ctx-menu"></div>
+// 当前模式：根据所在页面目录自动识别
+// 如果是本桌面导航（新UI），没有对应模式，标记为 null
+const CURRENT_MODE = (function () {
+  const path = location.pathname;
+  for (const [key, p] of Object.entries(MODE_PATHS)) {
+    if (path.includes('/' + key + '/') || path.includes('/' + key.toLowerCase() + '/')) return key;
+  }
+  return null;
+})();
 
-<!-- ================================================================
-     导航面板
-     ================================================================ -->
-<div class="modal-overlay" id="nav-overlay">
-  <div class="modal-panel" id="nav-panel">
-    <div class="modal-titlebar">
-      <span class="modal-title">🧭 网址导航</span>
-      <div class="traffic-lights">
-        <div class="tl tl-y" onclick="Modal.minimize('nav-overlay')" title="最小化"></div>
-        <div class="tl tl-g" onclick="Modal.maximize('nav-overlay')" title="最大化"></div>
-        <div class="tl tl-r" onclick="Modal.close('nav-overlay')" title="关闭"></div>
-      </div>
-    </div>
-    <div class="nav-search-bar">
-      <input class="nav-search-input" id="nav-search-input" placeholder="快速筛选网站...">
-      <button class="nav-search-btn" id="nav-search-btn">打开第一个</button>
-    </div>
-    <div class="nav-body">
-      <div class="nav-sidebar" id="nav-sidebar"></div>
-      <div class="nav-content"  id="nav-content"></div>
-    </div>
-  </div>
-</div>
+const ModeMenu = {
+  _open: false,
+  _el:   null,
 
-<!-- ================================================================
-     Links.json 快捷导航面板
-     ================================================================ -->
-<div class="modal-overlay" id="links-nav-overlay">
-  <div class="modal-panel" id="links-nav-panel">
-    <div class="modal-titlebar">
-      <span class="modal-title">🔗 快捷导航</span>
-      <div class="traffic-lights">
-        <div class="tl tl-y" onclick="Modal.minimize('links-nav-overlay')" title="最小化"></div>
-        <div class="tl tl-g" onclick="Modal.maximize('links-nav-overlay')" title="最大化"></div>
-        <div class="tl tl-r" onclick="Modal.close('links-nav-overlay')" title="关闭"></div>
-      </div>
-      <button id="links-net-btn" class="links-net-btn">🌐 外网</button>
-    </div>
-    <div class="links-nav-body">
-      <div id="links-nav-shortcut-grid"></div>
-    </div>
-  </div>
-</div>
+  _build() {
+    // 注入样式
+    const style = document.createElement('style');
+    style.textContent = `
+      #mode-menu {
+        position: fixed;
+        z-index: 99999;
+        display: none;
+        flex-direction: column;
+        gap: 3px;
+        padding: 10px 8px;
+        border-radius: 18px;
+        background: rgba(255,255,255,.72);
+        backdrop-filter: blur(28px) saturate(160%);
+        -webkit-backdrop-filter: blur(28px) saturate(160%);
+        border: 1px solid rgba(255,255,255,.85);
+        box-shadow: 0 16px 48px rgba(80,120,180,.18), 0 2px 12px rgba(0,0,0,.08);
+        min-width: 192px;
+        pointer-events: auto;
+      }
+      #mode-menu.open { display: flex; }
 
-<!-- ================================================================
-     记事本
-     ================================================================ -->
-<div class="modal-overlay" id="note-overlay">
-  <div class="modal-panel" id="note-panel">
-    <div class="modal-titlebar">
-      <span class="modal-title">📝 记事本</span>
-      <div class="traffic-lights">
-        <div class="tl tl-y" onclick="Modal.minimize('note-overlay')" title="最小化"></div>
-        <div class="tl tl-g" onclick="Modal.maximize('note-overlay')" title="最大化"></div>
-        <div class="tl tl-r" onclick="Modal.close('note-overlay')" title="关闭"></div>
-      </div>
-    </div>
-    <textarea id="note-area" placeholder="在这里记录你的想法..."></textarea>
-    <div class="note-footer">
-      <span id="note-count">0 字</span>
-      <button class="note-save-btn" onclick="Widgets.saveNote()">💾 保存</button>
-    </div>
-  </div>
-</div>
+      #mode-menu-title {
+        font-size: 10px;
+        font-weight: 700;
+        color: rgba(80,100,140,.45);
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        padding: 2px 8px 6px;
+        border-bottom: .5px solid rgba(0,0,0,.07);
+        margin-bottom: 2px;
+      }
 
-<!-- ================================================================
-     画板
-     ================================================================ -->
-<div class="modal-overlay" id="draw-overlay">
-  <div class="modal-panel" id="draw-panel">
-    <div class="modal-titlebar">
-      <span class="modal-title">🎨 画板</span>
-      <div class="traffic-lights">
-        <div class="tl tl-y" onclick="Modal.minimize('draw-overlay')" title="最小化"></div>
-        <div class="tl tl-g" onclick="Modal.maximize('draw-overlay')" title="最大化"></div>
-        <div class="tl tl-r" onclick="Modal.close('draw-overlay')" title="关闭"></div>
-      </div>
-    </div>
-    <div id="draw-toolbar">
-      <button class="dtool active" id="tool-pen"    onclick="Widgets.setTool('pen')">✏️ 画笔</button>
-      <button class="dtool"        id="tool-eraser" onclick="Widgets.setTool('eraser')">🧹 橡皮</button>
-      <div style="display:flex;gap:5px;align-items:center;">
-        <div class="clr-dot active" style="background:#222"    data-c="#222"    onclick="Widgets.setColor(this)"></div>
-        <div class="clr-dot"        style="background:#e8714a" data-c="#e8714a" onclick="Widgets.setColor(this)"></div>
-        <div class="clr-dot"        style="background:#4a9edb" data-c="#4a9edb" onclick="Widgets.setColor(this)"></div>
-        <div class="clr-dot"        style="background:#52b788" data-c="#52b788" onclick="Widgets.setColor(this)"></div>
-        <div class="clr-dot"        style="background:#f5a623" data-c="#f5a623" onclick="Widgets.setColor(this)"></div>
-        <div class="clr-dot"        style="background:#e63946" data-c="#e63946" onclick="Widgets.setColor(this)"></div>
-        <div class="clr-dot"        style="background:#9b59b6" data-c="#9b59b6" onclick="Widgets.setColor(this)"></div>
-      </div>
-      <label style="font-size:11px;color:#888;">粗细</label>
-      <input type="range" id="draw-sz" min="1" max="20" value="3" style="width:60px;accent-color:#e8714a;">
-      <button class="dtool" style="margin-left:auto;color:#c0392b;" onclick="Widgets.clearCanvas()">🗑 清空</button>
-      <button class="dtool" onclick="Widgets.saveCanvas()">💾 保存</button>
-    </div>
-    <canvas id="draw-canvas"></canvas>
-  </div>
-</div>
+      .mm-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 11px;
+        text-decoration: none;
+        border: 1px solid transparent;
+        transition: background .14s, border-color .14s;
+        cursor: pointer;
+      }
+      .mm-item:hover {
+        background: rgba(232,113,74,.08);
+        border-color: rgba(232,113,74,.18);
+      }
+      .mm-item.cur {
+        background: rgba(232,113,74,.12);
+        border-color: rgba(232,113,74,.32);
+      }
 
-<!-- ================================================================
-     AI 对话（原有，保留；桌面图标 action:'ai' 可跳转自定义URL或打开此弹窗）
-     ================================================================ -->
-<div class="modal-overlay" id="ai-overlay">
-  <div class="modal-panel" id="ai-panel">
-    <div class="modal-titlebar">
-      <span class="modal-title">🤖 AI 对话助手</span>
-      <div class="traffic-lights">
-        <div class="tl tl-y" onclick="Modal.minimize('ai-overlay')" title="最小化"></div>
-        <div class="tl tl-g" onclick="Modal.maximize('ai-overlay')" title="最大化"></div>
-        <div class="tl tl-r" onclick="Modal.close('ai-overlay')" title="关闭"></div>
-      </div>
-    </div>
-    <div id="chat-msgs">
-      <div class="chat-msg ai">你好！我是你的AI助手 👋 有什么可以帮你的吗？</div>
-    </div>
-    <div id="chat-input-row">
-      <input id="chat-input" type="text" placeholder="输入消息，Enter 发送...">
-      <button id="chat-send">发送</button>
-    </div>
-  </div>
-</div>
+      .mm-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .mm-icon { font-size: 17px; line-height: 1; }
+      .mm-body { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+      .mm-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #2c3e5a;
+        line-height: 1;
+      }
+      .mm-item.cur .mm-label { color: #d05528; }
+      .mm-desc  { font-size: 10px; color: rgba(80,100,140,.55); line-height: 1; }
+      .mm-check { font-size: 12px; color: #e8714a; margin-left: auto; flex-shrink: 0; }
 
-<!-- ================================================================
-     天气详情
-     ================================================================ -->
-<div class="modal-overlay" id="weather-overlay">
-  <div class="modal-panel" id="weather-panel">
-    <div class="modal-titlebar">
-      <span class="modal-title">🌤 天气详情</span>
-      <div class="traffic-lights">
-        <div class="tl tl-y" onclick="Modal.minimize('weather-overlay')" title="最小化"></div>
-        <div class="tl tl-g" onclick="Modal.maximize('weather-overlay')" title="最大化"></div>
-        <div class="tl tl-r" onclick="Modal.close('weather-overlay')" title="关闭"></div>
-      </div>
-    </div>
-    <div class="wd-body">
-      <div class="wd-main">
-        <div class="wd-big-temp">23°</div>
-        <div class="wd-big-icon">⛅</div>
-        <div class="wd-info">
-          <p>🌡 体感：21°C</p><p>💧 湿度：65%</p>
-          <p>🌬 东北风 3级</p><p>👁 能见度：良</p>
-        </div>
-      </div>
-      <div class="wd-5day">
-        <div class="wd-day"><div class="dn">今天</div><div class="di">⛅</div><div class="dt">23/15°</div></div>
-        <div class="wd-day"><div class="dn">明天</div><div class="di">🌤</div><div class="dt">25/17°</div></div>
-        <div class="wd-day"><div class="dn">周三</div><div class="di">🌧</div><div class="dt">19/13°</div></div>
-        <div class="wd-day"><div class="dn">周四</div><div class="di">☀️</div><div class="dt">28/18°</div></div>
-        <div class="wd-day"><div class="dn">周五</div><div class="di">⛅</div><div class="dt">24/16°</div></div>
-      </div>
-      <p style="font-size:11px;color:#bbb;text-align:center;">演示数据，可对接真实天气 API</p>
-    </div>
-  </div>
-</div>
+      /* 标题可点击提示 */
+      #site-title.mode-clickable {
+        cursor: pointer !important;
+        pointer-events: auto !important;
+        transition: opacity .15s;
+      }
+      #site-title.mode-clickable:hover { opacity: .75; }
 
-<!-- ================================================================
-     设置
-     ================================================================ -->
-<div class="modal-overlay" id="settings-overlay">
-  <div class="modal-panel" id="settings-panel">
-    <div class="modal-titlebar">
-      <span class="modal-title">⚙️ 设置</span>
-      <div class="traffic-lights">
-        <div class="tl tl-y" onclick="Modal.minimize('settings-overlay')" title="最小化"></div>
-        <div class="tl tl-g" onclick="Modal.maximize('settings-overlay')" title="最大化"></div>
-        <div class="tl tl-r" onclick="Modal.close('settings-overlay')" title="关闭"></div>
-      </div>
-    </div>
-    <div class="settings-body">
+      /* 移动端：菜单横向排列，铺满屏幕宽度 */
+      @media (max-width: 600px) {
+        #mode-menu {
+          flex-direction: row;
+          flex-wrap: wrap;
+          min-width: unset;
+          width: calc(100vw - 32px);
+          gap: 4px;
+          padding: 10px;
+          border-radius: 16px;
+        }
+        #mode-menu-title { width: 100%; padding-bottom: 6px; }
+        .mm-item {
+          flex-direction: column;
+          align-items: center;
+          gap: 3px;
+          padding: 8px 6px;
+          min-width: 56px;
+          flex: 1;
+          text-align: center;
+        }
+        .mm-body { align-items: center; }
+        .mm-desc  { display: none; }
+        .mm-check { display: none; }
+        .mm-dot   { display: none; }
+      }
+    `;
+    document.head.appendChild(style);
 
-      <!-- 背景图片 -->
-      <div class="st-section">
-        <h3>背景图片</h3>
-        <div class="bg-opts bg-img-opts">
-          <div class="bg-opt bg-img-opt active" data-bg-img="1.jpg" onclick="App.applyPresetImg(this,'images/1.jpg')">
-            <img src="images/1.jpg" alt="壁纸1" loading="lazy">
-          </div>
-          <div class="bg-opt bg-img-opt" data-bg-img="2.jpg" onclick="App.applyPresetImg(this,'images/2.jpg')">
-            <img src="images/2.jpg" alt="壁纸2" loading="lazy">
-          </div>
-          <div class="bg-opt bg-img-opt" data-bg-img="3.jpg" onclick="App.applyPresetImg(this,'images/3.jpg')">
-            <img src="images/3.jpg" alt="壁纸3" loading="lazy">
-          </div>
-          <div class="bg-opt bg-img-opt" data-bg-img="4.jpg" onclick="App.applyPresetImg(this,'images/4.jpg')">
-            <img src="images/4.jpg" alt="壁纸4" loading="lazy">
-          </div>
-        </div>
-      </div>
+    // 构建菜单 DOM
+    const menu = document.createElement('div');
+    menu.id = 'mode-menu';
 
-      <!-- 网络模式 -->
-      <div class="st-section">
-        <h3>网络模式</h3>
-        <div class="net-row">
-          <div class="net-opt active" data-net="cn"     onclick="Nav.switchNet(this)">🇨🇳 国内</div>
-          <div class="net-opt"        data-net="global" onclick="Nav.switchNet(this)">🌍 国际</div>
-        </div>
-      </div>
+    const title = document.createElement('div');
+    title.id = 'mode-menu-title';
+    title.textContent = '切换模式';
+    menu.appendChild(title);
 
-      <!-- 搜索引擎（新区块，由 JS 动态渲染） -->
-      <div id="se-section-container"></div>
+    MODES.forEach(key => {
+      const m = MODE_META[key];
+      const isCur = key === CURRENT_MODE;
+      const a = document.createElement('a');
+      a.href      = MODE_PATHS[key];
+      a.className = 'mm-item' + (isCur ? ' cur' : '');
+      a.innerHTML = `
+        <span class="mm-icon">${m.icon}</span>
+        <span class="mm-dot" style="background:${m.color}"></span>
+        <span class="mm-body">
+          <span class="mm-label">${m.label}</span>
+          <span class="mm-desc">${m.desc}</span>
+        </span>
+        ${isCur ? '<span class="mm-check">✓</span>' : ''}
+      `;
+      // 当前页不跳转，只关闭菜单
+      if (isCur) a.addEventListener('click', e => { e.preventDefault(); ModeMenu.close(); });
+      menu.appendChild(a);
+    });
 
-      <!-- 页面标题 -->
-      <div class="st-section">
-        <h3>页面标题</h3>
-        <div class="st-row">
-          <div class="st-label">自定义标题</div>
-          <input id="title-input" style="border:.5px solid rgba(0,0,0,.15);border-radius:6px;padding:5px 10px;font-size:13px;outline:none;width:160px;font-family:inherit;" value="我的导航">
-        </div>
-        <button class="st-btn primary" onclick="App.applyTitle()" style="width:100%;">应用标题</button>
-      </div>
+    document.body.appendChild(menu);
+    this._el = menu;
+  },
 
-      <!-- AI 接口 -->
-      <div class="st-section">
-        <h3>AI 接口（Anthropic）</h3>
-        <div class="st-row">
-          <div><div class="st-label">API Key</div><div class="st-sub">本地保存，不上传</div></div>
-          <input id="api-key-input" type="password" style="border:.5px solid rgba(0,0,0,.15);border-radius:6px;padding:5px 10px;font-size:13px;outline:none;width:180px;font-family:inherit;" placeholder="sk-ant-...">
-        </div>
-        <button class="st-btn primary" onclick="App.saveApiKey()" style="width:100%;">保存 Key</button>
-      </div>
+  _position() {
+    const titleEl = document.getElementById('site-title');
+    const menu    = this._el;
+    if (!titleEl || !menu) return;
 
-    </div>
-  </div>
-</div>
+    const rect    = titleEl.getBoundingClientRect();
+    const GAP     = 10;
+    const menuW   = Math.min(200, window.innerWidth - 32);
+    const isMobile = window.innerWidth <= 600;
 
-<!-- ================================================================
-     文件夹（模板）
-     ================================================================ -->
-<div class="modal-overlay" id="folder-overlay">
-  <div class="modal-panel" id="folder-panel">
-    <div class="modal-titlebar">
-      <span class="modal-title" id="folder-title">文件夹</span>
-      <div class="traffic-lights">
-        <div class="tl tl-y" onclick="Modal.minimize('folder-overlay')" title="最小化"></div>
-        <div class="tl tl-g" onclick="Modal.maximize('folder-overlay')" title="最大化"></div>
-        <div class="tl tl-r" onclick="Modal.close('folder-overlay')" title="关闭"></div>
-      </div>
-    </div>
-    <div class="folder-grid" id="folder-grid"></div>
-    <div class="folder-name-bar">
-      <input id="folder-name-inp" type="text" placeholder="文件夹名称...">
-      <button class="st-btn primary" onclick="saveFolderName()">确认</button>
-    </div>
-  </div>
-</div>
+    if (isMobile) {
+      // 移动端：水平居中，标题下方
+      menu.style.width  = (window.innerWidth - 32) + 'px';
+      menu.style.left   = '16px';
+      menu.style.right  = 'auto';
+      menu.style.top    = (rect.bottom + GAP + window.scrollY) + 'px';
+    } else {
+      // 桌面：跟随标题水平中心
+      let left = (rect.left + rect.right) / 2 - menuW / 2;
+      left = Math.max(16, Math.min(left, window.innerWidth - menuW - 16));
+      menu.style.width  = menuW + 'px';
+      menu.style.left   = left + 'px';
+      menu.style.right  = 'auto';
+      menu.style.top    = (rect.bottom + GAP + window.scrollY) + 'px';
+    }
+  },
 
-<!-- ================================================================
-     计算器
-     ================================================================ -->
-<div class="modal-overlay" id="calc-overlay">
-  <div class="modal-panel" id="calc-panel">
-    <div class="modal-titlebar">
-      <span class="modal-title">🧮 计算器</span>
-      <div class="traffic-lights">
-        <div class="tl tl-y" onclick="Modal.minimize('calc-overlay')"></div>
-        <div class="tl tl-g" onclick="Modal.maximize('calc-overlay')"></div>
-        <div class="tl tl-r" onclick="Modal.close('calc-overlay')"></div>
-      </div>
-    </div>
-    <div id="calc-display">
-      <div id="calc-sub"></div>
-      <div id="calc-main">0</div>
-    </div>
-    <div id="calc-sci">
-      <button class="ck fn" onclick="Calc.press('sin')">sin</button>
-      <button class="ck fn" onclick="Calc.press('cos')">cos</button>
-      <button class="ck fn" onclick="Calc.press('tan')">tan</button>
-      <button class="ck fn" onclick="Calc.press('log')">log</button>
-      <button class="ck fn" onclick="Calc.press('ln')">ln</button>
-    </div>
-    <div id="calc-keys">
-      <button class="ck fn" onclick="Calc.press('x²')">x²</button>
-      <button class="ck fn" onclick="Calc.press('√')">√</button>
-      <button class="ck fn" onclick="Calc.press('1/x')">1/x</button>
-      <button class="ck fn" onclick="Calc.press('π')">π</button>
-      <button class="ck ac"  onclick="Calc.press('AC')">AC</button>
-      <button class="ck fn" onclick="Calc.press('±')">±</button>
-      <button class="ck op" onclick="Calc.press('%')">%</button>
-      <button class="ck op" onclick="Calc.press('÷')">÷</button>
-      <button class="ck" onclick="Calc.press('7')">7</button>
-      <button class="ck" onclick="Calc.press('8')">8</button>
-      <button class="ck" onclick="Calc.press('9')">9</button>
-      <button class="ck op" onclick="Calc.press('×')">×</button>
-      <button class="ck" onclick="Calc.press('4')">4</button>
-      <button class="ck" onclick="Calc.press('5')">5</button>
-      <button class="ck" onclick="Calc.press('6')">6</button>
-      <button class="ck op" onclick="Calc.press('-')">−</button>
-      <button class="ck" onclick="Calc.press('1')">1</button>
-      <button class="ck" onclick="Calc.press('2')">2</button>
-      <button class="ck" onclick="Calc.press('3')">3</button>
-      <button class="ck op" onclick="Calc.press('+')">+</button>
-      <button class="ck fn" onclick="Calc.press('⌫')">⌫</button>
-      <button class="ck span2" onclick="Calc.press('0')">0</button>
-      <button class="ck" onclick="Calc.press('.')">.</button>
-      <button class="ck eq" onclick="Calc.press('=')">=</button>
-    </div>
-  </div>
-</div>
+  open() {
+    if (!this._el) this._build();
+    this._position();
+    this._el.classList.add('open');
+    this._open = true;
+  },
 
-<!-- ================================================================
-     脚本（顺序很重要）
-     ================================================================ -->
-<script src="js/data.js"></script>
-<script src="js/ai-engine.js"></script>
-<script src="js/links-nav.js"></script>
-<script src="js/grid.js"></script>
-<script src="js/modal.js"></script>
-<script src="js/nav.js"></script>
-<script src="js/widgets.js"></script>
-<script src="js/calculator.js"></script>
-<script src="js/app.js"></script>
-<script src="js/grid-patch.js"></script>
-<script src="js/mode-menu.js"></script>
-</body>
-</html>
+  close() {
+    if (this._el) this._el.classList.remove('open');
+    this._open = false;
+  },
+
+  toggle(e) {
+    e.stopPropagation();
+    this._open ? this.close() : this.open();
+  },
+
+  init() {
+    const titleEl = document.getElementById('site-title');
+    if (!titleEl) return;
+
+    titleEl.classList.add('mode-clickable');
+    titleEl.addEventListener('click', e => ModeMenu.toggle(e));
+
+    // 点击空白关闭
+    document.addEventListener('click', e => {
+      if (this._el && !this._el.contains(e.target)) this.close();
+    });
+
+    // resize 时重新定位
+    window.addEventListener('resize', () => {
+      if (this._open) this._position();
+    });
+    window.addEventListener('scroll', () => {
+      if (this._open) this._position();
+    }, { passive: true });
+  },
+};
+
+document.addEventListener('DOMContentLoaded', () => ModeMenu.init());

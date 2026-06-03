@@ -502,25 +502,29 @@ function renderCards(sections) {
       a.appendChild(popup);
       grid.appendChild(a);
     });
-    if (isProtected) {
-      grid.style.display = 'none';
-      h2.style.cursor = 'pointer';
-      h2.addEventListener('click', async () => {
-        if (sessionStorage.getItem(section) === 'ok') {
-          grid.style.display = grid.style.display === 'none' ? 'grid' : 'none';
-          return;
-        }
-        const pwd = prompt('请输入访问密码');
-        if (!pwd) return;
-        const hash = await sha256(pwd);
-        if (hash === PROTECTED_PASSWORD_HASH) {
-          sessionStorage.setItem(section, 'ok');
-          grid.style.display = 'grid';
-        } else {
-          alert('密码错误');
-        }
-      });
+   if (isProtected) {
+  grid.style.display = 'none';
+  const titleSpan = document.createElement('span');
+  titleSpan.textContent = h2.textContent;
+  titleSpan.style.cursor = 'pointer';
+  h2.textContent = '';
+  h2.appendChild(titleSpan);
+  titleSpan.addEventListener('click', async () => {
+    if (sessionStorage.getItem(section) === 'ok') {
+      grid.style.display = grid.style.display === 'none' ? 'grid' : 'none';
+      return;
     }
+    const pwd = prompt('请输入访问密码');
+    if (!pwd) return;
+    const hash = await sha256(pwd);
+    if (hash === PROTECTED_PASSWORD_HASH) {
+      sessionStorage.setItem(section, 'ok');
+      grid.style.display = 'grid';
+    } else {
+      alert('密码错误');
+    }
+  });
+}
 
     sec.appendChild(grid);
     main.appendChild(sec);

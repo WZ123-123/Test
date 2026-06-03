@@ -1,0 +1,180 @@
+/* ============================================================
+   links-nav.css — 快捷导航面板 + 搜索引擎设置区块
+   ============================================================ */
+
+/* ===== 快捷导航面板 ===== */
+#links-nav-panel {
+  width: 860px;
+  height: 560px;
+}
+
+.links-net-btn {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: .5px solid rgba(0,0,0,.15);
+  background: rgba(255,255,255,.7);
+  color: #555;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+}
+.links-net-btn:hover { background: rgba(255,255,255,.95); }
+.links-net-btn.active { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.4); color: #059669; }
+
+.links-nav-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px 20px;
+}
+.links-nav-body::-webkit-scrollbar { width: 5px; }
+.links-nav-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,.1); border-radius: 4px; }
+
+/* 分类 */
+.lnav-category { margin-bottom: 20px; }
+.lnav-category-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  border-bottom: .5px solid rgba(0,0,0,.07);
+}
+.lnav-category-title span { cursor: inherit; }
+
+/* 图标网格 */
+.lnav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px 8px;
+}
+
+/* 单个图标卡片 */
+.lnav-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 4px;
+  text-decoration: none;
+  border-radius: 10px;
+  border: .5px solid transparent;
+  transition: background .15s, border-color .15s;
+  cursor: pointer;
+}
+.lnav-card:hover {
+  background: rgba(232,113,74,.07);
+  border-color: rgba(232,113,74,.2);
+}
+
+.lnav-avatar {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: rgba(200,210,230,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; color: #888;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+.lnav-avatar img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.lnav-name {
+  font-size: 11px;
+  color: #444;
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== 搜索引擎设置区块 ===== */
+.se-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.se-group-label {
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 500;
+}
+.se-opts {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.se-ai-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* 普通引擎按钮复用 .net-opt 样式，加 se-opt 标记 */
+.se-opt.net-opt { flex: unset; padding: 6px 14px; font-size: 12px; min-width: 60px; text-align: center; }
+
+/* AI 模型 chip（非激活状态：灰色边框） */
+.ai-model-chip {
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: .5px solid rgba(0,0,0,.15);
+  background: rgba(255,255,255,.7);
+  font-size: 12px;
+  color: #aaa;
+  cursor: pointer;
+  user-select: none;
+  transition: all .15s;
+}
+.ai-model-chip.on.ai-mode {
+  background: rgba(232,113,74,.12);
+  border-color: #e8714a;
+  color: #d05528;
+  font-weight: 500;
+}
+.ai-model-chip:hover { border-color: rgba(232,113,74,.4); color: #d05528; }
+
+/* 分隔符 */
+.se-divider {
+  font-size: 11px;
+  color: #ccc;
+  text-align: center;
+  padding: 4px 0;
+  position: relative;
+}
+.se-divider::before,
+.se-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: .5px;
+  background: rgba(0,0,0,.07);
+}
+.se-divider::before { left: 0; }
+.se-divider::after  { right: 0; }
+
+/* 模式提示 */
+.se-hint {
+  font-size: 11px;
+  color: #e8714a;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* 移动端 */
+@media (max-width: 768px) {
+  #links-nav-panel { width: 100vw !important; height: 100vh !important; }
+  .lnav-grid { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px 6px; }
+  .lnav-avatar { width: 36px; height: 36px; }
+  .lnav-name { font-size: 10px; }
+}

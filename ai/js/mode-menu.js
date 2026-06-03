@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的导航</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/links-nav.css">
+</head>
+<body>
+
+<div id="wallpaper" class="default-bg">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<div id="pages-wrap">
+  <div class="page" data-page="0">
+    <div id="page-header">
+      <div id="site-title">我的导航</div>
+      <div id="search-wrap">
+        <input id="search-input" type="text" placeholder="搜索网页，Enter 跳转...">
+        <button id="search-clear">✕</button>
+        <button id="search-btn">搜索</button>
+      </div>
+    </div>
+    <div class="grid-area" id="grid-area"></div>
+  </div>
+</div>
+
+<div id="page-bottom">
+  <div id="minimized-bar"></div>
+  <div id="page-dots">
+    <div class="page-dot active"></div>
+    <button id="add-page-btn" title="新增页面">+</button>
+  </div>
+</div>
+
+<div id="ctx-menu"></div>
+
+<!-- ================================================================
+     导航面板
+     ================================================================ -->
+<div class="modal-overlay" id="nav-overlay">
+  <div class="modal-panel" id="nav-panel">
+    <div class="modal-titlebar">
+      <span class="modal-title">🧭 网址导航</span>
+      <div class="traffic-lights">
+        <div class="tl tl-y" onclick="Modal.minimize('nav-overlay')" title="最小化"></div>
+        <div class="tl tl-g" onclick="Modal.maximize('nav-overlay')" title="最大化"></div>
+        <div class="tl tl-r" onclick="Modal.close('nav-overlay')" title="关闭"></div>
+      </div>
+    </div>
+    <div class="nav-search-bar">
+      <input class="nav-search-input" id="nav-search-input" placeholder="快速筛选网站...">
+      <button class="nav-search-btn" id="nav-search-btn">打开第一个</button>
+    </div>
+    <div class="nav-body">
+      <div class="nav-sidebar" id="nav-sidebar"></div>
+      <div class="nav-content"  id="nav-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     Links.json 快捷导航面板
+     ================================================================ -->
+<div class="modal-overlay" id="links-nav-overlay">
+  <div class="modal-panel" id="links-nav-panel">
+    <div class="modal-titlebar">
+      <span class="modal-title">🔗 快捷导航</span>
+      <div class="traffic-lights">
+        <div class="tl tl-y" onclick="Modal.minimize('links-nav-overlay')" title="最小化"></div>
+        <div class="tl tl-g" onclick="Modal.maximize('links-nav-overlay')" title="最大化"></div>
+        <div class="tl tl-r" onclick="Modal.close('links-nav-overlay')" title="关闭"></div>
+      </div>
+      <button id="links-net-btn" class="links-net-btn">🌐 外网</button>
+    </div>
+    <div class="links-nav-body">
+      <div id="links-nav-shortcut-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     记事本
+     ================================================================ -->
+<div class="modal-overlay" id="note-overlay">
+  <div class="modal-panel" id="note-panel">
+    <div class="modal-titlebar">
+      <span class="modal-title">📝 记事本</span>
+      <div class="traffic-lights">
+        <div class="tl tl-y" onclick="Modal.minimize('note-overlay')" title="最小化"></div>
+        <div class="tl tl-g" onclick="Modal.maximize('note-overlay')" title="最大化"></div>
+        <div class="tl tl-r" onclick="Modal.close('note-overlay')" title="关闭"></div>
+      </div>
+    </div>
+    <textarea id="note-area" placeholder="在这里记录你的想法..."></textarea>
+    <div class="note-footer">
+      <span id="note-count">0 字</span>
+      <button class="note-save-btn" onclick="Widgets.saveNote()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     画板
+     ================================================================ -->
+<div class="modal-overlay" id="draw-overlay">
+  <div class="modal-panel" id="draw-panel">
+    <div class="modal-titlebar">
+      <span class="modal-title">🎨 画板</span>
+      <div class="traffic-lights">
+        <div class="tl tl-y" onclick="Modal.minimize('draw-overlay')" title="最小化"></div>
+        <div class="tl tl-g" onclick="Modal.maximize('draw-overlay')" title="最大化"></div>
+        <div class="tl tl-r" onclick="Modal.close('draw-overlay')" title="关闭"></div>
+      </div>
+    </div>
+    <div id="draw-toolbar">
+      <button class="dtool active" id="tool-pen"    onclick="Widgets.setTool('pen')">✏️ 画笔</button>
+      <button class="dtool"        id="tool-eraser" onclick="Widgets.setTool('eraser')">🧹 橡皮</button>
+      <div style="display:flex;gap:5px;align-items:center;">
+        <div class="clr-dot active" style="background:#222"    data-c="#222"    onclick="Widgets.setColor(this)"></div>
+        <div class="clr-dot"        style="background:#e8714a" data-c="#e8714a" onclick="Widgets.setColor(this)"></div>
+        <div class="clr-dot"        style="background:#4a9edb" data-c="#4a9edb" onclick="Widgets.setColor(this)"></div>
+        <div class="clr-dot"        style="background:#52b788" data-c="#52b788" onclick="Widgets.setColor(this)"></div>
+        <div class="clr-dot"        style="background:#f5a623" data-c="#f5a623" onclick="Widgets.setColor(this)"></div>
+        <div class="clr-dot"        style="background:#e63946" data-c="#e63946" onclick="Widgets.setColor(this)"></div>
+        <div class="clr-dot"        style="background:#9b59b6" data-c="#9b59b6" onclick="Widgets.setColor(this)"></div>
+      </div>
+      <label style="font-size:11px;color:#888;">粗细</label>
+      <input type="range" id="draw-sz" min="1" max="20" value="3" style="width:60px;accent-color:#e8714a;">
+      <button class="dtool" style="margin-left:auto;color:#c0392b;" onclick="Widgets.clearCanvas()">🗑 清空</button>
+      <button class="dtool" onclick="Widgets.saveCanvas()">💾 保存</button>
+    </div>
+    <canvas id="draw-canvas"></canvas>
+  </div>
+</div>
+
+<!-- ================================================================
+     AI 对话（原有，保留；桌面图标 action:'ai' 可跳转自定义URL或打开此弹窗）
+     ================================================================ -->
+<div class="modal-overlay" id="ai-overlay">
+  <div class="modal-panel" id="ai-panel">
+    <div class="modal-titlebar">
+      <span class="modal-title">🤖 AI 对话助手</span>
+      <div class="traffic-lights">
+        <div class="tl tl-y" onclick="Modal.minimize('ai-overlay')" title="最小化"></div>
+        <div class="tl tl-g" onclick="Modal.maximize('ai-overlay')" title="最大化"></div>
+        <div class="tl tl-r" onclick="Modal.close('ai-overlay')" title="关闭"></div>
+      </div>
+    </div>
+    <div id="chat-msgs">
+      <div class="chat-msg ai">你好！我是你的AI助手 👋 有什么可以帮你的吗？</div>
+    </div>
+    <div id="chat-input-row">
+      <input id="chat-input" type="text" placeholder="输入消息，Enter 发送...">
+      <button id="chat-send">发送</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     天气详情
+     ================================================================ -->
+<div class="modal-overlay" id="weather-overlay">
+  <div class="modal-panel" id="weather-panel">
+    <div class="modal-titlebar">
+      <span class="modal-title">🌤 天气详情</span>
+      <div class="traffic-lights">
+        <div class="tl tl-y" onclick="Modal.minimize('weather-overlay')" title="最小化"></div>
+        <div class="tl tl-g" onclick="Modal.maximize('weather-overlay')" title="最大化"></div>
+        <div class="tl tl-r" onclick="Modal.close('weather-overlay')" title="关闭"></div>
+      </div>
+    </div>
+    <div class="wd-body">
+      <div class="wd-main">
+        <div class="wd-big-temp">23°</div>
+        <div class="wd-big-icon">⛅</div>
+        <div class="wd-info">
+          <p>🌡 体感：21°C</p><p>💧 湿度：65%</p>
+          <p>🌬 东北风 3级</p><p>👁 能见度：良</p>
+        </div>
+      </div>
+      <div class="wd-5day">
+        <div class="wd-day"><div class="dn">今天</div><div class="di">⛅</div><div class="dt">23/15°</div></div>
+        <div class="wd-day"><div class="dn">明天</div><div class="di">🌤</div><div class="dt">25/17°</div></div>
+        <div class="wd-day"><div class="dn">周三</div><div class="di">🌧</div><div class="dt">19/13°</div></div>
+        <div class="wd-day"><div class="dn">周四</div><div class="di">☀️</div><div class="dt">28/18°</div></div>
+        <div class="wd-day"><div class="dn">周五</div><div class="di">⛅</div><div class="dt">24/16°</div></div>
+      </div>
+      <p style="font-size:11px;color:#bbb;text-align:center;">演示数据，可对接真实天气 API</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     设置
+     ================================================================ -->
+<div class="modal-overlay" id="settings-overlay">
+  <div class="modal-panel" id="settings-panel">
+    <div class="modal-titlebar">
+      <span class="modal-title">⚙️ 设置</span>
+      <div class="traffic-lights">
+        <div class="tl tl-y" onclick="Modal.minimize('settings-overlay')" title="最小化"></div>
+        <div class="tl tl-g" onclick="Modal.maximize('settings-overlay')" title="最大化"></div>
+        <div class="tl tl-r" onclick="Modal.close('settings-overlay')" title="关闭"></div>
+      </div>
+    </div>
+    <div class="settings-body">
+
+      <!-- 背景图片 -->
+      <div class="st-section">
+        <h3>背景图片</h3>
+        <div class="bg-opts bg-img-opts">
+          <div class="bg-opt bg-img-opt active" data-bg-img="1.jpg" onclick="App.applyPresetImg(this,'images/1.jpg')">
+            <img src="images/1.jpg" alt="壁纸1" loading="lazy">
+          </div>
+          <div class="bg-opt bg-img-opt" data-bg-img="2.jpg" onclick="App.applyPresetImg(this,'images/2.jpg')">
+            <img src="images/2.jpg" alt="壁纸2" loading="lazy">
+          </div>
+          <div class="bg-opt bg-img-opt" data-bg-img="3.jpg" onclick="App.applyPresetImg(this,'images/3.jpg')">
+            <img src="images/3.jpg" alt="壁纸3" loading="lazy">
+          </div>
+          <div class="bg-opt bg-img-opt" data-bg-img="4.jpg" onclick="App.applyPresetImg(this,'images/4.jpg')">
+            <img src="images/4.jpg" alt="壁纸4" loading="lazy">
+          </div>
+        </div>
+      </div>
+
+      <!-- 网络模式 -->
+      <div class="st-section">
+        <h3>网络模式</h3>
+        <div class="net-row">
+          <div class="net-opt active" data-net="cn"     onclick="Nav.switchNet(this)">🇨🇳 国内</div>
+          <div class="net-opt"        data-net="global" onclick="Nav.switchNet(this)">🌍 国际</div>
+        </div>
+      </div>
+
+      <!-- 搜索引擎（新区块，由 JS 动态渲染） -->
+      <div id="se-section-container"></div>
+
+      <!-- 页面标题 -->
+      <div class="st-section">
+        <h3>页面标题</h3>
+        <div class="st-row">
+          <div class="st-label">自定义标题</div>
+          <input id="title-input" style="border:.5px solid rgba(0,0,0,.15);border-radius:6px;padding:5px 10px;font-size:13px;outline:none;width:160px;font-family:inherit;" value="我的导航">
+        </div>
+        <button class="st-btn primary" onclick="App.applyTitle()" style="width:100%;">应用标题</button>
+      </div>
+
+      <!-- AI 接口 -->
+      <div class="st-section">
+        <h3>AI 接口（Anthropic）</h3>
+        <div class="st-row">
+          <div><div class="st-label">API Key</div><div class="st-sub">本地保存，不上传</div></div>
+          <input id="api-key-input" type="password" style="border:.5px solid rgba(0,0,0,.15);border-radius:6px;padding:5px 10px;font-size:13px;outline:none;width:180px;font-family:inherit;" placeholder="sk-ant-...">
+        </div>
+        <button class="st-btn primary" onclick="App.saveApiKey()" style="width:100%;">保存 Key</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     文件夹（模板）
+     ================================================================ -->
+<div class="modal-overlay" id="folder-overlay">
+  <div class="modal-panel" id="folder-panel">
+    <div class="modal-titlebar">
+      <span class="modal-title" id="folder-title">文件夹</span>
+      <div class="traffic-lights">
+        <div class="tl tl-y" onclick="Modal.minimize('folder-overlay')" title="最小化"></div>
+        <div class="tl tl-g" onclick="Modal.maximize('folder-overlay')" title="最大化"></div>
+        <div class="tl tl-r" onclick="Modal.close('folder-overlay')" title="关闭"></div>
+      </div>
+    </div>
+    <div class="folder-grid" id="folder-grid"></div>
+    <div class="folder-name-bar">
+      <input id="folder-name-inp" type="text" placeholder="文件夹名称...">
+      <button class="st-btn primary" onclick="saveFolderName()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     计算器
+     ================================================================ -->
+<div class="modal-overlay" id="calc-overlay">
+  <div class="modal-panel" id="calc-panel">
+    <div class="modal-titlebar">
+      <span class="modal-title">🧮 计算器</span>
+      <div class="traffic-lights">
+        <div class="tl tl-y" onclick="Modal.minimize('calc-overlay')"></div>
+        <div class="tl tl-g" onclick="Modal.maximize('calc-overlay')"></div>
+        <div class="tl tl-r" onclick="Modal.close('calc-overlay')"></div>
+      </div>
+    </div>
+    <div id="calc-display">
+      <div id="calc-sub"></div>
+      <div id="calc-main">0</div>
+    </div>
+    <div id="calc-sci">
+      <button class="ck fn" onclick="Calc.press('sin')">sin</button>
+      <button class="ck fn" onclick="Calc.press('cos')">cos</button>
+      <button class="ck fn" onclick="Calc.press('tan')">tan</button>
+      <button class="ck fn" onclick="Calc.press('log')">log</button>
+      <button class="ck fn" onclick="Calc.press('ln')">ln</button>
+    </div>
+    <div id="calc-keys">
+      <button class="ck fn" onclick="Calc.press('x²')">x²</button>
+      <button class="ck fn" onclick="Calc.press('√')">√</button>
+      <button class="ck fn" onclick="Calc.press('1/x')">1/x</button>
+      <button class="ck fn" onclick="Calc.press('π')">π</button>
+      <button class="ck ac"  onclick="Calc.press('AC')">AC</button>
+      <button class="ck fn" onclick="Calc.press('±')">±</button>
+      <button class="ck op" onclick="Calc.press('%')">%</button>
+      <button class="ck op" onclick="Calc.press('÷')">÷</button>
+      <button class="ck" onclick="Calc.press('7')">7</button>
+      <button class="ck" onclick="Calc.press('8')">8</button>
+      <button class="ck" onclick="Calc.press('9')">9</button>
+      <button class="ck op" onclick="Calc.press('×')">×</button>
+      <button class="ck" onclick="Calc.press('4')">4</button>
+      <button class="ck" onclick="Calc.press('5')">5</button>
+      <button class="ck" onclick="Calc.press('6')">6</button>
+      <button class="ck op" onclick="Calc.press('-')">−</button>
+      <button class="ck" onclick="Calc.press('1')">1</button>
+      <button class="ck" onclick="Calc.press('2')">2</button>
+      <button class="ck" onclick="Calc.press('3')">3</button>
+      <button class="ck op" onclick="Calc.press('+')">+</button>
+      <button class="ck fn" onclick="Calc.press('⌫')">⌫</button>
+      <button class="ck span2" onclick="Calc.press('0')">0</button>
+      <button class="ck" onclick="Calc.press('.')">.</button>
+      <button class="ck eq" onclick="Calc.press('=')">=</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     脚本（顺序很重要）
+     ================================================================ -->
+<script src="js/data.js"></script>
+<script src="js/ai-engine.js"></script>
+<script src="js/links-nav.js"></script>
+<script src="js/grid.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/widgets.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/app.js"></script>
+<script src="js/grid-patch.js"></script>
+<script src="js/mode-menu.js"></script>
+</body>
+</html>

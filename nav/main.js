@@ -2,6 +2,19 @@
    王五导航 · nav/main.js
    =========================== */
 
+const PROTECTED_PASSWORD_HASH =
+  'e5b560baff2258b7f00c54fb2871e3c45a575af15affb7d5b93a9ac3cba1f772';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(str)
+  );
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 // ── 模式配置 ────────────────────────────────────────────────
 const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim', 'ai'];
 const MODE_PATHS = {
@@ -443,7 +456,7 @@ function renderCards(sections) {
   const main = document.getElementById('main-content');
   if (!main) return;
   main.innerHTML = '';
-  sections.forEach(({ section, items }) => {
+  sections.forEach(({ section, items, protected: isProtected }) => {
     const sec = document.createElement('div');
     sec.className = 'section';
     const h2 = document.createElement('h2');
@@ -489,6 +502,26 @@ function renderCards(sections) {
       a.appendChild(popup);
       grid.appendChild(a);
     });
+    if (isProtected) {
+      grid.style.display = 'none';
+      h2.style.cursor = 'pointer';
+      h2.addEventListener('click', async () => {
+        if (sessionStorage.getItem(section) === 'ok') {
+          grid.style.display = grid.style.display === 'none' ? 'grid' : 'none';
+          return;
+        }
+        const pwd = prompt('请输入访问密码');
+        if (!pwd) return;
+        const hash = await sha256(pwd);
+        if (hash === PROTECTED_PASSWORD_HASH) {
+          sessionStorage.setItem(section, 'ok');
+          grid.style.display = 'grid';
+        } else {
+          alert('密码错误');
+        }
+      });
+    }
+
     sec.appendChild(grid);
     main.appendChild(sec);
   });

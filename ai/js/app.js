@@ -20,23 +20,19 @@ const App = {
   init() {
     this.loadData();
     this.bindSearch();
+    AI_ENGINE.init();        // 必须在 bindSettings 前，_buildSESection 需要 models
     this.bindSettings();
     this.tick();
     setInterval(() => this.tick(), 10000);
 
-    AI_ENGINE.init();
-
-    // 等页面完全加载后再渲染，确保尺寸正确
-    const _doRender = () => {
-      GRID_TOP = getGridTop();
-      renderAll();
-      setTimeout(() => renderAll(), 150);
-    };
-    if (document.readyState === 'complete') {
-      _doRender();
-    } else {
-      window.addEventListener('load', _doRender, { once: true });
-    }
+    // 多重兜底渲染，确保 GitHub Pages 字体/图片加载后尺寸稳定
+    const _doRender = () => { GRID_TOP = getGridTop(); renderAll(); };
+    // 立即渲染一次
+    requestAnimationFrame(() => { _doRender(); });
+    // load 后再渲染一次（字体加载完）
+    window.addEventListener('load', () => { _doRender(); }, { once: true });
+    // 500ms 后最终兜底，确保任何情况下都能显示
+    setTimeout(_doRender, 500);
   },
 
   /* ---- localStorage ---- */

@@ -26,14 +26,22 @@ const App = {
 
     AI_ENGINE.init();
 
-    requestAnimationFrame(() => requestAnimationFrame(() => {
+    // 等页面完全加载后再渲染，确保尺寸正确
+    const _doRender = () => {
+      GRID_TOP = getGridTop();
       renderAll();
-    }));
+      setTimeout(() => renderAll(), 150);
+    };
+    if (document.readyState === 'complete') {
+      _doRender();
+    } else {
+      window.addEventListener('load', _doRender, { once: true });
+    }
   },
 
   /* ---- localStorage ---- */
   loadData() {
-    const LAYOUT_VER = '10';
+    const LAYOUT_VER = '11';
     try {
       const ver = localStorage.getItem('aiNav_layoutVer');
       const d   = localStorage.getItem('aiNav_pages');
@@ -91,7 +99,7 @@ const App = {
         pages:     this.pages,
         pageCount: this.pageCount,
       }));
-      localStorage.setItem('aiNav_layoutVer', '10');
+      localStorage.setItem('aiNav_layoutVer', '11');
     } catch (e) {}
   },
 

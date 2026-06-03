@@ -33,7 +33,7 @@ const App = {
 
   /* ---- localStorage ---- */
   loadData() {
-    const LAYOUT_VER = '9';
+    const LAYOUT_VER = '10';
     try {
       const ver = localStorage.getItem('aiNav_layoutVer');
       const d   = localStorage.getItem('aiNav_pages');
@@ -91,7 +91,7 @@ const App = {
         pages:     this.pages,
         pageCount: this.pageCount,
       }));
-      localStorage.setItem('aiNav_layoutVer', '9');
+      localStorage.setItem('aiNav_layoutVer', '10');
     } catch (e) {}
   },
 

@@ -6,6 +6,19 @@ const WORKER_URL = 'https://ico.xmynscnq.dpdns.org';
 const LINKS_FILE = '../links.json';
 const DEFAULT_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0yIDEyaDIwIj48L3BhdGg+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ij48L3BhdGg+PC9zdmc+';
 
+const PROTECTED_PASSWORD_HASH =
+  'e5b560baff2258b7f00c54fb2871e3c45a575af15affb7d5b93a9ac3cba1f772';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(str)
+  );
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 // ── 模式配置 ──────────────────────────────────────────────
 const MODES = ['normal', 'webstack', 'easy', 'nav', '5iux', 'kim', 'ai'];
 const MODE_PATHS = {
@@ -488,13 +501,13 @@ function renderSidebar(sections) {
   const menu = document.getElementById('main-menu');
   if (!menu) return;
   menu.innerHTML = '';
-  sections.forEach(({ section }) => {
+  sections.forEach(({ section, protected: isProtected }) => {
     const li = document.createElement('li');
     li.className = 'sidebar-item';
     const a = document.createElement('a');
     a.href = '#' + sectionId(section);
     a.className = 'nav-smooth';
-    a.innerHTML = `<span class="sidebar-emoji">${sectionEmoji(section)}</span><span class="menu-label">${sectionLabel(section)}</span>`;
+    a.innerHTML = `<span class="sidebar-emoji">${sectionEmoji(section)}</span><span class="menu-label">${sectionLabel(section)}</span>${isProtected ? '<span style="margin-left:auto;font-size:0.75rem;opacity:0.5;">🔒</span>' : ''}`;
     li.appendChild(a);
     menu.appendChild(li);
   });
@@ -515,7 +528,7 @@ function renderContent(sections) {
   const main = document.getElementById('content');
   if (!main) return;
   main.innerHTML = '';
-  sections.forEach(({ section, items }) => {
+  sections.forEach(({ section, items, protected: isProtected }) => {
     const block = document.createElement('div');
     block.className = 'ws-section';
     block.innerHTML = `<div class="d-flex flex-fill"><h4 class="text-gray text-lg mb-4" id="${sectionId(section)}"><span class="section-emoji mr-1">${sectionEmoji(section)}</span>${sectionLabel(section)}</h4></div>`;
@@ -535,7 +548,31 @@ function renderContent(sections) {
       col.innerHTML = `<div class="url-body default"><a href="${url}" target="_blank" data-url="${item.url}" ${item.intranet?`data-intranet="${item.intranet}"`:''}  class="card no-c mb-4" data-toggle="tooltip" data-placement="bottom" data-original-title="${domain}"><div class="card-body"><div class="url-content d-flex align-items-center"><div class="url-img mr-2 d-flex align-items-center justify-content-center"><img src="${iconSrc}" onerror="this.src='${DEFAULT_ICON}';this.onerror=null;" alt="${title}"></div><div class="url-info flex-fill" style="min-width:0;"><div class="text-sm overflowClip_1"><strong>${title}</strong>${netBadge}</div><p class="overflowClip_1 m-0 text-muted text-xs">${desc}</p></div></div></div></a></div>`;
       row.appendChild(col);
     });
-    block.appendChild(row);
+    if (isProtected) {
+  row.style.display = 'none';
+
+  const h4 = block.querySelector('h4');
+  if (h4) {
+    h4.style.cursor = 'pointer';
+    h4.addEventListener('click', async () => {
+      if (sessionStorage.getItem(section) === 'ok') {
+        row.style.display = row.style.display === 'none' ? '' : 'none';
+        return;
+      }
+      const pwd = prompt('请输入访问密码');
+      if (!pwd) return;
+      const hash = await sha256(pwd);
+      if (hash === PROTECTED_PASSWORD_HASH) {
+        sessionStorage.setItem(section, 'ok');
+        row.style.display = '';
+      } else {
+        alert('密码错误');
+      }
+    });
+  }
+}
+
+block.appendChild(row);
     block.appendChild(document.createElement('br'));
     main.appendChild(block);
   });

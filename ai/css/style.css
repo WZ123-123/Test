@@ -605,3 +605,19 @@ body {
 }
 .bg-img-opt:hover { transform: scale(1.04); }
 .bg-img-opt.active { border-color: #e8714a; }
+
+/* ── favicon 桌面图标 ── */
+.favicon-body {
+  border-radius: 22px !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,.12) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.item-favicon-img {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+  border-radius: 6px;
+  display: block;
+}

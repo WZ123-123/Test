@@ -159,8 +159,20 @@ Nav._renderLinksContent = function(filter) {
         favicon: el.dataset.favicon,
       }));
       window._dragSize = '1x1';
+      const srcOverlay = el.closest('.modal-overlay');
+      if(srcOverlay) {
+        srcOverlay._prevPE = srcOverlay.style.pointerEvents;
+        srcOverlay.style.pointerEvents = 'none';
+        window._dragSrcOverlay = srcOverlay;
+      }
     });
-    el.addEventListener('dragend', () => { window._dragSize = null; });
+    el.addEventListener('dragend', () => {
+      window._dragSize = null;
+      if(window._dragSrcOverlay) {
+        window._dragSrcOverlay.style.pointerEvents = window._dragSrcOverlay._prevPE || '';
+        window._dragSrcOverlay = null;
+      }
+    });
     el.addEventListener('contextmenu', ev => {
       ev.preventDefault(); ev.stopPropagation();
       const menu = document.getElementById('ctx-menu');

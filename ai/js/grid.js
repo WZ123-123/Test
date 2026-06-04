@@ -38,10 +38,17 @@ const LEFT_PAD_COLS        = 2;
 const TOTAL_COLS           = DEFAULT_LAYOUT_COLS + LEFT_PAD_COLS; // 15
 
 function calcGridOffset() {
-  const mc       = Math.floor((innerWidth + GAP) / (CELL + GAP));
-  const usedCols = Math.min(mc, TOTAL_COLS);
-  const totalW   = usedCols * (CELL + GAP) - GAP;
-  return Math.max(0, Math.floor((innerWidth - totalW) / 2));
+  /* 以"内容列数"（不含左侧空白填充列）为基准居中，再减去左填充列宽，
+     使视觉内容在屏幕左右严格对称。                                     */
+  const contentCols = DEFAULT_LAYOUT_COLS; // 13：实际放图标的列数
+  const mc          = Math.floor((innerWidth + GAP) / (CELL + GAP));
+  const usedContent = Math.min(mc, contentCols);
+  const contentW    = usedContent * (CELL + GAP) - GAP;
+  // 内容区居中的起始 x
+  const contentLeft = Math.max(0, Math.floor((innerWidth - contentW) / 2));
+  // grid 坐标从 col=0 开始，内容从 col=LEFT_PAD_COLS 开始，
+  // 所以 grid 的 offset = contentLeft - LEFT_PAD_COLS*(CELL+GAP)
+  return Math.max(0, contentLeft - LEFT_PAD_COLS * (CELL + GAP));
 }
 
 /* 首次加载默认布局时把所有图标 col 向右偏移 LEFT_PAD_COLS */

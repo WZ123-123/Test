@@ -301,6 +301,22 @@ const App = {
     alert('API Key 已保存！');
   },
 
+  /* ── 内外网切换 ── */
+  setNetMode(mode, el) {
+    LinksNav.isIntranet = (mode === 'intranet');
+    localStorage.setItem('netMode', mode);
+    this._syncNetUI();
+    // 重新渲染导航内容（URL可能变化）
+    if (Nav._linksData) Nav._renderLinksContent('');
+    LinksNav._render && LinksNav._render(LinksNav._data || []);
+  },
+
+  _syncNetUI() {
+    const isIntranet = LinksNav.isIntranet;
+    document.getElementById('net-opt-internet')?.classList.toggle('active', !isIntranet);
+    document.getElementById('net-opt-intranet')?.classList.toggle('active', isIntranet);
+  },
+
   /* ── setSE（兼容旧 HTML onclick 调用） ── */
   setSE(el, url) {
     // 通过旧 onclick 调用的兼容入口，直接走 selectNormalEngine
@@ -322,8 +338,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('add-page-btn')?.addEventListener('click', () => App.addPage());
   // links.json 加载
   LinksNav.load();
-  // 内外网按钮（如果有）
+  // 内外网按钮（快捷导航面板里的，如果有）
   document.getElementById('links-net-btn')?.addEventListener('click', () => LinksNav.toggle());
+  // 同步设置面板内外网按钮初始状态
+  App._syncNetUI();
   // 设置面板打开时重建 SE 区域（保持和 App.searchMode 同步）
   document.querySelector('.tl-r[onclick*="settings"]')
     ?.closest('.modal-titlebar')

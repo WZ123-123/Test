@@ -126,10 +126,33 @@ document.addEventListener('DOMContentLoaded',()=>{
         _navDragOver=deskTarget;
         deskTarget.classList.add('merge-target');
       }
+      // 悬停在图标上时也做让位预览
+      const area=getGridArea(App.curPage);
+      if(area){
+        const ar=area.getBoundingClientRect();
+        const pageTop=(App.curPage===0)?GRID_TOP:20;
+        const fakeItem={size:sz,id:'__nav_drag__'};
+        const pc=Math.max(0,Math.floor((e.clientX-ar.left)/(CELL+GAP)));
+        const pr=Math.max(0,Math.floor((e.clientY-ar.top-pageTop)/(CELL+GAP)));
+        if(typeof applyShiftPreview==='function') applyShiftPreview(App.curPage,fakeItem,pc,pr);
+      }
     } else {
       _clearNavDragHighlight();
-      const gs=ghostSize(sz);
-      showGhost(e.clientX-gs.w/2, e.clientY-gs.h/2, gs.w, gs.h, gs.r);
+      if(typeof clearShiftPreview==='function') clearShiftPreview();
+      const area=getGridArea(App.curPage);
+      if(area){
+        const ar=area.getBoundingClientRect();
+        const pageTop=(App.curPage===0)?GRID_TOP:20;
+        const fakeItem={size:sz,id:'__nav_drag__'};
+        const pc=Math.max(0,Math.floor((e.clientX-ar.left)/(CELL+GAP)));
+        const pr=Math.max(0,Math.floor((e.clientY-ar.top-pageTop)/(CELL+GAP)));
+        if(typeof applyShiftPreview==='function') applyShiftPreview(App.curPage,fakeItem,pc,pr);
+        const gs=ghostSize(sz);
+        showGhost(e.clientX-gs.w/2, e.clientY-gs.h/2, gs.w, gs.h, gs.r);
+      } else {
+        const gs=ghostSize(sz);
+        showGhost(e.clientX-gs.w/2, e.clientY-gs.h/2, gs.w, gs.h, gs.r);
+      }
     }
   });
 
@@ -143,6 +166,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.addEventListener('drop',e=>{
     hideGhost&&hideGhost();
     _clearNavDragHighlight();
+    typeof clearShiftPreview==='function' && clearShiftPreview();
 
     const isNavIcon   = !!e.dataTransfer.getData('navIcon');
     const isFolderItem= !!e.dataTransfer.getData('folderItem');

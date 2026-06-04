@@ -115,59 +115,61 @@ document.addEventListener('DOMContentLoaded',()=>{
     e.preventDefault();
     if(!hideGhost||!showGhost) return;
 
-    /* 在任何 modal-panel 内（含文件夹弹窗、nav面板等） */
-    if(e.target.closest('.modal-panel')) {
-      _clearNavDragHighlight();
-      if(typeof clearShiftPreview==='function') clearShiftPreview();
-      /* 用坐标检测鼠标下方是否有 folder-grid（跨弹窗拖拽：e.target可能在源弹窗） */
-      const _under2 = document.elementFromPoint(e.clientX, e.clientY);
-      const _fg = _under2?.closest('.folder-grid');
-      if(_fg) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        /* Ghost 跟随鼠标，悬浮在目标文件夹 grid 上方 */
-        const sz = window._dragSize || '1x1';
-        const gs = ghostSize(sz);
-        showGhost(e.clientX - gs.w / 2, e.clientY - gs.h / 2, gs.w, gs.h, gs.r);
-      } else {
-        hideGhost();
-        e.preventDefault();
-      }
+    const sz = window._dragSize || '1x1';
+
+    /* 用坐标判断鼠标实际所在位置（穿透 pointerEvents:none 的源面板） */
+    const _srcOverlay = window._dragSrcOverlay;
+    /* 临时完全隐藏源面板，让 elementFromPoint 看到背后的元素 */
+    if(_srcOverlay) _srcOverlay.style.visibility = 'hidden';
+    const _realUnder = document.elementFromPoint(e.clientX, e.clientY);
+    if(_srcOverlay) _srcOverlay.style.visibility = '';
+
+    const _inFolderGrid = _realUnder?.closest('.folder-grid');
+    const _inModalPanel = _realUnder?.closest('.modal-panel');
+
+    _clearNavDragHighlight();
+    if(typeof clearShiftPreview==='function') clearShiftPreview();
+
+    if(_inFolderGrid) {
+      /* 鼠标在文件夹 grid 上：Ghost 跟随 */
+      e.dataTransfer.dropEffect = 'move';
+      const gs = ghostSize(sz);
+      showGhost(e.clientX - gs.w / 2, e.clientY - gs.h / 2, gs.w, gs.h, gs.r);
       return;
     }
 
-    let sz='1x1';
-    if(typeof _dragSize!=='undefined') sz=_dragSize||'1x1';
+    if(_inModalPanel) {
+      /* 鼠标在其他弹窗内（非文件夹grid）：隐藏Ghost，不做让位 */
+      hideGhost();
+      return;
+    }
 
+    /* 鼠标在桌面区域 */
     hideGhost();
-    const under=document.elementFromPoint(e.clientX,e.clientY);
-    const deskTarget=under&&under.closest('.desk-item');
+    const under = _realUnder;
+    const deskTarget = under?.closest('.desk-item');
 
     if(deskTarget) {
-      // 悬停在桌面图标上：高亮合并目标，清除让位预览（避免图标被推开导致elementFromPoint失效）
-      if(_navDragOver!==deskTarget) {
+      if(_navDragOver !== deskTarget) {
         _clearNavDragHighlight();
-        _navDragOver=deskTarget;
+        _navDragOver = deskTarget;
         deskTarget.classList.add('merge-target');
       }
-      if(typeof clearShiftPreview==='function') clearShiftPreview();
       hideGhost();
     } else {
-      // 悬停在空白处：清除合并高亮，做让位预览
       _clearNavDragHighlight();
-      const area=getGridArea(App.curPage);
+      const area = getGridArea(App.curPage);
       if(area){
-        const ar=area.getBoundingClientRect();
-        const pageTop=(App.curPage===0)?GRID_TOP:20;
-        const fakeItem={size:sz,id:'__nav_drag__'};
-        const pc=Math.max(0,Math.floor((e.clientX-ar.left)/(CELL+GAP)));
-        const pr=Math.max(0,Math.floor((e.clientY-ar.top-pageTop)/(CELL+GAP)));
-        if(typeof applyShiftPreview==='function') applyShiftPreview(App.curPage,fakeItem,pc,pr);
-        const gs=ghostSize(sz);
+        const ar = area.getBoundingClientRect();
+        const pageTop = (App.curPage===0) ? GRID_TOP : 20;
+        const fakeItem = {size:sz, id:'__nav_drag__'};
+        const pc = Math.max(0, Math.floor((e.clientX-ar.left)/(CELL+GAP)));
+        const pr = Math.max(0, Math.floor((e.clientY-ar.top-pageTop)/(CELL+GAP)));
+        if(typeof applyShiftPreview==='function') applyShiftPreview(App.curPage, fakeItem, pc, pr);
+        const gs = ghostSize(sz);
         showGhost(e.clientX-gs.w/2, e.clientY-gs.h/2, gs.w, gs.h, gs.r);
       } else {
-        if(typeof clearShiftPreview==='function') clearShiftPreview();
-        const gs=ghostSize(sz);
+        const gs = ghostSize(sz);
         showGhost(e.clientX-gs.w/2, e.clientY-gs.h/2, gs.w, gs.h, gs.r);
       }
     }
@@ -189,13 +191,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     const isFolderItem= !!e.dataTransfer.getData('folderItem');
     if(!isNavIcon && !isFolderItem) return;
 
-    /* ---- 落点判断（用坐标，避免跨弹窗时e.target在源弹窗）----
-       必须在恢复 pointerEvents 之前调用 elementFromPoint，
-       否则源面板已恢复拦截，找不到背后的 folder-grid */
+    /* ---- 落点判断：临时隐藏源面板，让 elementFromPoint 穿透到背后的元素 ---- */
+    const _srcOv = window._dragSrcOverlay;
+    if(_srcOv) _srcOv.style.visibility = 'hidden';
     const _dropUnder = document.elementFromPoint(e.clientX, e.clientY);
+    if(_srcOv) _srcOv.style.visibility = '';
+
     const targetFolderGrid = _dropUnder?.closest('.folder-grid');
     const targetDeskItem   = !targetFolderGrid && _dropUnder?.closest('.desk-item');
-    const inOtherModal     = !targetFolderGrid && !targetDeskItem && e.target.closest('.modal-panel');
+    const inOtherModal     = !targetFolderGrid && !targetDeskItem && _dropUnder?.closest('.modal-panel');
 
     /* 落点确定后再恢复源面板 pointer-events */
     if(window._dragSrcOverlay) {

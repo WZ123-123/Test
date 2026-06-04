@@ -203,8 +203,11 @@ function buildItemHTML(item) {
             <div class="item-label">${item.label}</div>`;
   }
   if (item.size==='1x1') {
-    return `<div class="item-body" style="${bs}">${shine}
-              <div class="item-emoji">${item.emoji||item.label.slice(0,2)}</div></div>
+    const iconInner = item._favicon
+      ? `<img src="${item._favicon}" alt="" style="width:58%;height:58%;object-fit:contain;border-radius:6px;"
+             onerror="this.parentNode.innerHTML='<div class=\"item-emoji\">${item.emoji||item.label.slice(0,2)}</div>';this.onerror=null;">`
+      : `<div class="item-emoji">${item.emoji||item.label.slice(0,2)}</div>`;
+    return `<div class="item-body" style="${bs}">${shine}${iconInner}</div>
             <div class="item-label">${item.label}</div>`;
   }
   if (item.size==='2x1') {

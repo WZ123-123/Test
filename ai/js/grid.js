@@ -198,10 +198,14 @@ function buildItemHTML(item) {
   if (item.type==='folder') {
     const cells=(item.items||[]).slice(0,4).map(s=>{
       if(s._favicon && s._favicon.startsWith('http')){
-        return `<div class="folder-cell" style="background:rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        return `<div class="folder-cell" style="background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;overflow:hidden;">
           <img src="${s._favicon}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:4px;"
                onerror="this.parentNode.style.background='${getBgStyle(s.bgClass,s._customBg).replace('background:','').replace('background-image:','')}';this.remove();">
         </div>`;
+      }
+      const em=s.emoji||'';
+      if(em){
+        return `<div class="folder-cell" style="${getBgStyle(s.bgClass,s._customBg)};display:flex;align-items:center;justify-content:center;font-size:13px;">${em}</div>`;
       }
       return `<div class="folder-cell" style="${getBgStyle(s.bgClass,s._customBg)}"></div>`;
     }).join('');

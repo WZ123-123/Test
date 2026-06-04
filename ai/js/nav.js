@@ -379,13 +379,21 @@ function _refreshFolderOverlay(overlay, item, pi){
 
 /* 渲染文件夹内图标列表 */
 function _renderFolderGridEl(gridEl, item, pi){
-  gridEl.innerHTML=(item.items||[]).map((it,idx)=>`
-    <div class="folder-icon-item" data-idx="${idx}" draggable="true">
-      <div class="folder-item-body" style="${getBgStyle(it.bgClass,it._customBg)};font-size:18px;">
-        ${it.emoji||it.label.slice(0,2)}
+  gridEl.innerHTML=(item.items||[]).map((it,idx)=>{
+    const bs2=getBgStyle(it.bgClass,it._customBg);
+    const inner=it._favicon
+      ? `<img src="${it._favicon}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:10px;"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+         <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:18px;">${it.emoji||it.label.slice(0,2)}</span>`
+      : `<span style="font-size:18px;">${it.emoji||it.label.slice(0,2)}</span>`;
+    const bg2=it._favicon?'background:rgba(255,255,255,0.88);':bs2;
+    return `<div class="folder-icon-item" data-idx="${idx}" draggable="true">
+      <div class="folder-item-body" style="${bg2};display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        ${inner}
       </div>
       <div class="folder-item-label">${it.label}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   gridEl.querySelectorAll('.folder-icon-item').forEach((el,idx)=>{
     add3D&&add3D(el);
     el.addEventListener('click',()=>{

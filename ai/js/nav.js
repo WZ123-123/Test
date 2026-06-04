@@ -104,13 +104,26 @@ document.addEventListener('DOMContentLoaded',()=>{
 
     /* 在任何 modal-panel 内（含文件夹弹窗、nav面板等） */
     if(e.target.closest('.modal-panel')) {
-      e.preventDefault();
       hideGhost(); _clearNavDragHighlight();
       if(typeof clearShiftPreview==='function') clearShiftPreview();
-      /* 检查鼠标下方是否有 folder-grid（跨弹窗拖拽时 e.target 在源弹窗，需用坐标检测目标） */
-      const _under = document.elementFromPoint(e.clientX, e.clientY);
-      if(_under?.closest('.folder-grid')) {
+      /* 用坐标检测鼠标下方是否有 folder-grid（跨弹窗拖拽关键：e.target在源弹窗） */
+      const _under2 = document.elementFromPoint(e.clientX, e.clientY);
+      const _fg = _under2?.closest('.folder-grid');
+      if(_fg) {
+        e.preventDefault();
         e.dataTransfer.dropEffect='copy';
+        /* 手动触发目标 folder-grid 所在 overlay 的 dragover，确保浏览器允许 drop */
+        const _destOverlay = _fg.closest('.modal-overlay');
+        if(_destOverlay && _destOverlay !== e.target.closest('.modal-overlay')) {
+          const synth = new DragEvent('dragover', {
+            bubbles: true, cancelable: true,
+            clientX: e.clientX, clientY: e.clientY,
+            dataTransfer: e.dataTransfer,
+          });
+          _fg.dispatchEvent(synth);
+        }
+      } else {
+        e.preventDefault();
       }
       return;
     }
@@ -163,16 +176,19 @@ document.addEventListener('DOMContentLoaded',()=>{
     hideGhost&&hideGhost();
     _clearNavDragHighlight();
     typeof clearShiftPreview==='function' && clearShiftPreview();
+    /* 恢复源文件夹 pointer-events */
+    if(window._dragSrcOverlay) {
+      window._dragSrcOverlay.style.pointerEvents = window._dragSrcOverlay._prevPE || '';
+      window._dragSrcOverlay = null;
+    }
 
     const isNavIcon   = !!e.dataTransfer.getData('navIcon');
     const isFolderItem= !!e.dataTransfer.getData('folderItem');
-    console.log('[DROP] isNavIcon=',isNavIcon,'isFolderItem=',isFolderItem,'target=',e.target,'xy=',e.clientX,e.clientY);
     if(!isNavIcon && !isFolderItem) return;
 
     /* ---- 落点判断（用坐标，避免跨弹窗时e.target在源弹窗）---- */
     const _dropUnder = document.elementFromPoint(e.clientX, e.clientY);
     const targetFolderGrid = _dropUnder?.closest('.folder-grid');
-    console.log('[DROP] _dropUnder=',_dropUnder,'targetFolderGrid=',targetFolderGrid);
     const targetDeskItem   = !targetFolderGrid && _dropUnder?.closest('.desk-item');
     const inOtherModal     = !targetFolderGrid && !targetDeskItem && e.target.closest('.modal-panel');
 
@@ -382,15 +398,11 @@ function openFolderModal(item, pi) {
 
   _refreshFolderOverlay(overlay, item, pi);
 
-  /* 接受拖拽（folder-grid内copy，panel内也preventDefault保证拖动流畅） */
+  /* 接受拖拽：整个overlay都preventDefault，让浏览器允许drop */
   overlay.addEventListener('dragover',e=>{
     e.preventDefault();
+    e.stopPropagation(); // 阻止冒泡，避免全局dragover的modal-panel分支干扰
     e.dataTransfer.dropEffect = e.target.closest('.folder-grid') ? 'copy' : 'none';
-  });
-  /* 处理桌面图标（mouseup方式）拖入文件夹：drop事件兜底 */
-  overlay.addEventListener('drop',e=>{
-    if(!e.target.closest('.folder-grid')) return;
-    // folderItem 和 navIcon 已由全局drop处理，这里只兜底 desk drag（无dataTransfer）
   });
 
   Modal.open(existId);
@@ -435,11 +447,23 @@ function _renderFolderGridEl(gridEl, item, pi){
       const it2=item.items[idx];
       ev.dataTransfer.setData('folderItem',JSON.stringify({idx,folderId:item.id,pi}));
       window._dragSize=(it2&&it2.size)||'1x1';
+      /* 拖动时源文件夹 overlay 不拦截鼠标，让目标文件夹能收到 dragover */
+      const srcOverlay = el.closest('.modal-overlay');
+      if(srcOverlay) {
+        srcOverlay._prevPE = srcOverlay.style.pointerEvents;
+        srcOverlay.style.pointerEvents = 'none';
+        window._dragSrcOverlay = srcOverlay;
+      }
     });
     el.addEventListener('dragend',()=>{
       window._dragSize=null;
       hideGhost&&hideGhost();
       _clearNavDragHighlight&&_clearNavDragHighlight();
+      /* 恢复源文件夹 pointer-events */
+      if(window._dragSrcOverlay) {
+        window._dragSrcOverlay.style.pointerEvents = window._dragSrcOverlay._prevPE || '';
+        window._dragSrcOverlay = null;
+      }
     });
   });
 }

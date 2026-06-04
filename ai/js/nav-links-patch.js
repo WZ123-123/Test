@@ -59,7 +59,7 @@ Nav.render = async function() {
   sidebar.innerHTML = data.map(s => `
     <div class="nav-cat${s.section === Nav.curCat ? ' active' : ''}"
          onclick="Nav.setCatLinks('${s.section.replace(/'/g,"\\'")}')">
-      ${s.protected ? '🔒 ' : ''}${s.section}
+      ${s.section}
     </div>
   `).join('');
 

@@ -382,9 +382,15 @@ function openFolderModal(item, pi) {
 
   _refreshFolderOverlay(overlay, item, pi);
 
-  /* 接受 navIcon drop（问题5/6：绑定在 overlay，用 closest 精确判断） */
+  /* 接受拖拽（folder-grid内copy，panel内也preventDefault保证拖动流畅） */
   overlay.addEventListener('dragover',e=>{
-    if(e.target.closest('.folder-grid')){ e.preventDefault(); e.dataTransfer.dropEffect='copy'; }
+    e.preventDefault();
+    e.dataTransfer.dropEffect = e.target.closest('.folder-grid') ? 'copy' : 'none';
+  });
+  /* 处理桌面图标（mouseup方式）拖入文件夹：drop事件兜底 */
+  overlay.addEventListener('drop',e=>{
+    if(!e.target.closest('.folder-grid')) return;
+    // folderItem 和 navIcon 已由全局drop处理，这里只兜底 desk drag（无dataTransfer）
   });
 
   Modal.open(existId);

@@ -70,27 +70,32 @@ Nav.render = async function() {
 };
 
 /* ── 切换分类（含密码验证） ── */
-Nav.setCatLinks = async function(section) {
+Nav.setCatLinks = function(section) {
   const data = Nav._linksData || [];
   const sec  = data.find(s => s.section === section);
 
+  const _doSwitch = () => {
+    Nav.curCat = section;
+    document.querySelectorAll('.nav-cat').forEach(el =>
+      el.classList.toggle('active', el.textContent.trim() === section));
+    const inp = document.getElementById('nav-search-input');
+    if (inp) inp.value = '';
+    Nav._renderLinksContent('');
+  };
+
   if (sec && sec.protected) {
     const key = 'nav_pwd_' + section;
-    if (sessionStorage.getItem(key) !== 'ok') {
-      const pwd = prompt(`「${section}」需要密码`);
-      if (!pwd) return;
-      const hash = await navSha256(pwd);
+    if (sessionStorage.getItem(key) === 'ok') { _doSwitch(); return; }
+    const pwd = prompt('请输入访问密码');
+    if (!pwd) return;
+    navSha256(pwd).then(hash => {
       if (hash !== NAV_PWD_HASH) { alert('密码错误'); return; }
       sessionStorage.setItem(key, 'ok');
-    }
+      _doSwitch();
+    });
+    return;
   }
-
-  Nav.curCat = section;
-  document.querySelectorAll('.nav-cat').forEach(el =>
-    el.classList.toggle('active', el.textContent.trim().replace(/^🔒\s*/,'') === section));
-  document.getElementById('nav-search-input') &&
-    (document.getElementById('nav-search-input').value = '');
-  Nav._renderLinksContent('');
+  _doSwitch();
 };
 
 /* ── 渲染内容区 ── */

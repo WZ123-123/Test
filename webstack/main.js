@@ -203,13 +203,13 @@ function positionModeMenu(anchorEl) {
     const menuW = Math.min(210, window.innerWidth - 24);
     let left = rect.left + rect.width / 2 - menuW / 2;
     left = Math.max(12, Math.min(left, window.innerWidth - menuW - 12));
-    menu.style.top      = (rect.bottom + GAP + window.scrollY) + 'px';
+    menu.style.top = (rect.bottom + GAP) + 'px';
     menu.style.left     = left + 'px';
     menu.style.right    = 'auto';
     menu.style.maxWidth = menuW + 'px';
   } else {
     // PC：锚点右侧，垂直居中对齐
-    menu.style.top      = (rect.top + window.scrollY + rect.height / 2 - 60) + 'px';
+    menu.style.top = (rect.top + rect.height / 2 - 60) + 'px';
     menu.style.left     = (rect.right + GAP) + 'px';
     menu.style.right    = 'auto';
     menu.style.maxWidth = '380px';

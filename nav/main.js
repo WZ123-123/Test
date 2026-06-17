@@ -203,22 +203,12 @@ function toggleModeMenu(e) {
   _modeMenuOpen ? closeModeMenu() : openModeMenu();
 }
 
-// ── 图标配置 ────────────────────────────────────────────────
-const FAVICON_PROVIDER = 'duckduckgo';
-const PROXY = '';
-
-function withProxy(originUrl) {
-  if (!PROXY) return originUrl;
-  return PROXY + '/' + originUrl.replace(/^https?:\/\//, '');
-}
+// 图标：
+const WORKER_URL = 'https://ico.xmynscnq.dpdns.org';
 
 function buildFaviconUrl(domain) {
   if (!domain) return DEFAULT_ICON;
-  if (FAVICON_PROVIDER === 'google')
-    return withProxy(`https://www.google.com/s2/favicons?sz=64&domain=${domain}`);
-  if (FAVICON_PROVIDER === 'duckduckgo')
-    return withProxy(`https://icons.duckduckgo.com/ip3/${domain}.ico`);
-  return DEFAULT_ICON;
+  return `${WORKER_URL}/?domain=${domain}`;
 }
 
 // ── 内外网切换 ────────────────────────────────────────────────
@@ -277,67 +267,68 @@ const DEFAULT_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53
 
 /* ── 搜索分类数据 ── */
 const SEARCH_CATEGORIES = [
-  {
-    id: 'engine', label: '引擎', icon: '🔍',
-    engines: [
-      { name: '百度',       url: 'https://www.baidu.com/s?wd=',           domain: 'baidu.com' },
-      { name: 'Google',     url: 'https://www.google.com/search?q=',      domain: 'google.com' },
-      { name: 'Brave',      url: 'https://search.brave.com/search?q=',    domain: 'search.brave.com' },
-      { name: '搜狗',       url: 'https://www.sogou.com/web?query=',       domain: 'sogou.com' },
-      { name: 'Bing',       url: 'https://www.bing.com/search?q=',        domain: 'bing.com' },
-      { name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=',            domain: 'duckduckgo.com' },
-      { name: '360',        url: 'https://www.so.com/s?q=',               domain: 'so.com' },
-      { name: '夸克',       url: 'https://www.quark.cn/s?q=',             domain: 'quark.cn' },
-    ]
-  },
-  {
-    id: 'community', label: '社区', icon: '💬',
-    engines: [
-      { name: 'GitHub', url: 'https://github.com/search?q=',             domain: 'github.com' },
-      { name: '微博',   url: 'https://s.weibo.com/weibo?q=',              domain: 'weibo.com' },
-      { name: '知乎',   url: 'https://www.zhihu.com/search?q=',           domain: 'zhihu.com' },
-      { name: '豆瓣',   url: 'https://www.douban.com/search?q=',          domain: 'douban.com' },
-      { name: '贴吧',   url: 'https://tieba.baidu.com/f/search/res?qw=',  domain: 'tieba.baidu.com' },
-      { name: 'Reddit', url: 'https://www.reddit.com/search/?q=',         domain: 'reddit.com' },
-    ]
-  },
-  {
-    id: 'video', label: '视频', icon: '🎬',
-    engines: [
-      { name: 'B站',    url: 'https://search.bilibili.com/all?keyword=', domain: 'bilibili.com' },
-      { name: '腾讯',   url: 'https://v.qq.com/search.html#stag=0&s=',  domain: 'v.qq.com' },
-      { name: '爱奇艺', url: 'https://so.iqiyi.com/so/q_',              domain: 'iqiyi.com' },
-      { name: '优酷',   url: 'https://so.youku.com/search_video/q_',    domain: 'youku.com' },
-      { name: '芒果',   url: 'https://so.mgtv.com/so/k-',               domain: 'mgtv.com' },
-    ]
-  },
-  {
-    id: 'music', label: '音乐', icon: '🎵',
-    engines: [
-      { name: 'QQ音乐', url: 'https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=', domain: 'y.qq.com' },
-      { name: '网易云', url: 'https://music.163.com/#/search/m/?s=',     domain: 'music.163.com' },
-    ]
-  },
-  {
-    id: 'life', label: '生活', icon: '🛒',
-    engines: [
-      { name: '淘宝',   url: 'https://s.taobao.com/search?q=',                              domain: 'taobao.com' },
-      { name: '京东',   url: 'https://search.jd.com/Search?keyword=',                       domain: 'jd.com' },
-      { name: '拼多多', url: 'https://mobile.yangkeduo.com/search_result.html?search_key=',  domain: 'pinduoduo.com' },
-      { name: '做菜',   url: 'https://www.xiachufang.com/search/?keyword=',                  domain: 'xiachufang.com' },
-      { name: '翻译',   url: 'https://fanyi.baidu.com/#zh/en/',                             domain: 'fanyi.baidu.com' },
-    ]
-  },
-  {
-    id: 'job', label: '求职', icon: '💼',
-    engines: [
-      { name: '智联招聘', url: 'https://sou.zhaopin.com/?jl=530&kw=',                        domain: 'zhaopin.com' },
-      { name: 'BOSS直聘', url: 'https://www.zhipin.com/web/geek/job?query=',                 domain: 'zhipin.com' },
-      { name: '猎聘',     url: 'https://www.liepin.com/zhaopin/?key=',                       domain: 'liepin.com' },
-      { name: '前程无忧', url: 'https://search.51job.com/list/000000,000000,0000,00,9,99,',  domain: '51job.com' },
-      { name: '拉勾网',   url: 'https://www.lagou.com/wn/jobs?kd=',                          domain: 'lagou.com' },
-    ]
-  },
+{
+  id: 'engine', label: '引擎', icon: '🔎',
+  engines: [
+    { name: '百度',       url: 'https://www.baidu.com/s?wd=',                                              domain: 'baidu.com',             icon: '../icons/engines/baidu.svg' },
+    { name: 'Google',     url: 'https://www.google.com/search?q=',                                         domain: 'google.com',            icon: '../icons/engines/google.svg' },
+    { name: 'Brave',      url: 'https://search.brave.com/search?q=',                                       domain: 'search.brave.com',      icon: '../icons/engines/brave.svg' },
+    { name: '搜狗',       url: 'https://www.sogou.com/web?query=',                                         domain: 'sogou.com',             icon: '../icons/engines/sougou.svg' },
+    { name: 'Bing',       url: 'https://www.bing.com/search?q=',                                           domain: 'bing.com',              icon: '../icons/engines/bing.svg' },
+    { name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=',                                               domain: 'duckduckgo.com',        icon: '../icons/engines/duckduckgo.svg' },
+    { name: '360',        url: 'https://www.so.com/s?q=',                                                  domain: 'so.com',                icon: '../icons/engines/360.svg' },
+    { name: '夸克',       url: 'https://www.quark.cn/s?q=',                                                domain: 'quark.cn',              icon: '../icons/engines/kuake.svg' },
+  ]
+},
+{
+  id: 'community', label: '社区', icon: '🏰',
+  engines: [
+    { name: 'GitHub', url: 'https://github.com/search?q=',                                                domain: 'github.com',            icon: '../icons/engines/github.svg' },
+    { name: '微博',   url: 'https://s.weibo.com/weibo?q=',                                                 domain: 'weibo.com',             icon: '../icons/engines/weibo.svg' },
+    { name: '知乎',   url: 'https://www.zhihu.com/search?q=',                                              domain: 'zhihu.com',             icon: '../icons/engines/zhihu.svg' },
+    { name: '豆瓣',   url: 'https://www.douban.com/search?q=',                                             domain: 'douban.com',            icon: '../icons/engines/douban.svg' },
+    { name: '贴吧',   url: 'https://tieba.baidu.com/f/search/res?qw=',                                     domain: 'tieba.baidu.com',       icon: '../icons/engines/tieba.svg' },
+    { name: 'Reddit', url: 'https://www.reddit.com/search/?q=',                                            domain: 'reddit.com',            icon: '../icons/engines/reddit.svg' },
+  ]
+},
+{
+  id: 'video', label: '视频', icon: '📺',
+  engines: [
+    { name: 'B站',    url: 'https://search.bilibili.com/all?keyword=',                                    domain: 'bilibili.com',          icon: '../icons/engines/bilibili.svg' },
+    { name: '抖音',    url: 'https://www.douyin.com/search/',                                              domain: 'douyin.com',          icon: '../icons/engines/douyin.svg' },
+    { name: '腾讯',   url: 'https://v.qq.com/search.html#stag=0&s=',                                       domain: 'v.qq.com',              icon: '../icons/engines/tengxun.svg' },
+    { name: '爱奇艺', url: 'https://so.iqiyi.com/so/q_',                                                   domain: 'iqiyi.com',             icon: '../icons/engines/iqiyi.svg' },
+    { name: '优酷',   url: 'https://so.youku.com/search_video/q_',                                         domain: 'youku.com',             icon: '../icons/engines/youku.svg' },
+    { name: '芒果',   url: 'https://so.mgtv.com/so/k-',                                                    domain: 'mgtv.com',              icon: '../icons/engines/mgtv.svg' },
+  ]
+},
+{
+  id: 'music', label: '音乐', icon: '🎧',
+  engines: [
+    { name: 'QQ音乐', url: 'https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=', domain: 'y.qq.com',         icon: '../icons/engines/qqmusic.svg' },
+    { name: '网易云', url: 'https://music.163.com/#/search/m/?s=',                                                          domain: 'music.163.com',   icon: '../icons/engines/wangyiyun.svg' },
+  ]
+},
+{
+  id: 'life', label: '生活', icon: '☕',
+  engines: [
+    { name: '淘宝',   url: 'https://s.taobao.com/search?q=',                                             domain: 'taobao.com',            icon: '../icons/engines/taobao.svg' },
+    { name: '京东',   url: 'https://search.jd.com/Search?keyword=',                                      domain: 'jd.com',                icon: '../icons/engines/jingdong.svg' },
+    { name: '拼多多', url: 'https://mobile.yangkeduo.com/search_result.html?search_key=',                 domain: 'pinduoduo.com',         icon: '../icons/engines/pinduoduo.svg' },
+    { name: '做菜',   url: 'https://www.xiachufang.com/search/?keyword=',                                 domain: 'xiachufang.com',        icon: '../icons/engines/xiachufang.svg' },
+    { name: '翻译',   url: 'https://fanyi.baidu.com/#zh/en/',                                            domain: 'fanyi.baidu.com',       icon: '../icons/engines/baidufanyi.svg' },
+  ]
+},
+{
+  id: 'job', label: '求职', icon: '✔',
+  engines: [
+    { name: '智联招聘', url: 'https://sou.zhaopin.com/?jl=530&kw=',                                      domain: 'zhaopin.com',           icon: '../icons/engines/zhilianzhaopin.svg' },
+    { name: 'BOSS直聘', url: 'https://www.zhipin.com/web/geek/job?query=',                               domain: 'zhipin.com',            icon: '../icons/engines/boss.svg' },
+    { name: '猎聘',     url: 'https://www.liepin.com/zhaopin/?key=',                                     domain: 'liepin.com',            icon: '../icons/engines/liepin.ico' },
+    { name: '前程无忧', url: 'https://search.51job.com/list/000000,000000,0000,00,9,99,',                domain: '51job.com',             icon: '../icons/engines/qianchengwuyou.svg' },
+    { name: '拉勾网',   url: 'https://www.lagou.com/wn/jobs?kd=',                                        domain: 'lagou.com',             icon: '../icons/engines/lagou.svg' },
+  ]
+}
 ];
 
 let currentCategoryId = 'engine';
@@ -377,13 +368,7 @@ function renderEnginePanel() {
     const img = document.createElement('img');
     img.src = engineFavicon(engine);
     img.alt = engine.name;
-    img.onerror = function () {
-      const d = engine.domain;
-      if (d && !this.dataset.fallbackTried) {
-        this.dataset.fallbackTried = '1';
-        this.src = `https://${d}/favicon.ico`;
-      } else { this.src = DEFAULT_ICON; this.onerror = null; }
-    };
+    img.onerror = function () { this.src = DEFAULT_ICON; this.onerror = null; };
     const label = document.createElement('span');
     label.textContent = engine.name;
     btn.appendChild(img);
@@ -477,13 +462,7 @@ function renderCards(sections) {
       img.className = 'favicon';
       img.loading   = 'lazy';
       img.src = item.icon ? item.icon : faviconSrc(item.url);
-      img.onerror = function () {
-        const domain = getDomain(item.url);
-        if (domain && !this.dataset.fallbackTried) {
-          this.dataset.fallbackTried = '1';
-          this.src = `https://${domain}/favicon.ico`;
-        } else { this.src = DEFAULT_ICON; this.onerror = null; }
-      };
+      img.onerror = function () { this.src = DEFAULT_ICON; this.onerror = null; };
       const info = document.createElement('div');
       info.className = 'card-info';
       const titleEl = document.createElement('span');

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>导航编辑器 · 王五导航</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;
+  --border:#2e3350;--border2:#3d4468;
+  --text:#e8eaf6;--text2:#8b92b8;--text3:#555e8a;
+  --accent:#5b6ef5;--accent2:#7c8cf8;
+  --green:#3ecf8e;--red:#f05f7a;--orange:#f5a623;
+  --radius:10px;--radius-sm:6px;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh}
+#app{display:flex;flex-direction:column;min-height:100vh}
+#topbar{display:flex;align-items:center;gap:12px;padding:0 20px;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:100}
+#topbar h1{font-size:15px;font-weight:600}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+#body{display:flex;flex:1;overflow:hidden;height:calc(100vh - 52px)}
+#sidebar{width:210px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+#main{flex:1;overflow-y:auto;padding:20px}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid var(--border)}.btn-danger:hover{background:rgba(240,95,122,.1)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+input[type=text],input[type=url],input[type=password],input[type=search]{
+  width:100%;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius-sm);color:var(--text);font-size:13px;outline:none;
+}
+input:focus{border-color:var(--accent)}
+
+/* 登录 */
+#login-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px 20px}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:420px}
+.login-card h2{font-size:18px;margin-bottom:6px}
+.login-card p{color:var(--text2);font-size:13px;margin-bottom:24px;line-height:1.6}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.tip{font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5}
+.tip a{color:var(--accent2);text-decoration:none}
+
+/* 侧边栏 */
+.sidebar-header{padding:14px 16px 8px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.sec-item{display:flex;align-items:center;gap:8px;padding:8px 16px;cursor:pointer;border-left:2px solid transparent;transition:background .1s}
+.sec-item:hover{background:var(--bg3)}
+.sec-item.active{background:var(--bg3);border-left-color:var(--accent)}
+.sec-item .sec-name{flex:1;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec-item .sec-count{font-size:11px;color:var(--text3);background:var(--bg);padding:1px 6px;border-radius:8px}
+.drag-handle{color:var(--text3);font-size:12px;cursor:grab;flex-shrink:0;user-select:none}
+.drag-handle:active{cursor:grabbing}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);margin-top:auto}
+
+/* 表格 */
+.sec-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.sec-header .cnt{font-size:12px;color:var(--text3)}
+.links-table{width:100%;border-collapse:collapse;min-width:820px}
+.links-table th{padding:8px 8px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap}
+.links-table td{padding:5px 5px;vertical-align:middle;border-bottom:1px solid var(--border)}
+.links-table tr:last-child td{border-bottom:none}
+.links-table tr:hover td{background:rgba(255,255,255,.02)}
+.links-table input{padding:5px 7px;font-size:12px}
+
+/* 图标格 */
+.icon-cell{width:32px;height:32px;border-radius:7px;border:1.5px solid var(--border);overflow:hidden;cursor:pointer;background:var(--bg3);display:flex;align-items:center;justify-content:center;margin:0 auto;position:relative;transition:border-color .15s;flex-shrink:0}
+.icon-cell:hover{border-color:var(--accent)}
+.icon-cell img{width:100%;height:100%;object-fit:contain}
+.icon-cell .badge-auto{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;background:var(--bg3);border-radius:50%;border:1px solid var(--border);font-size:7px;display:flex;align-items:center;justify-content:center;line-height:1}
+.icon-cell .badge-custom{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;background:var(--accent);border-radius:50%;border:1px solid var(--bg)}
+
+/* ── 图标选择弹窗 ── */
+.ipanel{position:fixed;z-index:1000;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);box-shadow:0 12px 40px rgba(0,0,0,.7);width:300px;overflow:hidden}
+.ipanel-tabs{display:flex;border-bottom:1px solid var(--border)}
+.ipanel-tab{flex:1;padding:9px 0;text-align:center;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s}
+.ipanel-tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.ipanel-tab:hover:not(.active){color:var(--text)}
+.ipanel-body{padding:12px}
+
+/* tab: 自动获取 */
+.auto-preview{display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 0}
+.auto-preview .big-icon{width:56px;height:56px;border-radius:12px;border:1px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.auto-preview .big-icon img{width:100%;height:100%;object-fit:contain}
+.auto-preview p{font-size:12px;color:var(--text2);text-align:center;line-height:1.5}
+.auto-preview .domain{font-size:11px;color:var(--text3)}
+
+/* tab: 上传 */
+.upload-mini{border:2px dashed var(--border2);border-radius:var(--radius-sm);padding:20px 16px;text-align:center;cursor:pointer;transition:all .15s}
+.upload-mini:hover,.upload-mini.drag{border-color:var(--accent);background:rgba(91,110,245,.05)}
+.upload-mini p{color:var(--text2);font-size:12px;margin-top:6px}
+.upload-mini small{color:var(--text3);font-size:11px}
+
+/* tab: 选择已上传 */
+.icon-search-wrap{position:relative;margin-bottom:10px}
+.icon-search-wrap input{padding-left:28px;font-size:12px}
+.icon-search-wrap::before{content:'🔍';position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none}
+.icon-grid-scroll{max-height:200px;overflow-y:auto}
+.icon-picker-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.icon-opt{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:6px;cursor:pointer;border:1.5px solid transparent;transition:all .12s}
+.icon-opt:hover{background:var(--bg3);border-color:var(--border)}
+.icon-opt.sel{border-color:var(--accent);background:rgba(91,110,245,.1)}
+.icon-opt img{width:26px;height:26px;object-fit:contain;border-radius:4px}
+.icon-opt span{font-size:9px;color:var(--text3);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.ipanel-footer{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+/* 图标管理页 */
+#icons-panel{display:none}
+.icons-mgr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:12px;margin-top:16px}
+.icon-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);position:relative}
+.icon-card img{width:38px;height:38px;object-fit:contain;border-radius:6px}
+.icon-card .iname{font-size:10px;color:var(--text2);word-break:break-all;text-align:center;line-height:1.3}
+.icon-card .del-icon{position:absolute;top:4px;right:4px;width:18px;height:18px;background:var(--red);border-radius:50%;border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.icon-card:hover .del-icon{opacity:1}
+.upload-zone{border:2px dashed var(--border2);border-radius:var(--radius);padding:28px 20px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg2)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(91,110,245,.05)}
+.upload-zone p{color:var(--text2);font-size:13px;margin-top:8px}
+.upload-zone small{color:var(--text3);font-size:11px}
+
+#toast{position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;z-index:9999;display:none}
+.toast-ok{background:#1a3d2b;color:var(--green);border:1px solid rgba(62,207,142,.3)}
+.toast-err{background:#3d1a20;color:var(--red);border:1px solid rgba(240,95,122,.3)}
+.progress{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:6px}
+.progress-bar{height:100%;background:var(--accent);transition:width .3s}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px;color:var(--text3);font-size:13px}
+.drag-row-over{outline:2px solid var(--accent);outline-offset:-1px}
+.sec-drag-over{background:rgba(91,110,245,.12)!important;border-left-color:var(--accent)!important}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- 登录 -->
+<div id="login-panel">
+  <div class="login-card">
+    <h2>🧭 导航编辑器</h2>
+    <p>输入 GitHub Token 连接仓库，可视化编辑 <code>links.json</code> 和图标，保存直接 commit。</p>
+    <div class="field">
+      <label>GitHub Token</label>
+      <input type="password" id="inp-token" placeholder="ghp_xxxxxxxxxxxxxx"/>
+      <div class="tip">需要 Contents <strong>Read and write</strong> 权限。<a href="https://github.com/settings/personal-access-tokens/new" target="_blank">Fine-grained token →</a><br>Token 仅存于当前标签页内存，关闭即消失。</div>
+    </div>
+    <div class="field">
+      <label>仓库（owner/repo）</label>
+      <input type="text" id="inp-repo" placeholder="xmynscnq/Simple-Nav-Page"/>
+    </div>
+    <div class="field">
+      <label>分支</label>
+      <input type="text" id="inp-branch" placeholder="main"/>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" onclick="doLogin()">连接仓库</button>
+      <span id="login-st" style="font-size:12px;color:var(--text3)"></span>
+    </div>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div id="editor-ui" style="display:none;flex-direction:column;flex:1">
+  <div id="topbar">
+    <span>🧭</span>
+    <h1>导航编辑器</h1>
+    <span id="repo-label" style="font-size:12px;color:var(--text3)"></span>
+    <div class="topbar-right">
+      <span id="dirty-st" style="font-size:12px"></span>
+      <button class="btn btn-ghost btn-sm" onclick="showPanel('icons')">🖼 图标管理</button>
+      <button class="btn btn-ghost btn-sm" onclick="showPanel('links')">🔗 链接编辑</button>
+      <button class="btn btn-primary btn-sm" id="save-btn" onclick="saveAll()">💾 保存到 GitHub</button>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">退出</button>
+    </div>
+  </div>
+  <div id="body">
+    <div id="sidebar">
+      <div class="sidebar-header">分类</div>
+      <div id="sec-list"></div>
+      <div class="sidebar-footer">
+        <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="addSection()">＋ 添加分类</button>
+      </div>
+    </div>
+    <div id="main">
+      <div id="links-panel">
+        <div id="links-content"><div class="empty"><span class="spinner"></span>正在加载…</div></div>
+      </div>
+      <div id="icons-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h2 style="font-size:16px;font-weight:600">图标管理</h2>
+            <p style="font-size:12px;color:var(--text3);margin-top:3px">存储在仓库 <code>icons/</code> 目录</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('icon-file-input').click()">＋ 上传图标</button>
+          <input id="icon-file-input" type="file" accept="image/*,.svg,.ico" multiple style="display:none" onchange="uploadIconFiles(Array.from(event.target.files));event.target.value=''">
+        </div>
+        <div class="upload-zone" id="drop-zone"
+          onclick="document.getElementById('icon-file-input').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="handleIconDrop(event)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p>点击或拖拽上传图标</p>
+          <small>PNG · SVG · ICO · JPG · WebP</small>
+        </div>
+        <div id="upload-prog" style="display:none;margin-top:10px">
+          <div style="font-size:12px;color:var(--text2)" id="prog-txt"></div>
+          <div class="progress"><div class="progress-bar" id="prog-bar" style="width:0"></div></div>
+        </div>
+        <div class="icons-mgr-grid" id="icons-grid"><div class="empty"><span class="spinner"></span>加载中…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 图标选择弹窗 -->
+<div id="ipanel" class="ipanel" style="display:none">
+  <div class="ipanel-tabs">
+    <div class="ipanel-tab active" onclick="switchITab('auto')">🌐 自动获取</div>
+    <div class="ipanel-tab" onclick="switchITab('upload')">⬆ 上传</div>
+    <div class="ipanel-tab" onclick="switchITab('pick')">📁 已上传</div>
+  </div>
+  <div class="ipanel-body" id="ipanel-body"></div>
+  <div class="ipanel-footer">
+    <button class="btn btn-ghost btn-sm" onclick="closeIPPanel()">取消</button>
+    <button class="btn btn-primary btn-sm" id="ipanel-confirm" onclick="confirmIcon()">确认</button>
+  </div>
+</div>
+<div id="ipanel-backdrop" style="display:none;position:fixed;inset:0;z-index:999" onclick="closeIPPanel()"></div>
+
+<div id="toast"></div>
+
+<script>
+// ── 状态 ──────────────────────────────────────────
+let TOKEN='',REPO='',BRANCH='main';
+let linksData=[],iconsData=[],linksSha='';
+let currentSec=0,isDirty=false;
+let dragRowSrc=null,dragSecSrc=null;
+
+// 图标弹窗状态
+let pickerTarget=null; // {si,ii}
+let pickerTab='auto';
+let pickerPendingIcon=''; // 待确认的图标值
+
+const DDGO = d => `https://icons.duckduckgo.com/ip3/${d}.ico`;
+
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+function getDomain(url){try{return new URL(url).hostname;}catch{return '';}}
+
+let toastTimer;
+function toast(msg,type='ok',dur=2800){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast-'+type;el.style.display='block';
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display='none',dur);
+}
+function setDirty(v=true){
+  isDirty=v;
+  const el=document.getElementById('dirty-st');
+  el.textContent=v?'● 未保存':'';el.style.color=v?'var(--orange)':'';
+}
+
+// ── 持久化 ────────────────────────────────────────
+function loadSaved(){
+  const t=sessionStorage.getItem('nt'),r=sessionStorage.getItem('nr'),b=sessionStorage.getItem('nb');
+  if(t)document.getElementById('inp-token').value=t;
+  if(r)document.getElementById('inp-repo').value=r;
+  document.getElementById('inp-branch').value=b||'main';
+}
+
+// ── GitHub API ────────────────────────────────────
+async function gh(path,opts={}){
+  const res=await fetch(`https://api.github.com/repos/${REPO}/${path}`,{
+    ...opts,
+    headers:{'Authorization':'Bearer '+TOKEN,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(opts.headers||{})}
+  });
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||'HTTP '+res.status);}
+  return res.status===204?null:res.json();
+}
+async function getFile(fp){
+  const d=await gh(`contents/${fp}?ref=${BRANCH}`);
+  return{content:decodeURIComponent(escape(atob(d.content.replace(/\s/g,'')))),sha:d.sha};
+}
+async function putFile(fp,content,sha,msg){
+  const b64=btoa(unescape(encodeURIComponent(content)));
+  return gh(`contents/${fp}`,{method:'PUT',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message:msg,content:b64,...(sha?{sha}:{}),branch:BRANCH})});
+}
+async function putBinary(fp,bytes,sha,msg){
+  let s='';bytes.forEach(b=>s+=String.fromCharCode(b));
+  return gh(`contents/${fp}`,{method:'PUT',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message:msg,content:btoa(s),...(sha?{sha}:{}),branch:BRANCH})});
+}
+async function delFile(fp,sha,msg){
+  return gh(`contents/${fp}`,{method:'DELETE',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message:msg,sha,branch:BRANCH})});
+}
+
+// ── 登录 ──────────────────────────────────────────
+async function doLogin(){
+  TOKEN=document.getElementById('inp-token').value.trim();
+  REPO=document.getElementById('inp-repo').value.trim();
+  BRANCH=document.getElementById('inp-branch').value.trim()||'main';
+  if(!TOKEN||!REPO){toast('请填写 Token 和仓库','err');return;}
+  const st=document.getElementById('login-st');st.textContent='连接中…';
+  try{
+    await gh(`git/ref/heads/${BRANCH}`);
+    sessionStorage.setItem('nt',TOKEN);sessionStorage.setItem('nr',REPO);sessionStorage.setItem('nb',BRANCH);
+    document.getElementById('login-panel').style.display='none';
+    document.getElementById('editor-ui').style.display='flex';
+    document.getElementById('repo-label').textContent=REPO+' @ '+BRANCH;
+    await Promise.all([loadLinks(),loadIcons()]);
+  }catch(e){st.textContent='❌ '+e.message;}
+}
+function doLogout(){sessionStorage.clear();location.reload();}
+
+// ── 数据加载 ──────────────────────────────────────
+async function loadLinks(){
+  try{
+    const{content,sha}=await getFile('links.json');
+    linksSha=sha;
+    const raw=JSON.parse(content);
+    linksData=raw.map(sec=>({...sec,_id:uid(),items:(sec.items||[]).map(it=>({...it,_id:uid()}))}));
+    renderSidebar();renderSection(currentSec);
+  }catch(e){toast('加载 links.json 失败：'+e.message,'err',6000);}
+}
+async function loadIcons(){
+  try{
+    const files=await gh(`contents/icons?ref=${BRANCH}`).catch(()=>[]);
+    iconsData=Array.isArray(files)
+      ?files.filter(f=>/\.(png|jpg|jpeg|svg|ico|webp|gif)$/i.test(f.name)).map(f=>({name:f.name,sha:f.sha,url:f.download_url}))
+      :[];
+  }catch{iconsData=[];}
+  renderIconsGrid();
+}
+
+// ── 面板切换 ──────────────────────────────────────
+function showPanel(p){
+  document.getElementById('links-panel').style.display=p==='links'?'block':'none';
+  document.getElementById('icons-panel').style.display=p==='icons'?'block':'none';
+  document.getElementById('sidebar').style.display=p==='links'?'flex':'none';
+  if(p==='icons')renderIconsGrid();
+}
+
+// ── 侧边栏 ────────────────────────────────────────
+function renderSidebar(){
+  document.getElementById('sec-list').innerHTML=linksData.map((sec,si)=>`
+    <div class="sec-item ${si===currentSec?'active':''}" draggable="true"
+      onclick="selectSection(${si})"
+      ondragstart="dragSecSrc=${si};event.dataTransfer.effectAllowed='move';this.style.opacity='.4'"
+      ondragover="event.preventDefault();this.classList.add('sec-drag-over')"
+      ondragleave="this.classList.remove('sec-drag-over')"
+      ondrop="dropSec(event,${si})"
+      ondragend="this.style.opacity=''">
+      <span class="drag-handle">⠿</span>
+      <span class="sec-name">${esc(sec.section)}</span>
+      <span class="sec-count">${sec.items.length}</span>
+    </div>`).join('');
+}
+function selectSection(si){currentSec=si;renderSidebar();renderSection(si);showPanel('links');}
+function dropSec(e,ti){
+  e.preventDefault();
+  document.querySelectorAll('.sec-item').forEach(el=>el.classList.remove('sec-drag-over'));
+  if(dragSecSrc===null||dragSecSrc===ti)return;
+  const[m]=linksData.splice(dragSecSrc,1);linksData.splice(ti,0,m);
+  currentSec=ti;dragSecSrc=null;setDirty();renderSidebar();renderSection(currentSec);
+}
+
+// ── 分区渲染 ──────────────────────────────────────
+function renderSection(si){
+  const panel=document.getElementById('links-content');
+  if(!linksData.length){panel.innerHTML='<div class="empty">还没有分类，点击左下角「添加分类」</div>';return;}
+  const sec=linksData[si];
+  if(!sec){panel.innerHTML='';return;}
+  panel.innerHTML=`
+    <div class="sec-header">
+      <input type="text" value="${esc(sec.section)}"
+        style="max-width:180px;font-size:15px;font-weight:600;background:transparent;border:1px solid transparent;padding:4px 8px;border-radius:6px"
+        onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='transparent'"
+        onchange="linksData[${si}].section=this.value;setDirty();renderSidebar()">
+      <span class="cnt">${sec.items.length} 条</span>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="addItem(${si})">＋ 添加</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSection(${si})">删除分类</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="links-table">
+      <thead><tr>
+        <th style="width:18px"></th>
+        <th style="width:44px;text-align:center">图标</th>
+        <th style="min-width:110px">名称</th>
+        <th style="min-width:180px">URL（外网）</th>
+        <th style="min-width:120px">简介</th>
+        <th style="min-width:120px">搜索词</th>
+        <th style="min-width:150px">内网地址</th>
+        <th style="width:44px"></th>
+      </tr></thead>
+      <tbody id="tbody-${si}">
+        ${sec.items.map((it,ii)=>rowHtml(si,ii,it)).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+// 构建图标格 HTML —— 显示实际效果
+function iconCellHtml(si,ii,it){
+  const domain=getDomain(it.url);
+  if(it.icon){
+    // 自定义图标
+    const name=it.icon.replace(/^icons\//,'');
+    const found=iconsData.find(i=>i.name===name);
+    const src=found?found.url:(it.icon.startsWith('http')?it.icon:'');
+    return `<div class="icon-cell" onclick="openIPPanel(${si},${ii},this)" title="自定义图标：${esc(it.icon)}">
+      ${src?`<img src="${src}" alt="" onerror="this.src=''">`:'<span style="font-size:18px">🖼</span>'}
+      <div class="badge-custom" title="自定义"></div>
+    </div>`;
+  } else {
+    // 自动抓取
+    const favUrl=domain?DDGO(domain):'';
+    return `<div class="icon-cell" onclick="openIPPanel(${si},${ii},this)" title="自动抓取：${domain||'无URL'}">
+      ${favUrl?`<img src="${favUrl}" alt="" onerror="this.src=''">`:'<span style="font-size:16px">🌐</span>'}
+      <div class="badge-auto" title="自动">⚡</div>
+    </div>`;
+  }
+}
+
+function rowHtml(si,ii,it){
+  return`<tr draggable="true"
+    ondragstart="dragRowSrc={si:${si},ii:${ii}};event.dataTransfer.effectAllowed='move';this.style.opacity='.4'"
+    ondragover="event.preventDefault();document.querySelectorAll('.drag-row-over').forEach(x=>x.classList.remove('drag-row-over'));this.classList.add('drag-row-over')"
+    ondragleave="this.classList.remove('drag-row-over')"
+    ondrop="dropRow(event,${si},${ii})"
+    ondragend="this.style.opacity='';document.querySelectorAll('.drag-row-over').forEach(x=>x.classList.remove('drag-row-over'))">
+    <td><span class="drag-handle">⠿</span></td>
+    <td style="text-align:center">${iconCellHtml(si,ii,it)}</td>
+    <td><input type="text" value="${esc(it.title)}" placeholder="名称" onchange="upd(${si},${ii},'title',this.value)"></td>
+    <td><input type="url" value="${esc(it.url)}" placeholder="https://" onchange="updUrl(${si},${ii},this.value)"></td>
+    <td><input type="text" value="${esc(it.desc||'')}" placeholder="简介" onchange="upd(${si},${ii},'desc',this.value)"></td>
+    <td><input type="text" value="${esc(it['data-desc']||'')}" placeholder="关键词（逗号分隔）" onchange="upd(${si},${ii},'data-desc',this.value)"></td>
+    <td><input type="url" value="${esc(it.intranet||'')}" placeholder="http://192.168.x.x" onchange="upd(${si},${ii},'intranet',this.value)"></td>
+    <td><button class="btn btn-danger btn-sm" onclick="deleteItem(${si},${ii})">✕</button></td>
+  </tr>`;
+}
+
+function upd(si,ii,k,v){linksData[si].items[ii][k]=v;setDirty();}
+function updUrl(si,ii,v){
+  linksData[si].items[ii].url=v;setDirty();
+  // 如果是自动模式，实时刷新图标预览
+  if(!linksData[si].items[ii].icon){
+    const cells=document.querySelectorAll(`#tbody-${si} tr:nth-child(${ii+1}) .icon-cell`);
+    cells.forEach(cell=>{
+      const domain=getDomain(v);
+      const img=cell.querySelector('img');
+      if(img&&domain) img.src=DDGO(domain);
+    });
+  }
+}
+
+function addItem(si){
+  linksData[si].items.push({_id:uid(),title:'',url:'',desc:'','data-desc':'',icon:'',intranet:''});
+  setDirty();renderSection(si);renderSidebar();
+  setTimeout(()=>{const rows=document.querySelectorAll(`#tbody-${si} tr`);rows[rows.length-1]?.querySelector('input')?.focus();},50);
+}
+function deleteItem(si,ii){linksData[si].items.splice(ii,1);setDirty();renderSection(si);renderSidebar();}
+function addSection(){
+  linksData.push({_id:uid(),section:'新分类',items:[]});
+  currentSec=linksData.length-1;setDirty();renderSidebar();renderSection(currentSec);showPanel('links');
+}
+function deleteSection(si){
+  if(!confirm(`确定删除「${linksData[si].section}」？`))return;
+  linksData.splice(si,1);currentSec=Math.max(0,si-1);setDirty();renderSidebar();renderSection(currentSec);
+}
+function dropRow(e,si,ti){
+  e.preventDefault();
+  if(!dragRowSrc||dragRowSrc.si!==si||dragRowSrc.ii===ti)return;
+  const items=linksData[si].items;
+  const[m]=items.splice(dragRowSrc.ii,1);
+  items.splice(dragRowSrc.ii<ti?ti-1:ti,0,m);
+  dragRowSrc=null;setDirty();renderSection(si);
+}
+
+// ══════════════════════════════════════════════════
+// 图标选择弹窗
+// ══════════════════════════════════════════════════
+function openIPPanel(si,ii,cellEl){
+  pickerTarget={si,ii};
+  pickerPendingIcon=linksData[si].items[ii].icon||'';
+  const panel=document.getElementById('ipanel');
+  const rect=cellEl.getBoundingClientRect();
+  let top=rect.bottom+window.scrollY+6;
+  let left=rect.left+window.scrollX;
+  // 防止超出右侧
+  if(left+310>window.innerWidth) left=window.innerWidth-315;
+  panel.style.top=top+'px';
+  panel.style.left=left+'px';
+  panel.style.display='block';
+  document.getElementById('ipanel-backdrop').style.display='block';
+  // 默认 tab：有自定义图标就打开 pick，否则 auto
+  switchITab(pickerPendingIcon?'pick':'auto');
+}
+
+function closeIPPanel(){
+  document.getElementById('ipanel').style.display='none';
+  document.getElementById('ipanel-backdrop').style.display='none';
+  pickerTarget=null;
+}
+
+function switchITab(tab){
+  pickerTab=tab;
+  document.querySelectorAll('.ipanel-tab').forEach((el,i)=>{
+    el.classList.toggle('active',['auto','upload','pick'][i]===tab);
+  });
+  renderITabBody();
+}
+
+function renderITabBody(){
+  const body=document.getElementById('ipanel-body');
+  const{si,ii}=pickerTarget||{si:0,ii:0};
+  const item=linksData[si]?.items[ii]||{};
+  const domain=getDomain(item.url||'');
+
+  if(pickerTab==='auto'){
+    const favUrl=domain?DDGO(domain):'';
+    const isAuto=!item.icon;
+    body.innerHTML=`
+      <div class="auto-preview">
+        <div class="big-icon">
+          ${favUrl?`<img src="${favUrl}" alt="" onerror="this.parentNode.innerHTML='🌐'" style="width:100%;height:100%;object-fit:contain">`:'<span style="font-size:28px">🌐</span>'}
+        </div>
+        <p>${isAuto?'<span style="color:var(--green)">✓ 当前已是自动获取模式</span>':'点击「确认」将切换为自动获取'}</p>
+        <div class="domain">${domain||'（URL 为空，无法抓取）'}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">来源：DuckDuckGo favicon 服务</div>
+      </div>`;
+    pickerPendingIcon='';
+
+  }else if(pickerTab==='upload'){
+    body.innerHTML=`
+      <div class="upload-mini" id="mini-drop"
+        onclick="document.getElementById('mini-file').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="handleMiniDrop(event)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p>点击或拖拽上传</p>
+        <small>上传后自动选中并应用</small>
+      </div>
+      <input id="mini-file" type="file" accept="image/*,.svg,.ico" style="display:none" onchange="handleMiniUpload(event)">
+      <div id="mini-prog" style="display:none;margin-top:8px">
+        <div style="font-size:11px;color:var(--text2)" id="mini-prog-txt"></div>
+        <div class="progress"><div class="progress-bar" id="mini-prog-bar" style="width:0"></div></div>
+      </div>`;
+
+  }else if(pickerTab==='pick'){
+    renderPickTab();
+  }
+}
+
+function renderPickTab(filter=''){
+  const body=document.getElementById('ipanel-body');
+  const{si,ii}=pickerTarget||{si:0,ii:0};
+  const cur=linksData[si]?.items[ii]?.icon||'';
+  const filtered=filter
+    ?iconsData.filter(ic=>ic.name.toLowerCase().includes(filter.toLowerCase()))
+    :iconsData;
+  body.innerHTML=`
+    <div class="icon-search-wrap">
+      <input type="search" placeholder="搜索图标名称…" value="${esc(filter)}"
+        oninput="renderPickTab(this.value)" style="padding-left:28px">
+    </div>
+    <div class="icon-grid-scroll">
+      ${!iconsData.length
+        ?'<div style="text-align:center;padding:16px;font-size:12px;color:var(--text3)">暂无图标，请先上传</div>'
+        :filtered.length===0
+          ?'<div style="text-align:center;padding:16px;font-size:12px;color:var(--text3)">没有匹配的图标</div>'
+          :`<div class="icon-picker-grid">
+            ${filtered.map(ic=>{
+              const val='icons/'+ic.name;
+              return`<div class="icon-opt ${pickerPendingIcon===val?'sel':''}" onclick="selectPendingIcon('${val}')">
+                <img src="${ic.url}" alt="${ic.name}" onerror="this.src=''">
+                <span>${ic.name.replace(/\.[^.]+$/,'')}</span>
+              </div>`;
+            }).join('')}
+          </div>`
+      }
+    </div>`;
+}
+
+function selectPendingIcon(val){
+  pickerPendingIcon=val;
+  // 刷新选中高亮（只更新 grid 不重渲 tab）
+  document.querySelectorAll('.icon-opt').forEach(el=>{
+    el.classList.toggle('sel',el.getAttribute('onclick').includes(`'${val}'`));
+  });
+}
+
+async function handleMiniUpload(e){
+  const file=e.target.files[0];e.target.value='';
+  if(!file)return;
+  await doSingleIconUpload(file);
+}
+async function handleMiniDrop(e){
+  e.preventDefault();document.getElementById('mini-drop')?.classList.remove('drag');
+  const file=e.dataTransfer.files[0];
+  if(!file)return;
+  await doSingleIconUpload(file);
+}
+async function doSingleIconUpload(file){
+  const prog=document.getElementById('mini-prog');
+  const bar=document.getElementById('mini-prog-bar');
+  const txt=document.getElementById('mini-prog-txt');
+  prog.style.display='block';txt.textContent='上传中…';bar.style.width='30%';
+  try{
+    const bytes=new Uint8Array(await file.arrayBuffer());
+    let sha='';
+    try{const ex=await gh(`contents/icons/${encodeURIComponent(file.name)}?ref=${BRANCH}`);sha=ex.sha;}catch{}
+    await putBinary(`icons/${file.name}`,bytes,sha,`upload icon: ${file.name}`);
+    bar.style.width='100%';
+    await loadIcons(); // 刷新 iconsData
+    pickerPendingIcon='icons/'+file.name;
+    toast('✅ 上传成功，已自动选中');
+    switchITab('pick'); // 切到选择 tab 展示结果
+  }catch(err){
+    toast('上传失败：'+err.message,'err');
+    prog.style.display='none';
+  }
+}
+
+function confirmIcon(){
+  if(!pickerTarget)return;
+  const{si,ii}=pickerTarget;
+  linksData[si].items[ii].icon=pickerPendingIcon;
+  setDirty();
+  closeIPPanel();
+  // 仅刷新该行
+  const tbody=document.getElementById(`tbody-${si}`);
+  if(tbody){
+    const rows=tbody.querySelectorAll('tr');
+    if(rows[ii]){
+      const it=linksData[si].items[ii];
+      rows[ii].cells[1].innerHTML=iconCellHtml(si,ii,it);
+    }
+  }
+}
+
+// ── 图标管理页 ────────────────────────────────────
+function renderIconsGrid(){
+  const g=document.getElementById('icons-grid');
+  if(!g)return;
+  if(!iconsData.length){g.innerHTML='<div class="empty">还没有图标，上传后可在链接里选用</div>';return;}
+  g.innerHTML=iconsData.map(ic=>`
+    <div class="icon-card">
+      <img src="${ic.url}" alt="${ic.name}">
+      <div class="iname">${ic.name}</div>
+      <button class="del-icon" onclick="deleteIcon('${ic.name}','${ic.sha}')">✕</button>
+    </div>`).join('');
+}
+function handleIconDrop(e){
+  e.preventDefault();document.getElementById('drop-zone').classList.remove('drag');
+  const files=Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')||/\.(svg|ico)$/i.test(f.name));
+  if(files.length)uploadIconFiles(files);
+}
+async function uploadIconFiles(files){
+  const prog=document.getElementById('upload-prog'),bar=document.getElementById('prog-bar'),txt=document.getElementById('prog-txt');
+  prog.style.display='block';let done=0;
+  for(const file of files){
+    txt.textContent=`上传 ${file.name}（${done+1}/${files.length}）`;
+    bar.style.width=(done/files.length*100)+'%';
+    try{
+      const bytes=new Uint8Array(await file.arrayBuffer());
+      let sha='';
+      try{const ex=await gh(`contents/icons/${encodeURIComponent(file.name)}?ref=${BRANCH}`);sha=ex.sha;}catch{}
+      await putBinary(`icons/${file.name}`,bytes,sha,`upload icon: ${file.name}`);
+      done++;bar.style.width=(done/files.length*100)+'%';
+    }catch(e){toast('上传 '+file.name+' 失败：'+e.message,'err');}
+  }
+  prog.style.display='none';
+  toast('✅ 上传完成，共 '+done+' 个图标');
+  await loadIcons();
+}
+async function deleteIcon(name,sha){
+  if(!confirm('确定删除图标 '+name+'？'))return;
+  try{
+    await delFile(`icons/${name}`,sha,`delete icon: ${name}`);
+    iconsData=iconsData.filter(i=>i.name!==name);renderIconsGrid();toast('已删除 '+name);
+  }catch(e){toast('删除失败：'+e.message,'err');}
+}
+
+// ── 保存 ──────────────────────────────────────────
+async function saveAll(){
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true;btn.textContent='保存中…';
+  try{
+    const out=linksData.map(sec=>({
+      section:sec.section,
+      items:sec.items.map(it=>{
+        const o={title:it.title,url:it.url,desc:it.desc||''};
+        if(it['data-desc'])o['data-desc']=it['data-desc'];
+        if(it.icon)o.icon=it.icon;
+        if(it.intranet)o.intranet=it.intranet;
+        return o;
+      })
+    }));
+    const res=await putFile('links.json',JSON.stringify(out,null,2),linksSha,'update links.json via editor');
+    linksSha=res.content.sha;
+    setDirty(false);toast('✅ 已保存到 GitHub，约 30 秒后生效');
+  }catch(e){toast('保存失败：'+e.message,'err',6000);}
+  finally{btn.disabled=false;btn.textContent='💾 保存到 GitHub';}
+}
+
+// ── 初始化 ────────────────────────────────────────
+window.addEventListener('beforeunload',e=>{if(isDirty){e.preventDefault();e.returnValue='';}});
+loadSaved();
+showPanel('links');
+</script>
+</body>
+</html>

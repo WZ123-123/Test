@@ -111,7 +111,7 @@ h1::after{
 }
 .search-tab:hover{background:var(--primary-dim);border-color:rgba(124,111,247,0.45);color:#fff;}
 .search-tab.active{background:var(--primary-dim);border-color:var(--primary);color:#fff;box-shadow:0 0 14px var(--primary-glow);}
-.tab-icon{display:none;}
+.tab-icon { display: inline; margin-right: 5px; }
 .tab-label{font-size:1rem;}
 
 /* 搜索框 */

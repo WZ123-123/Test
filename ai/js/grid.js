@@ -12,16 +12,14 @@ window.addEventListener('resize', () => { GRID_TOP = getGridTop(); });
 
 const SIZES = { '1x1':{cols:1,rows:1}, '2x1':{cols:2,rows:1}, '2x2':{cols:2,rows:2} };
 
-function cellPx(n) { const C=window.CELL||CELL, G=window.GAP||GAP; return n * C + (n - 1) * G; }
+function cellPx(n) { const C=window.CELL||CELL, G=window.GAP||GAP; return n*C + (n-1)*G; }
 function itemW(it) { return cellPx(SIZES[it.size].cols); }
 function itemH(it) { return cellPx(SIZES[it.size].rows); }
 
 /* 屏幕可容纳的最大列/行数，maxCols 要扣除左侧 offset，避免图标超出屏幕右边缘 */
 function maxCols() {
   /* 考虑 offset，确保图标不超出屏幕右边缘 */
-  const C = window.CELL || CELL, G = window.GAP || GAP;
-  if (typeof IconSettings !== 'undefined' && IconSettings.get().maxCols > 0)
-    return IconSettings.get().maxCols;
+  const C=window.CELL||CELL, G=window.GAP||GAP;
   return Math.floor((innerWidth - _curOffset + G) / (C + G));
 }
 function maxRows(pi) {
@@ -44,14 +42,15 @@ function calcGridOffset() {
   /* 以"内容列数"（不含左侧空白填充列）为基准居中，再减去左填充列宽，
      使视觉内容在屏幕左右严格对称。                                     */
   const contentCols = DEFAULT_LAYOUT_COLS; // 13：实际放图标的列数
-  const mc          = Math.floor((innerWidth + GAP) / (CELL + GAP));
+  const _C=window.CELL||CELL, _G=window.GAP||GAP;
+  const mc          = Math.floor((innerWidth + _G) / (_C + _G));
   const usedContent = Math.min(mc, contentCols);
-  const contentW    = usedContent * (CELL + GAP) - GAP;
+  const contentW    = usedContent * (_C + _G) - _G;
   // 内容区居中的起始 x
   const contentLeft = Math.max(0, Math.floor((innerWidth - contentW) / 2));
   // grid 坐标从 col=0 开始，内容从 col=LEFT_PAD_COLS 开始，
   // 所以 grid 的 offset = contentLeft - LEFT_PAD_COLS*(CELL+GAP)
-  return Math.max(0, contentLeft - LEFT_PAD_COLS * (CELL + GAP));
+  return Math.max(0, contentLeft - LEFT_PAD_COLS * (_C + _G));
 }
 
 /* 首次加载默认布局时把所有图标 col 向右偏移 LEFT_PAD_COLS */
@@ -66,11 +65,11 @@ window.addEventListener('resize', () => {
 });
 
 /* 数据坐标：col 从 0 开始，不含视觉偏移 */
-function itemX(it)  { return it.col * (CELL + GAP); }
+function itemX(it)  { const C=window.CELL||CELL, G=window.GAP||GAP; return it.col * (C + G); }
 function itemY(it, pi)  {
   /* 第0页保留GRID_TOP给标题搜索框，其他页从顶部留小间距即可 */
   const top = (pi === undefined || pi === 0) ? GRID_TOP : 20;
-  return top + it.row * (CELL + GAP);
+  const _CY=window.CELL||CELL, _GY=window.GAP||GAP; return top + it.row * (_CY + _GY);
 }
 
 /* ================================================================
@@ -78,7 +77,7 @@ function itemY(it, pi)  {
    ================================================================ */
 function clampAllPages() {
   /* 把所有页面图标的 col/row 约束在当前屏幕范围内（修改原始数据） */
-  const MC = Math.floor((innerWidth - calcGridOffset() + GAP) / (CELL + GAP));
+  const MC = Math.floor((innerWidth - calcGridOffset() + (window.GAP||GAP)) / ((window.CELL||CELL) + (window.GAP||GAP)));
   for (let pi = 0; pi < App.pageCount; pi++) {
     (App.pages[pi] || []).forEach(item => {
       const sz = SIZES[item.size] || SIZES['1x1'];
@@ -171,7 +170,7 @@ function renderPage(pi) {
     const ps = SIZES[p.sz]||SIZES['1x1'];
     maxRow = Math.max(maxRow, p.dr + ps.rows);
   });
-  const areaH = pageTop0 + maxRow * (CELL + GAP) + 80;
+  const areaH = pageTop0 + maxRow * ((window.CELL||CELL) + (window.GAP||GAP)) + 80;
   area.style.height = areaH + 'px';
   /* 移动端：grid-area 是 absolute，需要手动设置 .page min-height 让其可滚动 */
   const pageEl = area.closest('.page');
@@ -307,9 +306,11 @@ function hideGhost() { if (_ghost) _ghost.style.display='none'; }
 
 /* Ghost 尺寸：与 CSS item-body 缩放一致 */
 function ghostSize(size) {
-  if (size==='1x1') return {w:CELL*0.78,  h:CELL*0.78,  ox:CELL*0.11, oy:CELL*0.11, r:14};
-  if (size==='2x1') return {w:itemW({size:'2x1'})*0.96, h:itemH({size:'2x1'})*0.72, ox:itemW({size:'2x1'})*0.02, oy:itemH({size:'2x1'})*0.04, r:16};
-  /* 2x2 */         return {w:itemW({size:'2x2'})*0.96, h:itemH({size:'2x2'})*0.88, ox:itemW({size:'2x2'})*0.02, oy:itemH({size:'2x2'})*0.02, r:18};
+  const C=window.CELL||CELL;
+  const r=typeof IconSettings!=='undefined' ? IconSettings.get().radius : 18;
+  if (size==='1x1') return {w:C*0.78,  h:C*0.78,  ox:C*0.11, oy:C*0.11, r};
+  if (size==='2x1') return {w:itemW({size:'2x1'})*0.96, h:itemH({size:'2x1'})*0.72, ox:itemW({size:'2x1'})*0.02, oy:itemH({size:'2x1'})*0.04, r};
+  /* 2x2 */         return {w:itemW({size:'2x2'})*0.96, h:itemH({size:'2x2'})*0.88, ox:itemW({size:'2x2'})*0.02, oy:itemH({size:'2x2'})*0.02, r};
 }
 
 /* ================================================================
@@ -365,8 +366,9 @@ document.addEventListener('mousemove', e => {
     const cx = e.clientX - drag.ox + itemW(drag.item)/2;
     const cy = e.clientY - drag.oy + itemH(drag.item)/2;
     const pageTop = (App.curPage === 0) ? GRID_TOP : 20;
-    const pc = Math.max(0, Math.floor((cx-ar.left)/(CELL+GAP)));
-    const pr = Math.max(0, Math.floor((cy-ar.top-pageTop)/(CELL+GAP)));
+    const _CD=window.CELL||CELL, _GD=window.GAP||GAP;
+    const pc = Math.max(0, Math.floor((cx-ar.left)/(_CD+_GD)));
+    const pr = Math.max(0, Math.floor((cy-ar.top-pageTop)/(_CD+_GD)));
 
     // 让位预览
     applyShiftPreview(App.curPage, drag.item, pc, pr);
@@ -464,8 +466,9 @@ document.addEventListener('mouseup', e => {
     const cx = e.clientX-drag.ox+itemW(drag.item)/2;
     const cy = e.clientY-drag.oy+itemH(drag.item)/2;
     const pageTop2 = (pi === 0) ? GRID_TOP : 20;
-    let pc = Math.max(0, Math.floor((cx-ar.left)/(CELL+GAP)));
-    let pr = Math.max(0, Math.floor((cy-ar.top-pageTop2)/(CELL+GAP)));
+    const _CU=window.CELL||CELL, _GU=window.GAP||GAP;
+    let pc = Math.max(0, Math.floor((cx-ar.left)/(_CU+_GU)));
+    let pr = Math.max(0, Math.floor((cy-ar.top-pageTop2)/(_CU+_GU)));
     if (e.clientY-drag.oy < ar.top+pageTop2) pr=0;
 
     /* 问题1：确保落点在屏幕范围内 */
@@ -860,8 +863,9 @@ document.addEventListener('click',hideCtxMenu);
       const pageTop = (App.curPage === 0) ? GRID_TOP : 20;
       const cx      = touch.clientX - td.ox + itemW(td.item) / 2;
       const cy      = touch.clientY - td.oy + itemH(td.item) / 2;
-      const pc      = Math.max(0, Math.floor((cx - ar.left) / (CELL + GAP)));
-      const pr      = Math.max(0, Math.floor((cy - ar.top - pageTop) / (CELL + GAP)));
+      const _CT=window.CELL||CELL, _GT=window.GAP||GAP;
+      const pc      = Math.max(0, Math.floor((cx - ar.left) / (_CT + _GT)));
+      const pr      = Math.max(0, Math.floor((cy - ar.top - pageTop) / (_CT + _GT)));
 
       applyShiftPreview(App.curPage, td.item, pc, pr);
 
@@ -869,8 +873,8 @@ document.addEventListener('click',hideCtxMenu);
       if (simResult && !td.mergeTargetId) {
         const gs = ghostSize(td.item.size);
         showGhost(
-          ar.left + simResult.finalCol * (CELL + GAP) + gs.ox,
-          ar.top  + pageTop + simResult.finalRow * (CELL + GAP) + gs.oy,
+          ar.left + simResult.finalCol * (_CT + _GT) + gs.ox,
+          ar.top  + pageTop + simResult.finalRow * (_CT + _GT) + gs.oy,
           gs.w, gs.h, gs.r
         );
       } else {
@@ -942,8 +946,9 @@ document.addEventListener('click',hideCtxMenu);
       const cy  = touch.clientY - td.oy + itemH(td.item) / 2;
       const MC  = maxCols();
       const sz  = SIZES[td.item.size];
-      let pc = Math.max(0, Math.min(Math.floor((cx - ar.left) / (CELL + GAP)), MC - sz.cols));
-      let pr = Math.max(0, Math.floor((cy - ar.top - pageTop) / (CELL + GAP)));
+      const _CM=window.CELL||CELL, _GM=window.GAP||GAP;
+      let pc = Math.max(0, Math.min(Math.floor((cx - ar.left) / (_CM + _GM)), MC - sz.cols));
+      let pr = Math.max(0, Math.floor((cy - ar.top - pageTop) / (_CM + _GM)));
 
       if (pi !== td.pi) {
         App.pages[td.pi] = App.pages[td.pi].filter(i => i.id !== td.item.id);

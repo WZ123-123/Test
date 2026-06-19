@@ -251,7 +251,7 @@
           <div class="is-slider-wrap">
             <input id="is-size" type="range" min="60" max="130" step="4" class="is-slider"
               oninput="document.getElementById('is-size-val').textContent=this.value+'px'"
-              onchange="IconSettings.set('size', +this.value); window.CELL=+this.value;">
+              onchange="const s=+this.value; const g=Math.round(s*0.18); IconSettings.set('gap',g); IconSettings.set('size',s); window.CELL=s; window.GAP=g;">
             <span class="is-val" id="is-size-val">88px</span>
           </div>
         </div>
@@ -263,16 +263,6 @@
               oninput="document.getElementById('is-radius-val').textContent=this.value+'px'"
               onchange="IconSettings.set('radius', +this.value);">
             <span class="is-val" id="is-radius-val">20px</span>
-          </div>
-        </div>
-
-        <div class="st-row">
-          <div class="st-label">图标间距</div>
-          <div class="is-slider-wrap">
-            <input id="is-gap" type="range" min="4" max="40" step="2" class="is-slider"
-              oninput="document.getElementById('is-gap-val').textContent=this.value+'px'"
-              onchange="IconSettings.set('gap', +this.value); window.GAP=+this.value;">
-            <span class="is-val" id="is-gap-val">16px</span>
           </div>
         </div>
 

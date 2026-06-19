@@ -251,8 +251,18 @@
           <div class="is-slider-wrap">
             <input id="is-size" type="range" min="60" max="130" step="4" class="is-slider"
               oninput="document.getElementById('is-size-val').textContent=this.value+'px'"
-              onchange="const s=+this.value; const g=Math.round(s*0.18); IconSettings.set('gap',g); IconSettings.set('size',s); window.CELL=s; window.GAP=g;">
+              onchange="IconSettings.set('size', +this.value);">
             <span class="is-val" id="is-size-val">88px</span>
+          </div>
+        </div>
+
+        <div class="st-row">
+          <div class="st-label">图标间距</div>
+          <div class="is-slider-wrap">
+            <input id="is-gap" type="range" min="4" max="40" step="2" class="is-slider"
+              oninput="document.getElementById('is-gap-val').textContent=this.value+'px'"
+              onchange="IconSettings.set('gap', +this.value);">
+            <span class="is-val" id="is-gap-val">16px</span>
           </div>
         </div>
 
@@ -269,7 +279,7 @@
         <div class="st-row">
           <div class="st-label">图标文字颜色</div>
           <input id="is-labelcolor" type="color" value="#ffffff" class="is-color-picker"
-             oninput="IconSettings.set('labelColor', this.value);">
+            oninput="IconSettings.set('labelColor', this.value);">
         </div>
 
         <div class="st-row">

@@ -20,6 +20,7 @@ const IconSettings = {
         const raw = localStorage.getItem('aiNav_iconSettings');
         this._s = raw ? { ...ICON_SETTINGS_DEFAULTS, ...JSON.parse(raw) }
                       : { ...ICON_SETTINGS_DEFAULTS };
+         this._s.size = Math.min(this._s.size, 100);
       } catch(e) {
         this._s = { ...ICON_SETTINGS_DEFAULTS };
       }

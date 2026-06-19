@@ -12,14 +12,17 @@ window.addEventListener('resize', () => { GRID_TOP = getGridTop(); });
 
 const SIZES = { '1x1':{cols:1,rows:1}, '2x1':{cols:2,rows:1}, '2x2':{cols:2,rows:2} };
 
-function cellPx(n) { return n * CELL + (n - 1) * GAP; }
+function cellPx(n) { const C=window.CELL||CELL, G=window.GAP||GAP; return n * C + (n - 1) * G; }
 function itemW(it) { return cellPx(SIZES[it.size].cols); }
 function itemH(it) { return cellPx(SIZES[it.size].rows); }
 
 /* 屏幕可容纳的最大列/行数，maxCols 要扣除左侧 offset，避免图标超出屏幕右边缘 */
 function maxCols() {
   /* 考虑 offset，确保图标不超出屏幕右边缘 */
-  return Math.floor((innerWidth - _curOffset + GAP) / (CELL + GAP));
+  const C = window.CELL || CELL, G = window.GAP || GAP;
+  if (typeof IconSettings !== 'undefined' && IconSettings.get().maxCols > 0)
+    return IconSettings.get().maxCols;
+  return Math.floor((innerWidth - _curOffset + G) / (C + G));
 }
 function maxRows(pi) {
   /* 不限制行数，支持滚动；返回足够大的值 */

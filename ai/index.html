@@ -267,16 +267,6 @@
         </div>
 
         <div class="st-row">
-          <div class="st-label">图标最大列数</div>
-          <div class="is-slider-wrap">
-            <input id="is-maxcols" type="range" min="0" max="12" step="1" class="is-slider"
-              oninput="document.getElementById('is-maxcols-val').textContent=+this.value===0?'自动':this.value+'列'"
-              onchange="IconSettings.set('maxCols', +this.value);">
-            <span class="is-val" id="is-maxcols-val">自动</span>
-          </div>
-        </div>
-
-        <div class="st-row">
           <div class="st-label">图标文字颜色</div>
           <input id="is-labelcolor" type="color" value="#ffffff" class="is-color-picker"
              oninput="IconSettings.set('labelColor', this.value);">

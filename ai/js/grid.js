@@ -11,9 +11,9 @@ let GRID_TOP = getGridTop();
 window.addEventListener('resize', () => { GRID_TOP = getGridTop(); });
 
 const SIZES = { '1x1':{cols:1,rows:1}, '2x1':{cols:2,rows:1}, '2x2':{cols:2,rows:2} };
-/* ── IconSettings 动态尺寸 getter（调图标大小/间距时实时生效） ── */
-function _C() { return window.CELL || CELL; }
-function _G() { return window.GAP  || GAP;  }
+/* ── 动态尺寸 getter，调图标大小时实时生效 ── */
+function _C() { return (typeof IconSettings !== 'undefined' ? IconSettings.get().size : null) || window.CELL || CELL; }
+function _G() { return (typeof IconSettings !== 'undefined' ? IconSettings.get().gap  : null) || window.GAP  || GAP;  }
 function _R() { return (typeof IconSettings !== 'undefined') ? IconSettings.get().radius : 18; }
 
 
@@ -44,22 +44,12 @@ const LEFT_PAD_COLS        = 2;
 const TOTAL_COLS           = DEFAULT_LAYOUT_COLS + LEFT_PAD_COLS; // 15
 
 function calcGridOffset() {
-  /* 以实际放置图标的列宽为基准居中，左右空白严格对称 */
-  // 动态算出当前页所有图标占用的最大列号（含 size 宽度）
-  let maxUsedCol = LEFT_PAD_COLS; // 保底：至少有左填充列
-  if (typeof App !== 'undefined' && App.pages) {
-    App.pages.forEach(page => (page || []).forEach(it => {
-      const sz = (typeof SIZES !== 'undefined' && SIZES[it.size]) ? SIZES[it.size].cols : 1;
-      maxUsedCol = Math.max(maxUsedCol, (it.col || 0) + sz - 1);
-    }));
-  }
-  // 内容列数 = 最大列号+1，减去左侧填充列（填充列不计入内容宽度）
-  const contentCols = maxUsedCol + 1 - LEFT_PAD_COLS;
-  const contentW    = Math.max(0, contentCols * (_C() + _G()) - _G());
-  // 内容区居中起始 x
+  /* 以实际图标内容列数居中（不含左侧填充列），使左右空白严格对称 */
+  // 实际图标从 col=LEFT_PAD_COLS 开始，到 col=DEFAULT_LAYOUT_COLS-3 结束
+  // 内容列数 = DEFAULT_LAYOUT_COLS - LEFT_PAD_COLS - 2（经实测对称值）= 10
+  const contentCols = DEFAULT_LAYOUT_COLS - LEFT_PAD_COLS - 1; // 10列
+  const contentW    = contentCols * (_C() + _G()) - _G();
   const contentLeft = Math.max(0, Math.floor((innerWidth - contentW) / 2));
-  // grid area 的 left offset：内容从 col=LEFT_PAD_COLS 开始，
-  // 所以 offset = contentLeft - LEFT_PAD_COLS*(_C()+_G())
   return Math.max(0, contentLeft - LEFT_PAD_COLS * (_C() + _G()));
 }
 

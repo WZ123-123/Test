@@ -44,12 +44,18 @@ const LEFT_PAD_COLS        = 2;
 const TOTAL_COLS           = DEFAULT_LAYOUT_COLS + LEFT_PAD_COLS; // 15
 
 function calcGridOffset() {
-  /* 以"内容列数"（不含左侧空白填充列）为基准居中，再减去左填充列宽，
-     使视觉内容在屏幕左右严格对称。                                     */
-  const contentCols = DEFAULT_LAYOUT_COLS; // 13：实际放图标的列数
-  const mc          = Math.floor((innerWidth + _G()) / (_C() + _G()));
-  const usedContent = Math.min(mc, contentCols);
-  const contentW    = usedContent * (_C() + _G()) - _G();
+  /* 以实际放置的最大列数为基准居中，再减去左填充列宽，
+     使视觉内容在屏幕左右严格对称。                      */
+  // 计算当前所有页面实际用到的最大列号（含 size 宽度）
+  let maxUsedCol = DEFAULT_LAYOUT_COLS - 1; // 保底
+  if (typeof App !== 'undefined' && App.pages) {
+    App.pages.forEach(page => (page || []).forEach(it => {
+      const cols = (typeof SIZES !== 'undefined' && SIZES[it.size]) ? SIZES[it.size].cols : 1;
+      maxUsedCol = Math.max(maxUsedCol, (it.col || 0) + cols - 1);
+    }));
+  }
+  const contentCols = maxUsedCol + 1 - LEFT_PAD_COLS; // 内容列数（去掉左填充）
+  const contentW    = contentCols * (_C() + _G()) - _G();
   // 内容区居中的起始 x
   const contentLeft = Math.max(0, Math.floor((innerWidth - contentW) / 2));
   // grid 坐标从 col=0 开始，内容从 col=LEFT_PAD_COLS 开始，

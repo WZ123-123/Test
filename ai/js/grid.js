@@ -44,12 +44,11 @@ const LEFT_PAD_COLS        = 2;
 const TOTAL_COLS           = DEFAULT_LAYOUT_COLS + LEFT_PAD_COLS; // 15
 
 function calcGridOffset() {
-  /* 固定用实际内容列数（DEFAULT_LAYOUT_COLS - LEFT_PAD_COLS - 2 = 10）居中
-     不读 App.pages，避免拖放时 offset 变化导致整体位移 */
-  const contentCols = DEFAULT_LAYOUT_COLS - LEFT_PAD_COLS - 1; // 10
-  const contentW    = contentCols * (_C() + _G()) - _G();
-  const contentLeft = Math.max(0, Math.floor((innerWidth - contentW) / 2));
-  return Math.max(0, contentLeft - LEFT_PAD_COLS * (_C() + _G()));
+  /* 直接公式：令最左图标(col=2)和最右图标(col=11)两侧空白严格相等
+     offset = (innerWidth - 14*(C+G) + G) / 2
+     推导：left_space = offset+2*(C+G)，right_space = W-offset-12*(C+G)+G
+     令相等得 2*offset = W - 14*(C+G) + G                              */
+  return Math.max(0, Math.floor((innerWidth - 14 * (_C() + _G()) + _G()) / 2));
 }
 
 /* 首次加载默认布局时把所有图标 col 向右偏移 LEFT_PAD_COLS */

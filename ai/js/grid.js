@@ -44,22 +44,22 @@ const LEFT_PAD_COLS        = 2;
 const TOTAL_COLS           = DEFAULT_LAYOUT_COLS + LEFT_PAD_COLS; // 15
 
 function calcGridOffset() {
-  /* 以实际放置的最大列数为基准居中，再减去左填充列宽，
-     使视觉内容在屏幕左右严格对称。                      */
-  // 计算当前所有页面实际用到的最大列号（含 size 宽度）
-  let maxUsedCol = DEFAULT_LAYOUT_COLS - 1; // 保底
+  /* 以实际放置图标的列宽为基准居中，左右空白严格对称 */
+  // 动态算出当前页所有图标占用的最大列号（含 size 宽度）
+  let maxUsedCol = LEFT_PAD_COLS; // 保底：至少有左填充列
   if (typeof App !== 'undefined' && App.pages) {
     App.pages.forEach(page => (page || []).forEach(it => {
-      const cols = (typeof SIZES !== 'undefined' && SIZES[it.size]) ? SIZES[it.size].cols : 1;
-      maxUsedCol = Math.max(maxUsedCol, (it.col || 0) + cols - 1);
+      const sz = (typeof SIZES !== 'undefined' && SIZES[it.size]) ? SIZES[it.size].cols : 1;
+      maxUsedCol = Math.max(maxUsedCol, (it.col || 0) + sz - 1);
     }));
   }
-  const contentCols = maxUsedCol + 1 - LEFT_PAD_COLS; // 内容列数（去掉左填充）
-  const contentW    = contentCols * (_C() + _G()) - _G();
-  // 内容区居中的起始 x
+  // 内容列数 = 最大列号+1，减去左侧填充列（填充列不计入内容宽度）
+  const contentCols = maxUsedCol + 1 - LEFT_PAD_COLS;
+  const contentW    = Math.max(0, contentCols * (_C() + _G()) - _G());
+  // 内容区居中起始 x
   const contentLeft = Math.max(0, Math.floor((innerWidth - contentW) / 2));
-  // grid 坐标从 col=0 开始，内容从 col=LEFT_PAD_COLS 开始，
-  // 所以 grid 的 offset = contentLeft - LEFT_PAD_COLS*(_C()+_G())
+  // grid area 的 left offset：内容从 col=LEFT_PAD_COLS 开始，
+  // 所以 offset = contentLeft - LEFT_PAD_COLS*(_C()+_G())
   return Math.max(0, contentLeft - LEFT_PAD_COLS * (_C() + _G()));
 }
 

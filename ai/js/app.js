@@ -59,12 +59,10 @@ const App = {
 
     try {
       this.apiKey = localStorage.getItem('aiNav_apiKey') || '';
-      if (this.apiKey) document.getElementById('api-key-input').value = this.apiKey;
 
       const title = localStorage.getItem('aiNav_title');
       if (title) {
         document.getElementById('site-title').textContent = title;
-        document.getElementById('title-input').value = title;
       }
 
       const bg = localStorage.getItem('aiNav_bg');
@@ -188,6 +186,9 @@ const App = {
     if (inp) inp.placeholder = isAI
       ? '描述你想找的工具或网站，AI 帮你找...'
       : '搜索网页，Enter 跳转...';
+    // hint 文字
+    const hint = document.getElementById('se-hint');
+    if (hint) hint.textContent = isAI ? '当前：AI 检索模式' : '当前：普通搜索模式';
   },
 
   /* ── 设置面板初始化 ── */
@@ -231,18 +232,11 @@ const App = {
 
   _onAIChipClick(el, id) {
     AI_ENGINE.toggleModel(id);
-    // 如果至少有一个 AI 模型勾选，切换到 AI 模式
+    // 至少有一个 AI 模型勾选 → AI 模式；全部取消 → 普通模式
     const anyOn = AI_ENGINE.getActive().length > 0;
-    if (anyOn) {
-      this.searchMode = 'ai';
-      localStorage.setItem('aiNav_seMode', 'ai');
-    } else {
-      // 全部取消则退回普通
-      this.searchMode = 'normal';
-      localStorage.setItem('aiNav_seMode', 'normal');
-    }
+    this.searchMode = anyOn ? 'ai' : 'normal';
+    localStorage.setItem('aiNav_seMode', this.searchMode);
     this._syncSEUI();
-    this._updateSEHint();
   },
 
   _updateSEHint() {

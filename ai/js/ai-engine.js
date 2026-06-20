@@ -7,22 +7,24 @@ const AI_ENGINE = {
   AI_WORKER_URL: 'https://www.scnq.us.ci',
 
   ALL_MODELS: [
-    { id: 'gemini', name: 'Gemini 2.5 Flash',  checked: true },
-    { id: 'scout',  name: 'Llama 4 Scout 17B', checked: true },
-    { id: 'qwen',   name: 'Qwen3-32B',         checked: true },
-    { id: 'gpt',    name: 'GPT-OSS-120B',      checked: true },
-    { id: 'glm',    name: 'GLM-4 Flash',       checked: true },
+    { id: 'gemini', name: 'Gemini 2.5 Flash',  checked: false },
+    { id: 'scout',  name: 'Llama 4 Scout 17B', checked: false },
+    { id: 'qwen',   name: 'Qwen3-32B',         checked: false },
+    { id: 'gpt',    name: 'GPT-OSS-120B',      checked: false },
+    { id: 'glm',    name: 'GLM-4 Flash',       checked: false },
   ],
 
   models: null,
   conversations: {},
 
   init() {
-    this.models = JSON.parse(localStorage.getItem('ai_nav_models_v5')) || JSON.parse(JSON.stringify(this.ALL_MODELS));
+    // v6：默认全部未选中，清除旧版全选缓存
+    const raw = localStorage.getItem('ai_nav_models_v6');
+    this.models = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(this.ALL_MODELS));
   },
 
   saveModels() {
-    localStorage.setItem('ai_nav_models_v5', JSON.stringify(this.models));
+    localStorage.setItem('ai_nav_models_v6', JSON.stringify(this.models));
   },
 
   toggleModel(id) {

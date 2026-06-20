@@ -37,7 +37,7 @@ const App = {
 
   /* ---- localStorage ---- */
   loadData() {
-    const LAYOUT_VER = '13';
+    const LAYOUT_VER = '14';
     try {
       const ver = localStorage.getItem('aiNav_layoutVer');
       const d   = localStorage.getItem('aiNav_pages');
@@ -48,14 +48,12 @@ const App = {
         this.curPage   = 0;
       } else {
         this.pages     = JSON.parse(JSON.stringify(DEFAULT_PAGES));
-        applyLeftPadToLayout(this.pages);
         this.pageCount = 1;
         localStorage.setItem('aiNav_layoutVer', LAYOUT_VER);
         localStorage.removeItem('aiNav_pages');
       }
     } catch (e) {
       this.pages     = JSON.parse(JSON.stringify(DEFAULT_PAGES));
-      applyLeftPadToLayout(this.pages);
       this.pageCount = 1;
     }
 
@@ -95,7 +93,7 @@ const App = {
         pages:     this.pages,
         pageCount: this.pageCount,
       }));
-      localStorage.setItem('aiNav_layoutVer', '13');
+      localStorage.setItem('aiNav_layoutVer', '14');
     } catch (e) {}
   },
 

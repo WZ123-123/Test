@@ -44,10 +44,12 @@ const LEFT_PAD_COLS        = 0;
 const TOTAL_COLS           = DEFAULT_LAYOUT_COLS + LEFT_PAD_COLS; // 15
 
 function calcGridOffset() {
-  /* LEFT_PAD_COLS=0，图标从 col=0 开始，最右图标 col=9（1x1）右边缘=10格
-     令左空白=右空白：2*offset = innerWidth - 10*(C+G) + G
-     即 offset = (innerWidth - 10*(C+G) + G) / 2                        */
-  return Math.max(0, Math.floor((innerWidth - 10 * (_C() + _G()) + _G()) / 2));
+  /* 与 maxCols 保持完全一致：
+     mc = floor((innerWidth+G)/(C+G))，即屏幕能放的实际列数
+     令最左(col=0)和最右(col=mc-1)两侧空白相等：
+     offset = (innerWidth - mc*(C+G) + G) / 2                           */
+  const mc = Math.floor((innerWidth + _G()) / (_C() + _G()));
+  return Math.max(0, Math.floor((innerWidth - mc * (_C() + _G()) + _G()) / 2));
 }
 
 /* 首次加载默认布局时把所有图标 col 向右偏移 LEFT_PAD_COLS */

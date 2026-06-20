@@ -44,11 +44,17 @@ const LEFT_PAD_COLS        = 2;
 const TOTAL_COLS           = DEFAULT_LAYOUT_COLS + LEFT_PAD_COLS; // 15
 
 function calcGridOffset() {
-  /* 以实际图标内容列数居中（不含左侧填充列），使左右空白严格对称 */
-  // 实际图标从 col=LEFT_PAD_COLS 开始，到 col=DEFAULT_LAYOUT_COLS-3 结束
-  // 内容列数 = DEFAULT_LAYOUT_COLS - LEFT_PAD_COLS - 2（经实测对称值）= 10
-  const contentCols = DEFAULT_LAYOUT_COLS - LEFT_PAD_COLS - 1; // 10列
-  const contentW    = contentCols * (_C() + _G()) - _G();
+  /* 用实际图标占用的最大列号来居中，保证任意屏幕宽度和图标大小下左右对称 */
+  let maxUsedCol = LEFT_PAD_COLS; // 保底
+  if (typeof App !== 'undefined' && App.pages) {
+    App.pages.forEach(page => (page || []).forEach(it => {
+      const sz = SIZES[it.size] ? SIZES[it.size].cols : 1;
+      maxUsedCol = Math.max(maxUsedCol, (it.col || 0) + sz - 1);
+    }));
+  }
+  // 实际内容宽度：从 col=LEFT_PAD_COLS 到 col=maxUsedCol
+  const contentCols = maxUsedCol + 1 - LEFT_PAD_COLS;
+  const contentW    = Math.max(0, contentCols * (_C() + _G()) - _G());
   const contentLeft = Math.max(0, Math.floor((innerWidth - contentW) / 2));
   return Math.max(0, contentLeft - LEFT_PAD_COLS * (_C() + _G()));
 }

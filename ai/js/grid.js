@@ -24,8 +24,8 @@ function itemH(it) { return cellPx(SIZES[it.size].rows); }
 
 /* 屏幕可容纳的最大列/行数，maxCols 要扣除左侧 offset，避免图标超出屏幕右边缘 */
 function maxCols() {
-  /* 考虑 offset，确保图标不超出屏幕右边缘 */
-  return Math.floor((innerWidth - _curOffset + _G()) / (_C() + _G()));
+  /* grid area 整体居中，列数按全屏宽度计算 */
+  return Math.floor((innerWidth + _G()) / (_C() + _G()));
 }
 function maxRows(pi) {
   /* 不限制行数，支持滚动；返回足够大的值 */

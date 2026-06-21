@@ -98,6 +98,7 @@ function renderAll() {
   renderDots();
   applyPageTransform(App.curPage, false);
   if (typeof Weather !== 'undefined') Weather.resyncDesktopWidget();
+  if (typeof Hotspot !== 'undefined') Hotspot.resync();
 }
 
 function ensurePageDOM(pi) {
@@ -194,6 +195,12 @@ function createItemEl(item, pi) {
   el.innerHTML = buildItemHTML(item);
   el.addEventListener('click', e => {
     if (el.dataset.wasDragged==='1') { el.dataset.wasDragged='0'; return; }
+    const hsRow = e.target.closest('.hs-row');
+    if (hsRow && hsRow.dataset.url) {
+      e.stopPropagation();
+      window.open(hsRow.dataset.url, '_blank');
+      return;
+    }
     handleItemClick(item, pi);
   });
   el.addEventListener('contextmenu', e => { e.preventDefault(); showCtxMenu(e,item,pi); });
@@ -254,11 +261,13 @@ function buildWidget(item) {
       <div class="w-day"><span class="w-day-label">--</span><b>--</b></div>
       <div class="w-day"><span class="w-day-label">--</span><b>--</b></div>
       <div class="w-day"><span class="w-day-label">--</span><b>--</b></div>
-    </div><div class="w-footer-lbl">天气</div>`;
+    </div><div class="w-footer-lbl">--</div>`;
   if (item.action==='hotspot') return `
-    <div class="hs-badge">点击查看</div><div class="hs-img">📰</div>
-    <div class="hs-title">· AI大模型最新进展<br>· 今日科技热点</div>
-    <div class="hs-sub">今日热点</div>`;
+    <div class="hs-badge">实时热点</div>
+    <div class="hs-list">
+      <div class="hs-row">加载中...</div>
+    </div>
+    <div class="hs-sub">今日热点 · 点击查看更多</div>`;
   return `<div class="item-emoji large">${item.emoji||''}</div>`;
 }
 

@@ -59,10 +59,12 @@ const App = {
 
     try {
       this.apiKey = localStorage.getItem('aiNav_apiKey') || '';
+      if (this.apiKey) document.getElementById('api-key-input').value = this.apiKey;
 
       const title = localStorage.getItem('aiNav_title');
       if (title) {
         document.getElementById('site-title').textContent = title;
+        document.getElementById('title-input').value = title;
       }
 
       const bg = localStorage.getItem('aiNav_bg');
@@ -171,7 +173,7 @@ const App = {
     document.querySelectorAll('.se-opt[data-se-key]').forEach(b => {
       b.classList.toggle('active', !isAI && b.dataset.seKey === this.normalEngineKey);
     });
-    // AI 模型 chip：按 data-model-id 精确匹配，避免顺序错位
+    // AI 模型 chip：按 data-model-id 精确匹配
     document.querySelectorAll('.ai-model-chip[data-model-id]').forEach(chip => {
       const id = chip.dataset.modelId;
       const m  = AI_ENGINE.models.find(x => x.id === id);
@@ -186,9 +188,6 @@ const App = {
     if (inp) inp.placeholder = isAI
       ? '描述你想找的工具或网站，AI 帮你找...'
       : '搜索网页，Enter 跳转...';
-    // hint 文字
-    const hint = document.getElementById('se-hint');
-    if (hint) hint.textContent = isAI ? '当前：AI 检索模式' : '当前：普通搜索模式';
   },
 
   /* ── 设置面板初始化 ── */
@@ -199,42 +198,88 @@ const App = {
   _buildSESection() {
     const container = document.getElementById('se-section-container');
     if (!container) return;
+    const isAI = this.searchMode === 'ai';
 
-    const engines = this._normalEngines;
-    container.innerHTML = `
-      <div class="st-section">
-        <h3>搜索引擎</h3>
-        <div class="se-row">
-          <div class="se-group-label">普通引擎（二选一）</div>
-          <div class="se-opts" id="se-normal-opts">
-            ${Object.entries(engines).map(([key, e]) => `
-              <div class="se-opt net-opt${key === this.normalEngineKey && this.searchMode === 'normal' ? ' active' : ''}"
-                   data-se-key="${key}"
-                   onclick="App.selectNormalEngine(this)">${e.label}</div>
-            `).join('')}
-          </div>
-        </div>
-        <div class="se-divider">或</div>
-        <div class="se-row">
-          <div class="se-group-label">AI 引擎（可多选）</div>
-          <div class="se-ai-chips" id="se-ai-chips">
-            ${AI_ENGINE.models.map(m => {
-              const isOn = m.checked && this.searchMode === 'ai';
-              return `<div class="ai-model-chip se-opt${isOn ? ' on ai-mode' : ''}"
-                   data-model-id="${m.id}"
-                   onclick="App._onAIChipClick(this, '${m.id}')">${m.name}</div>`;
-            }).join('')}
-          </div>
-        </div>
-        <p class="se-hint" id="se-hint">${this.searchMode === 'ai' ? '当前：AI 检索模式' : '当前：普通搜索模式'}</p>
-      </div>
-    `;
+    // 用 DOM 操作而非 innerHTML，避免模板字符串 id 拼接错位
+    container.innerHTML = '';
+
+    const section = document.createElement('div');
+    section.className = 'st-section';
+
+    // 标题
+    const h3 = document.createElement('h3');
+    h3.textContent = '搜索引擎';
+    section.appendChild(h3);
+
+    // 普通引擎
+    const rowNormal = document.createElement('div');
+    rowNormal.className = 'se-row';
+    rowNormal.innerHTML = '<div class="se-group-label">普通引擎（二选一）</div>';
+    const optsDiv = document.createElement('div');
+    optsDiv.className = 'se-opts';
+    optsDiv.id = 'se-normal-opts';
+    Object.entries(this._normalEngines).forEach(([key, e]) => {
+      const btn = document.createElement('div');
+      btn.className = 'se-opt net-opt' + (!isAI && key === this.normalEngineKey ? ' active' : '');
+      btn.dataset.seKey = key;
+      btn.textContent = e.label;
+      btn.addEventListener('click', () => App.selectNormalEngine(btn));
+      optsDiv.appendChild(btn);
+    });
+    rowNormal.appendChild(optsDiv);
+    section.appendChild(rowNormal);
+
+    // 分隔
+    const divider = document.createElement('div');
+    divider.className = 'se-divider';
+    divider.textContent = '或';
+    section.appendChild(divider);
+
+    // AI 引擎
+    const rowAI = document.createElement('div');
+    rowAI.className = 'se-row';
+    rowAI.innerHTML = '<div class="se-group-label">AI 引擎（可多选）</div>';
+    const chipsDiv = document.createElement('div');
+    chipsDiv.className = 'se-ai-chips';
+    chipsDiv.id = 'se-ai-chips';
+
+    // 关键：直接用 AI_ENGINE.models 数组里的对象引用，不做字符串拼接
+    AI_ENGINE.models.forEach(modelObj => {
+      const chip = document.createElement('div');
+      chip.className = 'ai-model-chip se-opt';
+      chip.dataset.modelId = modelObj.id;
+      chip.textContent = modelObj.name;
+      if (modelObj.checked && isAI) chip.classList.add('on', 'ai-mode');
+      else if (isAI) chip.classList.add('ai-mode');
+      // 绑定时直接捕获 modelObj 引用，不依赖 id 字符串查找
+      chip.addEventListener('click', () => {
+        modelObj.checked = !modelObj.checked;
+        AI_ENGINE.saveModels();
+        const anyOn = AI_ENGINE.models.some(m => m.checked);
+        App.searchMode = anyOn ? 'ai' : 'normal';
+        localStorage.setItem('aiNav_seMode', App.searchMode);
+        App._syncSEUI();
+      });
+      chipsDiv.appendChild(chip);
+    });
+    rowAI.appendChild(chipsDiv);
+    section.appendChild(rowAI);
+
+    // hint
+    const hint = document.createElement('p');
+    hint.className = 'se-hint';
+    hint.id = 'se-hint';
+    hint.textContent = isAI ? '当前：AI 检索模式' : '当前：普通搜索模式';
+    section.appendChild(hint);
+
+    container.appendChild(section);
   },
 
   _onAIChipClick(el, id) {
-    AI_ENGINE.toggleModel(id);
-    // 至少有一个 AI 模型勾选 → AI 模式；全部取消 → 普通模式
-    const anyOn = AI_ENGINE.getActive().length > 0;
+    // 直接操作 models 对象，不用 toggleModel（避免新数组引用）
+    const m = AI_ENGINE.models.find(x => x.id === id);
+    if (m) { m.checked = !m.checked; AI_ENGINE.saveModels(); }
+    const anyOn = AI_ENGINE.models.some(x => x.checked);
     this.searchMode = anyOn ? 'ai' : 'normal';
     localStorage.setItem('aiNav_seMode', this.searchMode);
     this._syncSEUI();

@@ -18,16 +18,15 @@ const AI_ENGINE = {
   conversations: {},
 
   init() {
-    // v6：默认全部未选中，清除旧版全选缓存
-    const raw = localStorage.getItem('ai_nav_models_v6');
-    this.models = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(this.ALL_MODELS));
+    this.models = JSON.parse(localStorage.getItem('ai_nav_models_v7')) || JSON.parse(JSON.stringify(this.ALL_MODELS));
   },
 
   saveModels() {
-    localStorage.setItem('ai_nav_models_v6', JSON.stringify(this.models));
+    localStorage.setItem('ai_nav_models_v7', JSON.stringify(this.models));
   },
 
   toggleModel(id) {
+    // 原地修改，保持数组引用稳定，避免 id 错位
     const m = this.models.find(m => m.id === id);
     if (m) m.checked = !m.checked;
     this.saveModels();

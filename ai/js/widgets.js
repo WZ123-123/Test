@@ -94,77 +94,11 @@ const Widgets = {
     });
   },
 
-  /* ---- AI 对话 ---- */
-  chatHistory: [],
-
-  appendMsg(role, text, loading = false) {
-    const msgs = document.getElementById('chat-msgs');
-    const d = document.createElement('div');
-    d.className = 'chat-msg ' + role + (loading ? ' loading' : '');
-    d.textContent = text;
-    msgs.appendChild(d);
-    msgs.scrollTop = msgs.scrollHeight;
-    return d;
-  },
-
-  async sendChat() {
-    const input = document.getElementById('chat-input');
-    const text  = input.value.trim();
-    if (!text) return;
-    input.value = '';
-    const sendBtn = document.getElementById('chat-send');
-    sendBtn.disabled = true;
-
-    this.appendMsg('user', text);
-    this.chatHistory.push({ role: 'user', content: text });
-
-    const ld  = this.appendMsg('ai', '思考中…', true);
-    const key = App.apiKey || localStorage.getItem('aiNav_apiKey') || '';
-
-    if (!key) {
-      ld.classList.remove('loading');
-      ld.textContent = '请先在设置中填写 Anthropic API Key。';
-      sendBtn.disabled = false;
-      return;
-    }
-
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          system: '你是一个友好的中文AI助手，回答简洁清晰。',
-          messages: this.chatHistory,
-        }),
-      });
-      const data  = await res.json();
-      const reply = data.content?.map(i => i.text || '').join('') || '抱歉，无法回答。';
-      ld.classList.remove('loading');
-      ld.textContent = reply;
-      this.chatHistory.push({ role: 'assistant', content: reply });
-    } catch (ex) {
-      ld.classList.remove('loading');
-      ld.textContent = '连接失败，请检查网络或 API Key。';
-    }
-
-    sendBtn.disabled = false;
-    document.getElementById('chat-msgs').scrollTop = 9999;
-  },
 };
 
 /* ---- DOMContentLoaded bindings ---- */
 document.addEventListener('DOMContentLoaded', () => {
   Widgets.bindCanvas();
 
-  document.getElementById('chat-input')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); Widgets.sendChat(); }
-  });
-  document.getElementById('chat-send')?.addEventListener('click', () => Widgets.sendChat());
   document.getElementById('note-area')?.addEventListener('input', () => Widgets._updateNoteCount());
 });

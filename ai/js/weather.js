@@ -1,14 +1,17 @@
 /* ============================================================
    weather.js — 真实天气接口
-   使用 open-meteo.com（免费、无需 Key）+ ip-api.com（IP定位）
-   支持：IP自动定位 / 绑定城市（geocoding）
+   使用 open-meteo.com（免费、无需 Key）+ ipapi.co（IP定位，支持 https）
+   支持：IP自动定位（失败时默认北京，可修改）/ 绑定城市（支持同名城市选择）
+         / 桌面天气小组件与真实数据同步
    ============================================================ */
 
 const Weather = {
-  _city:     null,   // 用户绑定的城市名
-  _lat:      null,
-  _lon:      null,
-  _loaded:   false,
+  _loc:        null,   // 当前生效的位置 { name, admin1, country, lat, lon }
+  _locFallback: false, // 是否是“定位失败，使用默认北京”的兜底状态
+  _candidates:  [],    // 城市搜索的候选结果（同名城市消歧）
+  _loaded:      false,
+
+  DEFAULT_LOC: { name: '北京', admin1: '', country: '中国', lat: 39.9042, lon: 116.4074 },
 
   ICONS: {
     0:'☀️', 1:'🌤', 2:'⛅', 3:'☁️',
@@ -32,77 +35,143 @@ const Weather = {
   /* ─── 打开面板时调用 ─── */
   async open() {
     this._showLoading();
-    const saved = localStorage.getItem('weather_city');
-    if (saved) {
-      this._city = saved;
-      document.getElementById('wd-city-input').value = saved;
-    }
+    this._loadSavedLoc();
+    if (this._loc) document.getElementById('wd-city-input').value = this._loc.name;
+    this._hideCandidates();
     await this._load();
   },
 
-  /* ─── 绑定城市 ─── */
+  /* ─── 桌面挂件初始化：随页面一起静默加载，不依赖打开面板 ─── */
+  async autoLoad() {
+    this._loadSavedLoc();
+    await this._load(true);
+  },
+
+  _loadSavedLoc() {
+    try {
+      const raw = localStorage.getItem('weather_loc');
+      if (raw) this._loc = JSON.parse(raw);
+    } catch (e) { this._loc = null; }
+  },
+
+  /* ─── 绑定城市（支持同名城市消歧） ─── */
   async bindCity() {
     const val = document.getElementById('wd-city-input').value.trim();
     if (!val) return;
-    this._city = val;
-    localStorage.setItem('weather_city', val);
+    this._hideCandidates();
     this._showLoading();
-    await this._load();
-  },
-
-  /* ─── 核心加载 ─── */
-  async _load() {
     try {
-      if (this._city) {
-        await this._geocode(this._city);
+      const results = await this._geocodeSearch(val);
+      if (!results.length) { this._showError(`找不到城市：${val}`); return; }
+      if (results.length === 1) {
+        this._applyLoc(results[0]);
+        await this._load();
       } else {
-        await this._ipLocate();
+        // 多个同名城市，列出来让用户自己选（带省/州 + 国家区分）
+        this._showCandidates(results);
       }
-      await this._fetchWeather();
     } catch (e) {
-      this._showError(e.message || '天气加载失败，请检查网络');
+      this._showError('搜索失败，请检查网络');
     }
   },
 
-  /* ─── IP 定位 ─── */
-  async _ipLocate() {
-    const res  = await fetch('https://ip-api.com/json/?lang=zh-CN&fields=status,city,lat,lon');
-    const data = await res.json();
-    if (data.status !== 'success') throw new Error('IP 定位失败');
-    this._lat  = data.lat;
-    this._lon  = data.lon;
-    document.getElementById('wd-city-name').textContent = data.city || '当前位置';
-  },
-
-  /* ─── 城市名 → 经纬度 ─── */
-  async _geocode(city) {
-    const url  = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh&format=json`;
+  async _geocodeSearch(city) {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=8&language=zh&format=json`;
     const res  = await fetch(url);
     const data = await res.json();
-    const r    = data.results?.[0];
-    if (!r) throw new Error(`找不到城市：${city}`);
-    this._lat  = r.latitude;
-    this._lon  = r.longitude;
-    document.getElementById('wd-city-name').textContent = r.name || city;
+    return data.results || [];
+  },
+
+  _applyLoc(r) {
+    this._loc = {
+      name: r.name, admin1: r.admin1 || '', country: r.country || '',
+      lat: r.latitude, lon: r.longitude,
+    };
+    this._locFallback = false;
+    localStorage.setItem('weather_loc', JSON.stringify(this._loc));
+  },
+
+  _showCandidates(results) {
+    const wrap = document.getElementById('wd-city-candidates');
+    if (!wrap) return;
+    this._candidates = results;
+    wrap.innerHTML = results.map((r, i) => {
+      const sub = [r.admin1, r.country].filter(Boolean).join('，');
+      return `<div class="wd-candidate" data-i="${i}">
+        <span class="wd-candidate-name">${r.name}</span>
+        ${sub ? `<span class="wd-candidate-sub">${sub}</span>` : ''}
+      </div>`;
+    }).join('');
+    wrap.style.display = '';
+    wrap.querySelectorAll('.wd-candidate').forEach(el => {
+      el.addEventListener('click', async () => {
+        const r = this._candidates[+el.dataset.i];
+        this._hideCandidates();
+        this._applyLoc(r);
+        document.getElementById('wd-city-input').value = r.name;
+        this._showLoading();
+        await this._load();
+      });
+    });
+    document.getElementById('wd-loading').style.display = 'none';
+    document.getElementById('wd-content').style.display = 'none';
+    document.getElementById('wd-error').style.display   = 'none';
+  },
+
+  _hideCandidates() {
+    const wrap = document.getElementById('wd-city-candidates');
+    if (wrap) { wrap.style.display = 'none'; wrap.innerHTML = ''; }
+  },
+
+  /* ─── 核心加载 ─── */
+  async _load(silent = false) {
+    try {
+      if (!this._loc) await this._ipLocate();
+      await this._fetchWeather(silent);
+    } catch (e) {
+      if (!silent) this._showError(e.message || '天气加载失败，请检查网络');
+    }
+  },
+
+  /* ─── IP 定位（ipapi.co 支持 https，失败则兜底默认北京，仍可在输入框手动修改） ─── */
+  async _ipLocate() {
+    try {
+      const res  = await fetch('https://ipapi.co/json/');
+      const data = await res.json();
+      if (data && !data.error && data.latitude && data.longitude) {
+        this._loc = {
+          name: data.city || '当前位置', admin1: data.region || '',
+          country: data.country_name || '', lat: data.latitude, lon: data.longitude,
+        };
+        this._locFallback = false;
+        return;
+      }
+      throw new Error('定位失败');
+    } catch (e) {
+      this._loc = { ...this.DEFAULT_LOC };
+      this._locFallback = true;
+    }
   },
 
   /* ─── 获取天气 ─── */
-  async _fetchWeather() {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${this._lat}&longitude=${this._lon}`
+  async _fetchWeather(silent) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${this._loc.lat}&longitude=${this._loc.lon}`
       + `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m`
       + `&daily=weather_code,temperature_2m_max,temperature_2m_min`
       + `&timezone=auto&forecast_days=5`;
     const res  = await fetch(url);
     const data = await res.json();
-    this._render(data);
+    this._render(data, silent);
   },
 
-  /* ─── 渲染 ─── */
-  _render(data) {
+  /* ─── 渲染（面板 + 桌面小组件同步） ─── */
+  _render(data, silent) {
     const c = data.current;
     const d = data.daily;
-
     const code = c.weather_code;
+    const cityLabel = this._loc.name + (this._locFallback ? '（自动定位失败，已默认）' : '');
+
+    document.getElementById('wd-city-name').textContent = cityLabel;
     document.getElementById('wd-temp').textContent     = Math.round(c.temperature_2m) + '°C';
     document.getElementById('wd-icon').textContent     = this.ICONS[code] || '🌤';
     document.getElementById('wd-feel').textContent     = `🌡 体感：${Math.round(c.apparent_temperature)}°C`;
@@ -110,7 +179,6 @@ const Weather = {
     document.getElementById('wd-wind').textContent     = `🌬 风速：${c.wind_speed_10m} km/h`;
     document.getElementById('wd-desc').textContent     = `${this.ICONS[code] || ''} ${this.DESCS[code] || ''}`;
 
-    // 未来5天
     const days = ['今天','明天','后天'];
     const fw = document.getElementById('wd-forecast');
     fw.innerHTML = d.time.slice(0, 5).map((_, i) => {
@@ -126,6 +194,38 @@ const Weather = {
     document.getElementById('wd-error').style.display   = 'none';
     document.getElementById('wd-content').style.display = '';
     this._loaded = true;
+    this._lastData = data;
+
+    this._syncDesktopWidget(data);
+  },
+
+  /* renderAll() 重建 DOM 后会清空小组件为占位符，需要重新塞回真实数据 */
+  resyncDesktopWidget() {
+    if (this._lastData) this._syncDesktopWidget(this._lastData);
+  },
+
+  /* ─── 同步桌面天气小组件（不再是写死的“23°/北京”占位数据） ─── */
+  _syncDesktopWidget(data) {
+    const tile = document.querySelector('.desk-item[data-id="weather"]');
+    if (!tile) return;
+    const c = data.current, d = data.daily, code = c.weather_code;
+
+    const icon = tile.querySelector('.w-icon-top'); if (icon) icon.textContent = this.ICONS[code] || '🌤';
+    const temp = tile.querySelector('.w-temp');     if (temp) temp.textContent = Math.round(c.temperature_2m) + '°';
+    const desc = tile.querySelector('.w-desc');      if (desc) desc.textContent = this.DESCS[code] || '';
+    const city = tile.querySelector('.w-city');
+    if (city) city.textContent = (this._loc.name || '') + (this._locFallback ? '（默认）' : '') + ' · 今日';
+
+    const weekNames = ['周日','周一','周二','周三','周四','周五','周六'];
+    const dayEls = tile.querySelectorAll('.w-day');
+    d.time.slice(1, 1 + dayEls.length).forEach((dateStr, i) => {
+      const dayEl = dayEls[i];
+      if (!dayEl) return;
+      const label = dayEl.querySelector('.w-day-label');
+      const val   = dayEl.querySelector('b');
+      if (label) label.textContent = weekNames[new Date(dateStr).getDay()];
+      if (val)   val.textContent   = Math.round(d.temperature_2m_max[i + 1]) + '°';
+    });
   },
 
   _showLoading() {
@@ -143,11 +243,14 @@ const Weather = {
   },
 };
 
-/* 打开天气弹窗时自动加载 */
+/* 打开天气弹窗时自动加载 + 页面加载后静默加载并同步桌面小组件 */
 document.addEventListener('DOMContentLoaded', () => {
   const ov = document.getElementById('weather-overlay');
-  if (!ov) return;
-  new MutationObserver(() => {
-    if (ov.classList.contains('open')) Weather.open();
-  }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+  if (ov) {
+    new MutationObserver(() => {
+      if (ov.classList.contains('open')) Weather.open();
+    }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+  }
+  // 不依赖打开面板，页面一加载就静默获取一次，桌面小组件才能显示真实数据
+  Weather.autoLoad();
 });

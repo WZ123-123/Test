@@ -28,7 +28,8 @@ const AI_ENGINE = {
   },
 
   toggleModel(id) {
-    this.models = this.models.map(m => m.id === id ? { ...m, checked: !m.checked } : m);
+    const m = this.models.find(m => m.id === id);
+    if (m) m.checked = !m.checked;
     this.saveModels();
   },
 

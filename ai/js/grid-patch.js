@@ -16,6 +16,7 @@ function handleItemClick(item, pi) {
   else if (item.action === 'settings')   Modal.open('settings-overlay');
   else if (item.action === 'calc')       { Modal.open('calc-overlay'); Calc.init(); }
   else if (item.action === 'hotspot')    window.open('https://www.baidu.com/s?wd=今日热点', '_blank');
+  else if (item.action === 'music')      { Modal.open('music-overlay'); MusicPlayer.init(); }
   else if (item.action === 'links-nav')  Modal.open('links-nav-overlay');
   else if (item.action === 'ai-search')  AISearchModal.open();
   else if (item.action === 'ai') {

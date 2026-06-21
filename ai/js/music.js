@@ -75,6 +75,11 @@ const MusicPlayer = {
     });
   },
 
+  /* ─── 控制黑胶旋转 + 唱针动画 ─── */
+  _setPlayingState(on) {
+    document.getElementById('music-panel')?.classList.toggle('playing', on);
+  },
+
   /* ─── 播放指定曲目 ─── */
   async play(idx) {
     if (idx < 0 || idx >= this.list.length) return;
@@ -100,6 +105,7 @@ const MusicPlayer = {
     document.getElementById('music-title').textContent  = t.title;
     document.getElementById('music-artist').textContent = t.artist || '未知歌手';
     document.getElementById('mc-play').textContent      = '⏸';
+    this._setPlayingState(true);
 
     // 歌词
     t.lrc = [];
@@ -123,9 +129,11 @@ const MusicPlayer = {
     if (this.audio.paused) {
       this.audio.play();
       document.getElementById('mc-play').textContent = '⏸';
+      this._setPlayingState(true);
     } else {
       this.audio.pause();
       document.getElementById('mc-play').textContent = '▶️';
+      this._setPlayingState(false);
     }
   },
 
@@ -229,6 +237,7 @@ const MusicPlayer = {
       document.getElementById('music-artist').textContent = '--';
       document.getElementById('mc-play').textContent      = '▶️';
       document.getElementById('music-lyrics').textContent = '暂无歌词';
+      this._setPlayingState(false);
     } else if (this.cur > idx) {
       this.cur--;
     }

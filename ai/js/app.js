@@ -37,7 +37,7 @@ const App = {
 
   /* ---- localStorage ---- */
   loadData() {
-    const LAYOUT_VER = '14';
+    const LAYOUT_VER = '15';
     try {
       const ver = localStorage.getItem('aiNav_layoutVer');
       const d   = localStorage.getItem('aiNav_pages');
@@ -93,7 +93,7 @@ const App = {
         pages:     this.pages,
         pageCount: this.pageCount,
       }));
-      localStorage.setItem('aiNav_layoutVer', '14');
+      localStorage.setItem('aiNav_layoutVer', '15');
     } catch (e) {}
   },
 
@@ -150,6 +150,11 @@ const App = {
     this.searchMode = 'normal';
     localStorage.setItem('aiNav_seMode', 'normal');
     this._setNormalEngineByKey(el.dataset.seKey);
+    // 切到普通引擎时必须把 AI 模型的勾选状态真正清空，
+    // 否则 chip 视觉上显示未选中，但 modelObj.checked 其实还是 true，
+    // 下次点击该 chip 时会被当成「取消勾选」，导致看起来选中了别的模型。
+    AI_ENGINE.models.forEach(m => { m.checked = false; });
+    AI_ENGINE.saveModels();
     this._syncSEUI();
   },
 

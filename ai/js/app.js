@@ -171,11 +171,11 @@ const App = {
     document.querySelectorAll('.se-opt[data-se-key]').forEach(b => {
       b.classList.toggle('active', !isAI && b.dataset.seKey === this.normalEngineKey);
     });
-    // AI 模型 chip
-    document.querySelectorAll('.ai-model-chip').forEach(chip => {
+    // AI 模型 chip：按 data-model-id 精确匹配，避免顺序错位
+    document.querySelectorAll('.ai-model-chip[data-model-id]').forEach(chip => {
       const id = chip.dataset.modelId;
       const m  = AI_ENGINE.models.find(x => x.id === id);
-      if (m) chip.classList.toggle('on', m.checked && isAI);
+      chip.classList.toggle('on',      !!(m && m.checked && isAI));
       chip.classList.toggle('ai-mode', isAI);
     });
     // 搜索按钮文字
@@ -218,11 +218,12 @@ const App = {
         <div class="se-row">
           <div class="se-group-label">AI 引擎（可多选）</div>
           <div class="se-ai-chips" id="se-ai-chips">
-            ${AI_ENGINE.models.map(m => `
-              <div class="ai-model-chip se-opt${m.checked && this.searchMode === 'ai' ? ' on ai-mode' : ''}"
+            ${AI_ENGINE.models.map(m => {
+              const isOn = m.checked && this.searchMode === 'ai';
+              return `<div class="ai-model-chip se-opt${isOn ? ' on ai-mode' : ''}"
                    data-model-id="${m.id}"
-                   onclick="App._onAIChipClick(this, '${m.id}')">${m.name}</div>
-            `).join('')}
+                   onclick="App._onAIChipClick(this, '${m.id}')">${m.name}</div>`;
+            }).join('')}
           </div>
         </div>
         <p class="se-hint" id="se-hint">${this.searchMode === 'ai' ? '当前：AI 检索模式' : '当前：普通搜索模式'}</p>

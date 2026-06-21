@@ -96,7 +96,48 @@ const Widgets = {
 
 };
 
-/* ---- DOMContentLoaded bindings ---- */
+/* ---- 今日热点（桌面小组件实时同步） ---- */
+const Hotspot = {
+  _data: [],
+
+  // 用的是第三方免费热搜接口，无需 Key。这类免费接口偶尔会失效/限流，
+  // 失败时会静默放弃，卡片保留“加载中...”不影响其他功能；
+  // 如果哪天这个接口挂了，换一个新的免费热搜接口地址即可。
+  API_URL: 'https://api.vvhan.com/api/hotlist?type=baidu',
+
+  async load() {
+    try {
+      const res  = await fetch(this.API_URL);
+      const json = await res.json();
+      const raw  = json.data || json.result || json.list || [];
+      const list = raw.slice(0, 4).map(it => ({
+        title: it.title || it.name || it.desc || '',
+        url:   it.url || it.link || it.mobileUrl ||
+               ('https://www.baidu.com/s?wd=' + encodeURIComponent(it.title || it.name || '')),
+      })).filter(it => it.title);
+      if (!list.length) return;
+      this._data = list;
+      this._sync();
+    } catch (e) {
+      // 接口不可用，静默忽略，桌面卡片保持原样，点击仍可跳转到百度热搜页
+    }
+  },
+
+  _sync() {
+    const list = document.querySelector('.desk-item[data-id="hotspot"] .hs-list');
+    if (!list || !this._data.length) return;
+    list.innerHTML = this._data.map((it, i) =>
+      `<div class="hs-row" data-url="${it.url}" title="${it.title}"><b>${i+1}</b>${it.title}</div>`
+    ).join('');
+  },
+
+  /* renderAll() 重建 DOM 后需要把已经拉到的数据重新塞回去 */
+  resync() { if (this._data.length) this._sync(); },
+};
+
+document.addEventListener('DOMContentLoaded', () => Hotspot.load());
+
+
 document.addEventListener('DOMContentLoaded', () => {
   Widgets.bindCanvas();
 

@@ -97,6 +97,7 @@ function renderAll() {
   }
   renderDots();
   applyPageTransform(App.curPage, false);
+  if (typeof Weather !== 'undefined') Weather.resyncDesktopWidget();
 }
 
 function ensurePageDOM(pi) {
@@ -247,19 +248,17 @@ function buildItemHTML(item) {
 
 function buildWidget(item) {
   if (item.action==='weather') return `
-    <div class="w-icon-top">⛅</div><div class="w-temp">23°</div>
-    <div class="w-desc">多云</div><div class="w-city">北京 · 今日</div>
+    <div class="w-icon-top">⏳</div><div class="w-temp">--°</div>
+    <div class="w-desc">定位中...</div><div class="w-city">--</div>
     <div class="w-week">
-      <div class="w-day">周一<b>22°</b></div>
-      <div class="w-day">周二<b>25°</b></div>
-      <div class="w-day">周三<b>20°</b></div>
+      <div class="w-day"><span class="w-day-label">--</span><b>--</b></div>
+      <div class="w-day"><span class="w-day-label">--</span><b>--</b></div>
+      <div class="w-day"><span class="w-day-label">--</span><b>--</b></div>
     </div><div class="w-footer-lbl">天气</div>`;
   if (item.action==='hotspot') return `
     <div class="hs-badge">点击查看</div><div class="hs-img">📰</div>
     <div class="hs-title">· AI大模型最新进展<br>· 今日科技热点</div>
     <div class="hs-sub">今日热点</div>`;
-  if (item.action==='ai') return `
-    <div class="ai-logo-box">🤖</div><div class="ai-label-text">开启对话</div>`;
   return `<div class="item-emoji large">${item.emoji||''}</div>`;
 }
 
@@ -270,7 +269,6 @@ function handleItemClick(item, pi) {
   if      (item.action==='nav')      Modal.open('nav-overlay');
   else if (item.action==='note')     Modal.open('note-overlay');
   else if (item.action==='draw')     Modal.open('draw-overlay');
-  else if (item.action==='ai')       Modal.open('ai-overlay');
   else if (item.action==='weather')  Modal.open('weather-overlay');
   else if (item.action==='settings') Modal.open('settings-overlay');
   else if (item.action==='calc')     { Modal.open('calc-overlay'); Calc.init(); }

@@ -87,6 +87,19 @@
   background:linear-gradient(135deg,#64a0dc,#3c78be);
   color:#fff; font-size:12px; cursor:pointer; font-family:inherit;
 }
+.wd-city-candidates {
+  margin:0 16px 6px; border:.5px solid rgba(0,0,0,.1); border-radius:10px;
+  overflow:hidden; background:rgba(255,255,255,.85);
+}
+.wd-candidate {
+  padding:8px 12px; font-size:12px; cursor:pointer;
+  display:flex; align-items:center; gap:8px;
+  border-bottom:.5px solid rgba(0,0,0,.06);
+}
+.wd-candidate:last-child { border-bottom:none; }
+.wd-candidate:hover { background:rgba(100,160,220,.1); }
+.wd-candidate-name { font-weight:600; color:#2c3e5a; }
+.wd-candidate-sub  { color:#999; font-size:11px; }
 </style>
 </head>
 <body>
@@ -243,6 +256,7 @@
           <button onclick="Weather.bindCity()">绑定</button>
         </div>
       </div>
+      <div id="wd-city-candidates" class="wd-city-candidates" style="display:none;"></div>
       <div id="wd-loading" style="text-align:center;padding:40px 0;color:#aaa;font-size:14px;">⏳ 正在获取天气...</div>
       <div id="wd-content" style="display:none;">
         <div class="wd-main">

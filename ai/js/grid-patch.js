@@ -19,10 +19,6 @@ function handleItemClick(item, pi) {
   else if (item.action === 'music')      { Modal.open('music-overlay'); MusicPlayer.init(); }
   else if (item.action === 'links-nav')  Modal.open('links-nav-overlay');
   else if (item.action === 'ai-search')  AISearchModal.open();
-  else if (item.action === 'ai') {
-    // 后续可改为跳转自定义 URL：window.open('https://your-ai-site.com', '_blank');
-    Modal.open('ai-overlay');
-  }
   else if (item.type === 'folder')       openFolderModal(item, pi);
   else if (item.url)                     window.open(item.url, '_blank');
 }

@@ -6,7 +6,7 @@ const CELL = 88;
 const GAP  = 16;
 const ROWS = 2;
 
-const DEFAULT_BG_IMAGE = '3.jpg';
+const DEFAULT_BG_IMAGE = '1.jpg';
 
 const BG_PRESETS = {
   default: null,

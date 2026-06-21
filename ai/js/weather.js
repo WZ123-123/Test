@@ -215,6 +215,8 @@ const Weather = {
     const desc = tile.querySelector('.w-desc');      if (desc) desc.textContent = this.DESCS[code] || '';
     const city = tile.querySelector('.w-city');
     if (city) city.textContent = (this._loc.name || '') + (this._locFallback ? '（默认）' : '') + ' · 今日';
+    const footer = tile.querySelector('.w-footer-lbl');
+    if (footer) footer.textContent = `体感 ${Math.round(c.apparent_temperature)}°`;
 
     const weekNames = ['周日','周一','周二','周三','周四','周五','周六'];
     const dayEls = tile.querySelectorAll('.w-day');

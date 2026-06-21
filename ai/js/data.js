@@ -23,6 +23,7 @@ const BG_STYLES = {
   'bg-draw':     'linear-gradient(145deg,#4facfe,#1a7fd4)',
   'bg-ai':       'linear-gradient(145deg,#f07130,#e05518)',
   'bg-settings': 'linear-gradient(145deg,#8e9eab,#616f7a)',
+  'bg-music':    'linear-gradient(145deg,#a855f7,#7c3aed)',
   'bg-calc':     'linear-gradient(145deg,#5b86e5,#36d1dc)',
   'bg-hot':      'rgba(255,255,255,0.22)',
 };
@@ -43,7 +44,7 @@ const DEFAULT_PAGES = [
     { id:'hotspot',   type:'widget', size:'2x2', label:'今日热点', bgClass:'bg-hot',      col:2, row:0, action:'hotspot'                   },
     { id:'note',      type:'widget', size:'2x1', label:'记事本',   bgClass:'bg-note',     col:4, row:0, action:'note',     emoji:'📝'      },
     { id:'draw',      type:'widget', size:'2x1', label:'画板',     bgClass:'bg-draw',     col:4, row:1, action:'draw',     emoji:'🎨'      },
-    { id:'ai',        type:'widget', size:'2x2', label:'AI 对话',  bgClass:'bg-ai',       col:6, row:0, action:'ai'                        },
+    { id:'music',     type:'widget', size:'2x2', label:'音乐',     bgClass:'bg-music',    col:6, row:0, action:'music'                     },
     { id:'nav',       type:'icon',   size:'1x1', label:'网址导航', bgClass:'bg-nav',      col:8, row:0, action:'nav',      emoji:'🧭'      },
     { id:'ai-search', type:'icon',   size:'1x1', label:'AI 检索',  bgClass:'bg-ai',       col:8, row:1, action:'ai-search',emoji:'✨'      },
     { id:'calc',      type:'icon',   size:'1x1', label:'计算器',   bgClass:'bg-calc',     col:9, row:0, action:'calc',     emoji:'🧮'      },

@@ -102,25 +102,35 @@ const Hotspot = {
 
   // 用的是第三方免费热搜接口，无需 Key。这类免费接口偶尔会失效/限流，
   // 失败时会静默放弃，卡片保留“加载中...”不影响其他功能；
-  // 如果哪天这个接口挂了，换一个新的免费热搜接口地址即可。
-  API_URL: 'https://api.vvhan.com/api/hotlist?type=baidu',
+  // 列了两个常见可用地址依次重试，如果哪天都挂了，换一个新的免费热搜接口地址即可。
+  // 注：之前用的 type=baidu 是错误参数值，百度热搜正确取值是 baiduRD，这是之前一直卡“加载中”的原因。
+  API_URLS: [
+    'https://api.vvhan.com/api/hotlist?type=baiduRD',
+    'https://api.vvhan.com/api/hotlist/baiduRD',
+  ],
 
   async load() {
-    try {
-      const res  = await fetch(this.API_URL);
-      const json = await res.json();
-      const raw  = json.data || json.result || json.list || [];
-      const list = raw.slice(0, 4).map(it => ({
-        title: it.title || it.name || it.desc || '',
-        url:   it.url || it.link || it.mobileUrl ||
-               ('https://www.baidu.com/s?wd=' + encodeURIComponent(it.title || it.name || '')),
-      })).filter(it => it.title);
-      if (!list.length) return;
-      this._data = list;
-      this._sync();
-    } catch (e) {
-      // 接口不可用，静默忽略，桌面卡片保持原样，点击仍可跳转到百度热搜页
+    for (const url of this.API_URLS) {
+      try {
+        const res  = await fetch(url);
+        const json = await res.json();
+        const raw  = json.data || json.result || json.list || [];
+        const list = raw.slice(0, 4).map(it => ({
+          title: it.title || it.name || it.desc || '',
+          url:   it.url || it.link || it.mobilUrl || it.mobileUrl ||
+                 ('https://www.baidu.com/s?wd=' + encodeURIComponent(it.title || it.name || '')),
+        })).filter(it => it.title);
+        if (list.length) {
+          this._data = list;
+          this._sync();
+          return;
+        }
+        console.warn('[Hotspot] 接口返回为空，尝试下一个地址：', url, json);
+      } catch (e) {
+        console.warn('[Hotspot] 接口请求失败：', url, e);
+      }
     }
+    console.warn('[Hotspot] 所有热点接口均不可用，卡片保持占位状态。可在浏览器 F12 -> Network 面板搜索 hotlist 查看具体报错原因。');
   },
 
   _sync() {

@@ -98,6 +98,10 @@ Nav.setCatLinks = function(section) {
   _doSwitch();
 };
 
+/* ── 图标数据内存缓存（key → favicon完整值），避免 base64 写入 HTML 属性被截断 ── */
+Nav._iconCache = new Map();
+let _iconCacheSeq = 0;
+
 /* ── 渲染内容区 ── */
 Nav._renderLinksContent = function(filter) {
   const content = document.getElementById('nav-content');
@@ -127,53 +131,93 @@ Nav._renderLinksContent = function(filter) {
     return;
   }
 
-  content.innerHTML = `<div class="nav-icon-grid">${items.map(item => {
-    const url     = Nav._itemUrl(item);
-    const favicon = Nav._favicon(item, url);
-    const initial = (item.title || '?').charAt(0).toUpperCase();
-    const faviconHtml = favicon
-      ? `<img src="${favicon}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:8px;"
-             onerror="this.style.display='none';this.parentNode.textContent='${initial}'">`
-      : initial;
-    return `
-      <div class="nav-icon" draggable="true"
-           data-url="${url}" data-name="${item.title || ''}"
-           data-color="rgba(200,210,230,0.3)" data-letter="${initial}"
-           data-favicon="${favicon}">
-        <div class="nav-icon-body nav-icon-favicon"
-             style="background:rgba(255,255,255,0.85);">${faviconHtml}</div>
-        <div class="nav-icon-label">${item.title || ''}</div>
-      </div>`;
-  }).join('')}</div>`;
+  // 每次渲染前清空旧缓存，防止无限增长
+  Nav._iconCache.clear();
 
-  content.querySelectorAll('.nav-icon').forEach(el => {
+  const grid = document.createElement('div');
+  grid.className = 'nav-icon-grid';
+
+  items.forEach(item => {
+    const url     = Nav._itemUrl(item);
+    const favicon = Nav._favicon(item, url);  // 可能是 base64 / http url / ''
+    const initial = (item.title || '?').charAt(0).toUpperCase();
+
+    // 把完整 favicon 存进内存 Map，DOM 只记 key
+    const cacheKey = 'nic_' + (++_iconCacheSeq);
+    Nav._iconCache.set(cacheKey, favicon || '');
+
+    const el = document.createElement('div');
+    el.className   = 'nav-icon';
+    el.draggable   = true;
+    el.dataset.url     = url;
+    el.dataset.name    = item.title || '';
+    el.dataset.color   = 'rgba(200,210,230,0.3)';
+    el.dataset.letter  = initial;
+    el.dataset.iconKey = cacheKey;   // ← 只存 key，不存实际 favicon 内容
+
+    // 图标体
+    const body = document.createElement('div');
+    body.className = 'nav-icon-body nav-icon-favicon';
+    body.style.background = 'rgba(255,255,255,0.85)';
+
+    if (favicon) {
+      const img = document.createElement('img');
+      img.src   = favicon;
+      img.alt   = '';
+      img.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;';
+      img.onerror = function() {
+        this.style.display = 'none';
+        body.textContent   = initial;
+      };
+      body.appendChild(img);
+    } else {
+      body.textContent = initial;
+    }
+
+    const label = document.createElement('div');
+    label.className   = 'nav-icon-label';
+    label.textContent = item.title || '';
+
+    el.appendChild(body);
+    el.appendChild(label);
+
     typeof add3D === 'function' && add3D(el);
+
     el.addEventListener('click', () => window.open(el.dataset.url, '_blank'));
+
     el.addEventListener('dragstart', ev => {
       ev.dataTransfer.effectAllowed = 'copy';
+      // 从内存 Map 里取完整 favicon
+      const fullFavicon = Nav._iconCache.get(el.dataset.iconKey) || '';
       ev.dataTransfer.setData('navIcon', JSON.stringify({
         label:   el.dataset.name,
         color:   el.dataset.color,
         letter:  el.dataset.letter,
         url:     el.dataset.url,
-        favicon: el.dataset.favicon,
+        favicon: fullFavicon,
       }));
       window._dragSize = '1x1';
     });
-    el.addEventListener('dragend', () => {
-      window._dragSize = null;
-    });
+
+    el.addEventListener('dragend', () => { window._dragSize = null; });
+
     el.addEventListener('contextmenu', ev => {
       ev.preventDefault(); ev.stopPropagation();
       const menu = document.getElementById('ctx-menu');
       menu.innerHTML = '<div class="ctx-item">➕ 添加到桌面</div>';
+      const fullFavicon = Nav._iconCache.get(el.dataset.iconKey) || '';
       menu.querySelector('.ctx-item').onclick = () => {
-        Nav.addToDesktop(el.dataset.name, el.dataset.color, el.dataset.letter, el.dataset.url, '1x1', el.dataset.favicon);
+        Nav.addToDesktop(el.dataset.name, el.dataset.color, el.dataset.letter, el.dataset.url, '1x1', fullFavicon);
         hideCtxMenu && hideCtxMenu();
       };
       menu.style.cssText = `display:block;left:${Math.min(ev.clientX,innerWidth-180)}px;top:${Math.min(ev.clientY,innerHeight-80)}px;`;
     });
+
+    grid.appendChild(el);
   });
+
+  content.innerHTML = '';
+  content.appendChild(grid);
 };
 
 /* ── addToDesktop 支持 favicon ── */

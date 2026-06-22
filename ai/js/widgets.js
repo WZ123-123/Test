@@ -100,44 +100,70 @@ const Widgets = {
 const Hotspot = {
   _data: [],
 
-  // 用的是第三方免费热搜接口，无需 Key。这类免费接口偶尔会失效/限流，
-  // 失败时会静默放弃，卡片保留“加载中...”不影响其他功能；
-  // 列了两个常见可用地址依次重试，如果哪天都挂了，换一个新的免费热搜接口地址即可。
-  // 注：之前用的 type=baidu 是错误参数值，百度热搜正确取值是 baiduRD，这是之前一直卡“加载中”的原因。
+  // 接口列表：依次重试，第一个成功就停止。
+  // 用知乎热榜做主接口（vvhan 该接口结构固定，跨域无问题）；微博热搜做备用。
+  // baiduRD 接口返回百度原始嵌套格式，需要额外处理，暂不作为主接口。
   API_URLS: [
-    'https://api.vvhan.com/api/hotlist?type=baiduRD',
-    'https://api.vvhan.com/api/hotlist/baiduRD',
+    'https://api.vvhan.com/api/hotlist?type=zhihuHot',
+    'https://api.vvhan.com/api/hotlist?type=wbhot',
   ],
+
+  // 从任意嵌套结构里找到第一个非空数组（深度优先）
+  _findArray(obj, depth) {
+    if (depth === undefined) depth = 0;
+    if (depth > 4) return null;
+    if (Array.isArray(obj) && obj.length) return obj;
+    if (obj && typeof obj === 'object') {
+      for (const v of Object.values(obj)) {
+        const found = this._findArray(v, depth + 1);
+        if (found) return found;
+      }
+    }
+    return null;
+  },
 
   async load() {
     for (const url of this.API_URLS) {
       try {
-        const res  = await fetch(url);
+        const ctrl = new AbortController();
+        const tid  = setTimeout(() => ctrl.abort(), 6000);
+        const res  = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(tid);
         const json = await res.json();
-        const raw  = json.data || json.result || json.list || [];
+        // 先找已知字段，找不到再深度搜索
+        const raw = json.data || json.result || json.list || this._findArray(json) || [];
         const list = raw.slice(0, 4).map(it => ({
-          title: it.title || it.name || it.desc || '',
-          url:   it.url || it.link || it.mobilUrl || it.mobileUrl ||
-                 ('https://www.baidu.com/s?wd=' + encodeURIComponent(it.title || it.name || '')),
-        })).filter(it => it.title);
+          title: it.title || it.name || it.word || it.desc || '',
+          url:   it.url || it.link || it.mobilUrl || it.mobileUrl || '',
+        }))
+        .filter(it => it.title)
+        .map(it => ({
+          title: it.title,
+          url:   it.url || ('https://www.baidu.com/s?wd=' + encodeURIComponent(it.title)),
+        }));
+
         if (list.length) {
           this._data = list;
           this._sync();
           return;
         }
-        console.warn('[Hotspot] 接口返回为空，尝试下一个地址：', url, json);
+        console.warn('[Hotspot] 接口返回为空，尝试下一个：', url, json);
       } catch (e) {
-        console.warn('[Hotspot] 接口请求失败：', url, e);
+        console.warn('[Hotspot] 接口请求失败：', url, e.message || e);
       }
     }
-    console.warn('[Hotspot] 所有热点接口均不可用，卡片保持占位状态。可在浏览器 F12 -> Network 面板搜索 hotlist 查看具体报错原因。');
+    // 全部失败：把卡片从"加载中"改成提示，点击可跳转
+    const list = document.querySelector('.desk-item[data-id="hotspot"] .hs-list');
+    if (list) {
+      list.innerHTML = '<div class="hs-row" data-url="https://top.baidu.com/board?tab=realtime" style="color:rgba(26,58,92,.5)">暂无数据，点击查看百度热搜</div>';
+    }
   },
 
   _sync() {
     const list = document.querySelector('.desk-item[data-id="hotspot"] .hs-list');
     if (!list || !this._data.length) return;
     list.innerHTML = this._data.map((it, i) =>
-      `<div class="hs-row" data-url="${it.url}" title="${it.title}"><b>${i+1}</b>${it.title}</div>`
+      '<div class="hs-row" data-url="' + it.url + '" title="' + it.title + '"><b>' + (i+1) + '</b>' + it.title + '</div>'
     ).join('');
   },
 

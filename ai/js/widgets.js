@@ -100,70 +100,82 @@ const Widgets = {
 const Hotspot = {
   _data: [],
 
-  // 接口列表：依次重试，第一个成功就停止。
-  // 用知乎热榜做主接口（vvhan 该接口结构固定，跨域无问题）；微博热搜做备用。
-  // baiduRD 接口返回百度原始嵌套格式，需要额外处理，暂不作为主接口。
+  // 静态兜底数据：无论接口是否可用，8 秒内没拿到数据就显示这些，
+  // 点击每条会跳转到对应的百度搜索，始终可用，不会卡在"加载中"。
+  FALLBACK: [
+    { title: '今日百度热搜', url: 'https://top.baidu.com/board?tab=realtime' },
+    { title: '微博实时热榜', url: 'https://s.weibo.com/top/summary' },
+    { title: '知乎每日热榜', url: 'https://www.zhihu.com/hot' },
+    { title: '今日科技要闻', url: 'https://www.baidu.com/s?wd=今日科技新闻' },
+  ],
+
+  // 接口列表：先请求文本再判断是否是 JSON，防止拦截页被当成数据解析
   API_URLS: [
     'https://api.vvhan.com/api/hotlist?type=zhihuHot',
     'https://api.vvhan.com/api/hotlist?type=wbhot',
   ],
 
-  // 从任意嵌套结构里找到第一个非空数组（深度优先）
-  _findArray(obj, depth) {
-    if (depth === undefined) depth = 0;
-    if (depth > 4) return null;
-    if (Array.isArray(obj) && obj.length) return obj;
-    if (obj && typeof obj === 'object') {
-      for (const v of Object.values(obj)) {
-        const found = this._findArray(v, depth + 1);
-        if (found) return found;
-      }
-    }
-    return null;
-  },
-
   async load() {
+    // 8 秒总超时：超时就降级到静态兜底数据
+    const fallbackTimer = setTimeout(() => {
+      if (!this._data.length) {
+        console.warn('[Hotspot] 8 秒内未获取到数据，降级为静态兜底');
+        this._data = this.FALLBACK;
+        this._sync();
+      }
+    }, 8000);
+
     for (const url of this.API_URLS) {
       try {
         const ctrl = new AbortController();
-        const tid  = setTimeout(() => ctrl.abort(), 6000);
+        const tid  = setTimeout(() => ctrl.abort(), 5000);
         const res  = await fetch(url, { signal: ctrl.signal });
         clearTimeout(tid);
-        const json = await res.json();
-        // 先找已知字段，找不到再深度搜索
-        const raw = json.data || json.result || json.list || this._findArray(json) || [];
-        const list = raw.slice(0, 4).map(it => ({
-          title: it.title || it.name || it.word || it.desc || '',
-          url:   it.url || it.link || it.mobilUrl || it.mobileUrl || '',
-        }))
-        .filter(it => it.title)
-        .map(it => ({
-          title: it.title,
-          url:   it.url || ('https://www.baidu.com/s?wd=' + encodeURIComponent(it.title)),
-        }));
+
+        // 先以文本形式获取，确认是 JSON 再解析（避免拦截页被解析报错）
+        const text = await res.text();
+        if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) {
+          console.warn('[Hotspot] 接口返回非 JSON（可能被拦截）：', url, text.slice(0, 80));
+          continue;
+        }
+        const json = JSON.parse(text);
+        const raw  = json.data || json.result || json.list || [];
+        const list = raw.slice(0, 4)
+          .map(it => ({
+            title: (it.title || it.name || it.word || '').trim(),
+            url:   it.url || it.link || it.mobilUrl || it.mobileUrl || '',
+          }))
+          .filter(it => it.title)
+          .map(it => ({
+            title: it.title,
+            url:   it.url || ('https://www.baidu.com/s?wd=' + encodeURIComponent(it.title)),
+          }));
 
         if (list.length) {
+          clearTimeout(fallbackTimer);
           this._data = list;
           this._sync();
           return;
         }
-        console.warn('[Hotspot] 接口返回为空，尝试下一个：', url, json);
+        console.warn('[Hotspot] 接口返回数组为空：', url, json);
       } catch (e) {
-        console.warn('[Hotspot] 接口请求失败：', url, e.message || e);
+        console.warn('[Hotspot] 接口请求失败：', url, e.message || String(e));
       }
     }
-    // 全部失败：把卡片从"加载中"改成提示，点击可跳转
-    const list = document.querySelector('.desk-item[data-id="hotspot"] .hs-list');
-    if (list) {
-      list.innerHTML = '<div class="hs-row" data-url="https://top.baidu.com/board?tab=realtime" style="color:rgba(26,58,92,.5)">暂无数据，点击查看百度热搜</div>';
-    }
+    // 所有接口都走完了还没数据，等 fallbackTimer 触发即可（已设置）
   },
 
   _sync() {
-    const list = document.querySelector('.desk-item[data-id="hotspot"] .hs-list');
-    if (!list || !this._data.length) return;
-    list.innerHTML = this._data.map((it, i) =>
-      '<div class="hs-row" data-url="' + it.url + '" title="' + it.title + '"><b>' + (i+1) + '</b>' + it.title + '</div>'
+    // 找到桌面上的热点组件，填充数据
+    const wrap = document.querySelector('.desk-item[data-id="hotspot"] .hs-list');
+    if (!wrap) {
+      // DOM 还没渲染好（极少数情况），100ms 后重试一次
+      setTimeout(() => this._sync(), 100);
+      return;
+    }
+    if (!this._data.length) return;
+    wrap.innerHTML = this._data.map((it, i) =>
+      '<div class="hs-row" data-url="' + it.url + '" title="' + it.title + '"><b>' + (i + 1) + '</b>' + it.title + '</div>'
     ).join('');
   },
 

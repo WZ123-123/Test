@@ -35,20 +35,20 @@ function getBgStyle(bgClass, customBg) {
 }
 
 /*
-  布局（col 从0起，applyLeftPadToLayout 首次加载时 +2）：
+  布局（ 从0起，applyLeftPadToLayout 首次加载时 +2）：
   天气(0-1) | 热点(2-3) | 记事本/画板(4-5) | AI对话(6-7) | 网址导航(8,0) AI检索(8,1) | 计算器(9,0) 设置(9,1)
 */
 const DEFAULT_PAGES = [
   [
-    { id:'weather',   type:'widget', size:'2x2', label:'天气',     bgClass:'bg-weather',  col:0, row:0, action:'weather'                   },
-    { id:'hotspot',   type:'widget', size:'2x2', label:'今日热点', bgClass:'bg-hot',      col:2, row:0, action:'hotspot'                   },
-    { id:'note',      type:'widget', size:'2x1', label:'记事本',   bgClass:'bg-note',     col:4, row:0, action:'note',     emoji:'📝'      },
-    { id:'draw',      type:'widget', size:'2x1', label:'画板',     bgClass:'bg-draw',     col:4, row:1, action:'draw',     emoji:'🎨'      },
-    { id:'music',     type:'icon',   size:'1x1', label:'音乐',     bgClass:'bg-music',    col:6, row:0, action:'music',    emoji:'🎵'      },
+    { id:'weather',   type:'widget', size:'2x2', label:'天气',     bgClass:'bg-weather',  col:4, row:0, action:'weather'                   },
+    { id:'hotspot',   type:'widget', size:'2x2', label:'今日热点', bgClass:'bg-hot',      col:12, row:0, action:'hotspot'                   },
+    { id:'note',      type:'widget', size:'2x1', label:'记事本',   bgClass:'bg-note',     col:6, row:0, action:'note',     emoji:'📝'      },
+    { id:'draw',      type:'widget', size:'2x1', label:'画板',     bgClass:'bg-draw',     col:6, row:1, action:'draw',     emoji:'🎨'      },
+    { id:'music',     type:'icon',   size:'1x1', label:'音乐',     bgClass:'bg-music',    col:11, row:0, action:'music',    emoji:'🎵'      },
     { id:'nav',       type:'icon',   size:'1x1', label:'网址导航', bgClass:'bg-nav',      col:8, row:0, action:'nav',      emoji:'🧭'      },
-    { id:'ai-search', type:'icon',   size:'1x1', label:'AI 检索',  bgClass:'bg-ai',       col:8, row:1, action:'ai-search',emoji:'✨'      },
-    { id:'calc',      type:'icon',   size:'1x1', label:'计算器',   bgClass:'bg-calc',     col:9, row:0, action:'calc',     emoji:'🧮'      },
-    { id:'settings',  type:'icon',   size:'1x1', label:'设置',     bgClass:'bg-settings', col:9, row:1, action:'settings', emoji:'⚙️'     },
+    { id:'ai-search', type:'icon',   size:'1x1', label:'AI 检索',  bgClass:'bg-ai',       col:9, row:0, action:'ai-search',emoji:'✨'      },
+    { id:'calc',      type:'icon',   size:'1x1', label:'计算器',   bgClass:'bg-calc',     col:11, row:1, action:'calc',     emoji:'🧮'      },
+    { id:'settings',  type:'icon',   size:'1x1', label:'设置',     bgClass:'bg-settings', col:10, row:0, action:'settings', emoji:'⚙️'     },
   ]
 ];
 

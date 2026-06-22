@@ -1,7 +1,8 @@
 /* ============================================================
-   music.js — 本地音乐播放器
-   支持：相对路径预置歌单 / 手动添加文件
-   功能：播放/暂停、上下曲、进度拖拽、音量、循环模式、歌词同步、播放列表
+   music.js — 音乐播放器（网易云风格）
+   播放列表来自下面的 PRESET 数组（按需手动添加歌曲信息即可）
+   功能：播放/暂停、上下曲、进度拖拽、音量、循环模式、
+         整屏滚动歌词同步、播放列表（侧边抽屉开关）
    ============================================================ */
 
 const MusicPlayer = {
@@ -9,9 +10,8 @@ const MusicPlayer = {
   list:  [],          // { title, artist, src, cover, lrcSrc, lrc[] }
   cur:   -1,
   mode:  'list',      // 'list' | 'single' | 'random'
-  _lrcTimer: null,
 
-  /* ─── 预置歌单（相对路径，放在 music/ 目录下） ─── */
+  /* ─── 预置歌单（相对路径，放在 music/ 目录下，手动维护） ─── */
   PRESET: [
     /* 示例，有文件时取消注释：
     {
@@ -45,23 +45,9 @@ const MusicPlayer = {
     document.getElementById('music-vol')
       .addEventListener('input', e => { this.audio.volume = +e.target.value; });
 
-    document.getElementById('music-file-input')
-      .addEventListener('change', e => this._addFiles(e.target.files));
-
-    // 加载预置
+    // 加载预置歌单
     this.PRESET.forEach(p => this._addTrack(p));
     this._renderList();
-  },
-
-  /* ─── 添加本地文件 ─── */
-  _addFiles(files) {
-    Array.from(files).forEach(file => {
-      const src   = URL.createObjectURL(file);
-      const name  = file.name.replace(/\.[^.]+$/, '');
-      this._addTrack({ title: name, artist: '', src, cover: '', lrcSrc: '' });
-    });
-    this._renderList();
-    if (this.cur < 0 && this.list.length > 0) this.play(0);
   },
 
   _addTrack(info) {
@@ -78,6 +64,11 @@ const MusicPlayer = {
   /* ─── 控制黑胶旋转 + 唱针动画 ─── */
   _setPlayingState(on) {
     document.getElementById('music-panel')?.classList.toggle('playing', on);
+  },
+
+  /* ─── 播放列表抽屉开关 ─── */
+  toggleList() {
+    document.getElementById('music-list-wrap')?.classList.toggle('open');
   },
 
   /* ─── 播放指定曲目 ─── */
@@ -109,16 +100,16 @@ const MusicPlayer = {
 
     // 歌词
     t.lrc = [];
-    document.getElementById('music-lyrics').textContent = '加载歌词中...';
+    this._renderLyricsList(null, '加载歌词中...');
     if (t.lrcSrc) {
       try {
         const res  = await fetch(t.lrcSrc);
         const text = await res.text();
         t.lrc = this._parseLrc(text);
-        if (!t.lrc.length) document.getElementById('music-lyrics').textContent = '暂无歌词';
-      } catch { document.getElementById('music-lyrics').textContent = '歌词加载失败'; }
+        this._renderLyricsList(t.lrc, '暂无歌词');
+      } catch { this._renderLyricsList(null, '歌词加载失败'); }
     } else {
-      document.getElementById('music-lyrics').textContent = '暂无歌词';
+      this._renderLyricsList(null, '暂无歌词');
     }
 
     this._renderList();
@@ -180,7 +171,7 @@ const MusicPlayer = {
   },
 
   _onError() {
-    document.getElementById('music-lyrics').textContent = '文件加载失败';
+    this._renderLyricsList(null, '文件加载失败');
   },
 
   /* ─── 歌词 ─── */
@@ -194,6 +185,20 @@ const MusicPlayer = {
     return lines.sort((a, b) => a.t - b.t);
   },
 
+  /* 整屏滚动歌词：把所有行渲染出来，当前行高亮，其余行淡灰 */
+  _renderLyricsList(lrc, emptyText) {
+    const wrap = document.getElementById('music-lyrics');
+    if (!wrap) return;
+    wrap.dataset.idx = '';
+    if (!lrc || !lrc.length) {
+      wrap.innerHTML = `<div class="lrc-empty">${emptyText || '暂无歌词'}</div>`;
+      return;
+    }
+    wrap.innerHTML = lrc.map((l, i) =>
+      `<div class="lrc-line" data-i="${i}">${l.text || '·'}</div>`
+    ).join('');
+  },
+
   _syncLyric(cur) {
     const lrc = this.list[this.cur]?.lrc;
     if (!lrc || !lrc.length) return;
@@ -201,10 +206,14 @@ const MusicPlayer = {
     for (let i = 0; i < lrc.length; i++) {
       if (lrc[i].t <= cur) idx = i;
     }
-    const el = document.getElementById('music-lyrics');
-    if (el.dataset.idx !== String(idx)) {
-      el.dataset.idx = idx;
-      el.textContent = lrc[idx]?.text || '';
+    const wrap = document.getElementById('music-lyrics');
+    if (!wrap || wrap.dataset.idx === String(idx)) return;
+    wrap.dataset.idx = idx;
+    wrap.querySelectorAll('.lrc-line.active').forEach(el => el.classList.remove('active'));
+    const activeEl = wrap.querySelector(`.lrc-line[data-i="${idx}"]`);
+    if (activeEl) {
+      activeEl.classList.add('active');
+      activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
   },
 
@@ -213,7 +222,7 @@ const MusicPlayer = {
     const wrap = document.getElementById('music-list');
     if (!wrap) return;
     if (!this.list.length) {
-      wrap.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb;font-size:12px;">暂无歌曲<br>点击「添加」导入本地音乐</div>';
+      wrap.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4);font-size:12px;">暂无歌曲</div>';
       return;
     }
     wrap.innerHTML = this.list.map((t, i) => `
@@ -236,7 +245,7 @@ const MusicPlayer = {
       document.getElementById('music-title').textContent  = '未播放';
       document.getElementById('music-artist').textContent = '--';
       document.getElementById('mc-play').textContent      = '▶️';
-      document.getElementById('music-lyrics').textContent = '暂无歌词';
+      this._renderLyricsList(null, '暂无歌词');
       this._setPlayingState(false);
     } else if (this.cur > idx) {
       this.cur--;

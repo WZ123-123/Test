@@ -213,10 +213,11 @@ function buildItemHTML(item) {
   const shine = '<div class="item-shine"></div>';
   if (item.type==='folder') {
     const cells=(item.items||[]).slice(0,4).map(s=>{
-      if(s._favicon && s._favicon.startsWith('http')){
+      if(s._favicon){
+        const _fbFallback=(s.emoji||s.label||'').slice(0,2);
         return `<div class="folder-cell" style="background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;overflow:hidden;">
           <img src="${s._favicon}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:4px;"
-               onerror="this.parentNode.style.background='${getBgStyle(s.bgClass,s._customBg).replace('background:','').replace('background-image:','')}';this.remove();">
+               onerror="this.style.display='none';this.parentNode.textContent='${_fbFallback}';">
         </div>`;
       }
       const em=s.emoji||'';
@@ -230,7 +231,7 @@ function buildItemHTML(item) {
             <div class="item-label">${item.label}</div>`;
   }
   if (item.size==='1x1') {
-    if (item._favicon && item._favicon.startsWith('http')) {
+    if (item._favicon) {
       const fallbackEmoji = item.emoji || item.label.slice(0,2);
       return `<div class="item-body favicon-body" style="background:rgba(255,255,255,0.88);">${shine}
                 <img class="item-favicon-img" src="${item._favicon}" alt=""

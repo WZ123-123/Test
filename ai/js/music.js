@@ -146,9 +146,11 @@ const MusicPlayer = {
 
   toggleMode() {
     const modes = ['list', 'single', 'random'];
-    const icons = { list: '🔁', single: '🔂', random: '🔀' };
+    const icons  = { list: '🔁', single: '🔂', random: '🔀' };
+    const labels = { list: '列表循环', single: '单曲循环', random: '随机播放' };
     this.mode = modes[(modes.indexOf(this.mode) + 1) % modes.length];
-    document.getElementById('mc-mode').textContent = icons[this.mode];
+    const btn = document.getElementById('mc-mode');
+    if (btn) { btn.textContent = icons[this.mode]; btn.title = labels[this.mode]; }
   },
 
   /* ─── 事件 ─── */

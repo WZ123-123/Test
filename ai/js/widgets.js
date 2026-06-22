@@ -100,26 +100,27 @@ const Widgets = {
 const Hotspot = {
   _data: [],
 
-  // 静态兜底数据：无论接口是否可用，8 秒内没拿到数据就显示这些，
-  // 点击每条会跳转到对应的百度搜索，始终可用，不会卡在"加载中"。
-  FALLBACK: [
-    { title: '今日百度热搜', url: 'https://top.baidu.com/board?tab=realtime' },
-    { title: '微博实时热榜', url: 'https://s.weibo.com/top/summary' },
-    { title: '知乎每日热榜', url: 'https://www.zhihu.com/hot' },
-    { title: '今日科技要闻', url: 'https://www.baidu.com/s?wd=今日科技新闻' },
+  // orz.ai 提供的免费公共热榜 API，无需 Key，支持 CORS，约每 30 分钟更新一次。
+  // 格式：GET https://orz.ai/api/v1/dailynews/?platform=baidu
+  // 响应：{ "status":"200", "data":[{"title":"...","url":"...","score":"..."}] }
+  // 百度热搜为主，微博热搜为备用。
+  API_URLS: [
+    'https://orz.ai/api/v1/dailynews/?platform=baidu',
+    'https://orz.ai/api/v1/dailynews/?platform=weibo',
   ],
 
-  // 接口列表：先请求文本再判断是否是 JSON，防止拦截页被当成数据解析
-  API_URLS: [
-    'https://api.vvhan.com/api/hotlist?type=zhihuHot',
-    'https://api.vvhan.com/api/hotlist?type=wbhot',
+  // 静态兜底：所有接口失败时显示，始终可点击不会卡住
+  FALLBACK: [
+    { title: '百度实时热搜',     url: 'https://top.baidu.com/board?tab=realtime' },
+    { title: '微博热搜榜',       url: 'https://s.weibo.com/top/summary' },
+    { title: '知乎热榜',         url: 'https://www.zhihu.com/hot' },
+    { title: '今日科技新闻',     url: 'https://www.baidu.com/s?wd=今日科技新闻' },
   ],
 
   async load() {
-    // 8 秒总超时：超时就降级到静态兜底数据
+    // 8 秒总超时：超时就降级到静态兜底
     const fallbackTimer = setTimeout(() => {
       if (!this._data.length) {
-        console.warn('[Hotspot] 8 秒内未获取到数据，降级为静态兜底');
         this._data = this.FALLBACK;
         this._sync();
       }
@@ -132,18 +133,18 @@ const Hotspot = {
         const res  = await fetch(url, { signal: ctrl.signal });
         clearTimeout(tid);
 
-        // 先以文本形式获取，确认是 JSON 再解析（避免拦截页被解析报错）
         const text = await res.text();
         if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) {
-          console.warn('[Hotspot] 接口返回非 JSON（可能被拦截）：', url, text.slice(0, 80));
+          console.warn('[Hotspot] 接口返回非 JSON：', url, text.slice(0, 80));
           continue;
         }
         const json = JSON.parse(text);
+        // orz.ai 的数据在 json.data，字段是 title / url
         const raw  = json.data || json.result || json.list || [];
         const list = raw.slice(0, 4)
           .map(it => ({
             title: (it.title || it.name || it.word || '').trim(),
-            url:   it.url || it.link || it.mobilUrl || it.mobileUrl || '',
+            url:   it.url || it.link || it.mobilUrl || '',
           }))
           .filter(it => it.title)
           .map(it => ({
@@ -157,19 +158,18 @@ const Hotspot = {
           this._sync();
           return;
         }
-        console.warn('[Hotspot] 接口返回数组为空：', url, json);
+        console.warn('[Hotspot] 接口数据为空：', url, json);
       } catch (e) {
         console.warn('[Hotspot] 接口请求失败：', url, e.message || String(e));
       }
     }
-    // 所有接口都走完了还没数据，等 fallbackTimer 触发即可（已设置）
+    // 所有接口都走完了还没数据，等 fallbackTimer 触发
   },
 
   _sync() {
-    // 找到桌面上的热点组件，填充数据
     const wrap = document.querySelector('.desk-item[data-id="hotspot"] .hs-list');
     if (!wrap) {
-      // DOM 还没渲染好（极少数情况），100ms 后重试一次
+      // DOM 还没渲染好，100ms 后重试
       setTimeout(() => this._sync(), 100);
       return;
     }
@@ -179,7 +179,6 @@ const Hotspot = {
     ).join('');
   },
 
-  /* renderAll() 重建 DOM 后需要把已经拉到的数据重新塞回去 */
   resync() { if (this._data.length) this._sync(); },
 };
 

@@ -382,6 +382,26 @@ function _renderFolderGridEl(gridEl, item, pi){
         return cx<fr.left||cx>fr.right||cy<fr.top||cy>fr.bottom;
       }
 
+      /* 获取鼠标下方的目标文件夹 grid（排除源文件夹自身） */
+      function getTargetFolderGrid(cx,cy){
+        clone.style.pointerEvents='none';
+        const under=document.elementFromPoint(cx,cy);
+        clone.style.pointerEvents='';
+        const tGrid=under?.closest('.folder-grid');
+        if(!tGrid) return null;
+        const tOverlay=tGrid.closest('.modal-overlay');
+        if(!tOverlay||tOverlay===folderOverlay) return null;
+        return tGrid;
+      }
+
+      let _hoverFolderGrid=null;
+      function _clearFolderHover(){
+        if(_hoverFolderGrid){
+          _hoverFolderGrid.closest('.modal-overlay')?.querySelector('.modal-panel')?.classList.remove('folder-drop-target');
+          _hoverFolderGrid=null;
+        }
+      }
+
       function onMove(e2){
         const dx=e2.clientX-e.clientX, dy=e2.clientY-e.clientY;
         if(!moved && dx*dx+dy*dy<16) return;
@@ -389,30 +409,45 @@ function _renderFolderGridEl(gridEl, item, pi){
         clone.style.left=(e2.clientX-ox)+'px';
         clone.style.top =(e2.clientY-oy)+'px';
 
-        // 只在离开文件夹后显示桌面 ghost
         if(isOutsideFolder(e2.clientX,e2.clientY)){
           clone.style.opacity='0.7';
-          // 用桌面 ghost 系统显示落点预览
-          const area=getGridArea(App.curPage);
-          if(area){
-            const ar=area.getBoundingClientRect();
-            const pageTop=(App.curPage===0)?GRID_TOP:20;
-            const fakeItem={...it, id:'__folder_drag__'};
-            const pc=Math.max(0,Math.floor((e2.clientX-ox+r.width/2-ar.left)/(CELL+GAP)));
-            const pr=Math.max(0,Math.floor((e2.clientY-oy+r.height/2-ar.top-pageTop)/(CELL+GAP)));
-            if(typeof applyShiftPreview==='function') applyShiftPreview(App.curPage,fakeItem,pc,pr);
-            const gs=ghostSize(it.size||'1x1');
-            const simResult=simulatePlacement(App.curPage,fakeItem,pc,pr);
-            if(simResult){
-              showGhost(
-                ar.left+simResult.finalCol*(CELL+GAP)+gs.ox,
-                ar.top+pageTop+simResult.finalRow*(CELL+GAP)+gs.oy,
-                gs.w,gs.h,gs.r
-              );
+
+          // 检查是否悬停在另一个文件夹上
+          const tGrid=getTargetFolderGrid(e2.clientX,e2.clientY);
+          if(tGrid){
+            // 高亮目标文件夹，清除桌面预览
+            if(_hoverFolderGrid!==tGrid){
+              _clearFolderHover();
+              _hoverFolderGrid=tGrid;
+              tGrid.closest('.modal-overlay')?.querySelector('.modal-panel')?.classList.add('folder-drop-target');
+            }
+            if(typeof clearShiftPreview==='function') clearShiftPreview();
+            hideGhost&&hideGhost();
+          } else {
+            // 悬停在桌面上，显示落点预览
+            _clearFolderHover();
+            const area=getGridArea(App.curPage);
+            if(area){
+              const ar=area.getBoundingClientRect();
+              const pageTop=(App.curPage===0)?GRID_TOP:20;
+              const fakeItem={...it, id:'__folder_drag__'};
+              const pc=Math.max(0,Math.floor((e2.clientX-ox+r.width/2-ar.left)/(_C()+_G())));
+              const pr=Math.max(0,Math.floor((e2.clientY-oy+r.height/2-ar.top-pageTop)/(_C()+_G())));
+              if(typeof applyShiftPreview==='function') applyShiftPreview(App.curPage,fakeItem,pc,pr);
+              const gs=ghostSize(it.size||'1x1');
+              const simResult=simulatePlacement(App.curPage,fakeItem,pc,pr);
+              if(simResult){
+                showGhost(
+                  ar.left+simResult.finalCol*(_C()+_G())+gs.ox,
+                  ar.top+pageTop+simResult.finalRow*(_C()+_G())+gs.oy,
+                  gs.w,gs.h,gs.r
+                );
+              }
             }
           }
         } else {
-          // 还在文件夹内：清除桌面预览
+          // 还在源文件夹内：清除所有预览
+          _clearFolderHover();
           if(typeof clearShiftPreview==='function') clearShiftPreview();
           hideGhost&&hideGhost();
         }
@@ -425,6 +460,7 @@ function _renderFolderGridEl(gridEl, item, pi){
         document.removeEventListener('mouseup',onUp);
         clone.remove();
         el.style.opacity='';
+        _clearFolderHover();
         if(typeof clearShiftPreview==='function') clearShiftPreview();
         hideGhost&&hideGhost();
 
@@ -501,8 +537,8 @@ function _renderFolderGridEl(gridEl, item, pi){
         if(area){
           const ar=area.getBoundingClientRect();
           const pageTop=(App.curPage===0)?GRID_TOP:20;
-          pc2=Math.max(0,Math.floor((e2.clientX-ox+r.width/2-ar.left)/(CELL+GAP)));
-          pr2=Math.max(0,Math.floor((e2.clientY-oy+r.height/2-ar.top-pageTop)/(CELL+GAP)));
+          pc2=Math.max(0,Math.floor((e2.clientX-ox+r.width/2-ar.left)/(_C()+_G())));
+          pr2=Math.max(0,Math.floor((e2.clientY-oy+r.height/2-ar.top-pageTop)/(_C()+_G())));
         }
         const result=placeWithShift(App.curPage,it,pc2,pr2);
         if(!result){alert('本页无空间，请新建分页');item.items.splice(idx,0,it);saveData();renderAll();return;}

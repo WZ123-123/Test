@@ -100,11 +100,22 @@ function _clearNavDragHighlight() {
 document.addEventListener('DOMContentLoaded',()=>{
 
   /* dragover — 无条件 preventDefault，确保任何位置都能触发 drop */
+  let _navDragLastFlip=0;
   document.addEventListener('dragover',e=>{
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
     if(!window._dragSize) return;
     if(!hideGhost||!showGhost) return;
+
+    // 边缘翻页（600ms 防抖）
+    const _now=Date.now();
+    if(_now-_navDragLastFlip>600){
+      if(e.clientX<40 && App.curPage>0){
+        goPage(App.curPage-1); _navDragLastFlip=_now;
+      } else if(e.clientX>innerWidth-40 && App.curPage<App.pageCount-1){
+        goPage(App.curPage+1); _navDragLastFlip=_now;
+      }
+    }
 
     const sz = window._dragSize || '1x1';
     const _realUnder = document.elementFromPoint(e.clientX, e.clientY);

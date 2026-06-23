@@ -720,13 +720,24 @@ function renderDots(){
   }
 }
 function goPage(idx){
-  // 只关闭文件夹弹窗，其他弹窗（设置、导航、天气等）保持开启
+  App.curPage=idx;
+  applyPageTransform(idx,true);
+  renderDots();
+  // 翻页后：显示属于当前页的弹窗，隐藏其他页的弹窗（不关闭，保留状态）
   document.querySelectorAll('.modal-overlay.open').forEach(ov => {
-    if (ov.id && ov.id.startsWith('folder-inst-')) {
-      Modal.close(ov.id);
+    const ovPage = ov.dataset.page !== undefined ? parseInt(ov.dataset.page) : -1;
+    const panel  = ov.querySelector('.modal-panel');
+    if (!panel) return;
+    if (ovPage === idx) {
+      // 属于当前页：显示
+      panel.classList.add('visible');
+      ov.style.pointerEvents = '';
+    } else {
+      // 属于其他页：隐藏但不关闭
+      panel.classList.remove('visible');
+      ov.style.pointerEvents = 'none';
     }
   });
-  App.curPage=idx;applyPageTransform(idx,true);renderDots();
 }
 function deletePage(pi){
   if(App.pageCount<=1){alert('至少保留一页！');return;}

@@ -864,6 +864,9 @@ document.addEventListener('click',hideCtxMenu);
     /* 已进入拖拽模式 */
     e.preventDefault();
 
+    // 拖动时自动关闭ctx-menu
+    hideCtxMenu();
+
     td.el.style.left = (touch.clientX - td.ox) + 'px';
     td.el.style.top  = (touch.clientY - td.oy) + 'px';
 

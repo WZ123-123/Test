@@ -24,14 +24,6 @@ const Modal = {
 
     // 居中定位（未放置过，或刚重置）
     if (!panel.dataset.placed) {
-      // 移动端：直接全屏，无需计算居中位置
-      if (innerWidth <= 768) {
-        panel.style.visibility = '';
-        panel.dataset.placed  = '1';
-        this._front(panel, ov);
-        requestAnimationFrame(() => panel.classList.add('visible'));
-        return;
-      }
       // 让浏览器先渲染出尺寸
       panel.style.visibility = 'hidden';
       panel.style.display = 'flex';
@@ -372,3 +364,76 @@ document.addEventListener('keydown', e => {
   });
   if (top) Modal.close(top.closest('.modal-overlay').id);
 });
+
+/* ================================================================
+   移动端：标题栏触摸拖拽
+   ================================================================ */
+(function () {
+  if (!('ontouchstart' in window)) return;
+  let td = null;
+
+  document.addEventListener('touchstart', e => {
+    if (innerWidth > 768) return;
+    const tb = e.target.closest('.modal-titlebar');
+    if (!tb || e.target.closest('.traffic-lights')) return;
+    const panel = tb.closest('.modal-panel');
+    if (!panel) return;
+    const t = e.touches[0];
+    const r = panel.getBoundingClientRect();
+    panel.style.position  = 'fixed';
+    panel.style.left      = r.left + 'px';
+    panel.style.top       = r.top  + 'px';
+    panel.style.transform = 'none';
+    panel.style.margin    = '0';
+    panel.dataset.placed  = '1';
+    td = { panel, ox: t.clientX - r.left, oy: t.clientY - r.top };
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!td || innerWidth > 768) return;
+    const t = e.touches[0];
+    const nx = Math.max(0, Math.min(innerWidth  - td.panel.offsetWidth,  t.clientX - td.ox));
+    const ny = Math.max(0, Math.min(innerHeight - td.panel.offsetHeight, t.clientY - td.oy));
+    td.panel.style.left = nx + 'px';
+    td.panel.style.top  = ny + 'px';
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => { td = null; });
+})();
+
+/* ================================================================
+   移动端：双指缩放弹窗
+   ================================================================ */
+(function () {
+  if (!('ontouchstart' in window)) return;
+  let pinch = null;
+
+  document.addEventListener('touchstart', e => {
+    if (innerWidth > 768 || e.touches.length !== 2) return;
+    const panel = e.target.closest('.modal-panel');
+    if (!panel) return;
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    pinch = {
+      panel,
+      startDist: Math.sqrt(dx*dx + dy*dy),
+      startW: panel.offsetWidth,
+      startH: panel.offsetHeight,
+    };
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pinch || e.touches.length !== 2) return;
+    e.preventDefault();
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const scale = dist / pinch.startDist;
+    const newW = Math.max(260, Math.min(innerWidth * 0.95,  pinch.startW * scale));
+    const newH = Math.max(200, Math.min(innerHeight * 0.92, pinch.startH * scale));
+    pinch.panel.style.width  = newW + 'px';
+    pinch.panel.style.height = newH + 'px';
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => { pinch = null; });
+})();

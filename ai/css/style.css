@@ -139,6 +139,12 @@ body {
   transform: scale(1.06);
 }
 
+/* 拖拽悬停在目标文件夹弹窗上时的高亮 */
+.modal-panel.folder-drop-target {
+  box-shadow: 0 0 0 3px rgba(232,113,74,.8), 0 12px 40px rgba(0,0,0,.3) !important;
+  transition: box-shadow .15s;
+}
+
 .item-body {
   border-radius: 20px;
   display: flex; flex-direction: column;

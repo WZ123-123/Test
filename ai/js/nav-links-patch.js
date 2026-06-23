@@ -229,10 +229,24 @@ Nav.addToDesktop = function(name, color, letter, url, size, favicon) {
     emoji: letter.slice(0, 2), url, col: 0, row: 0,
   };
   if (favicon) it._favicon = favicon;
-  const result = placeWithShift(App.curPage, it, 0, 0);
-  if (!result) { alert('本页无空间，请新建分页'); return; }
-  it.col = result.col; it.row = result.row;
-  App.pages[App.curPage].push(it);
+  // 找第一个真正空闲的位置，避免挤走已有图标
+  const pi = App.curPage;
+  const MC = maxCols();
+  const MR = maxRows(pi);
+  const sz = SIZES[size] || {cols:1, rows:1};
+  const existing = App.pages[pi] || [];
+  let placed = false;
+  outer: for (let r = 0; r < MR; r++) {
+    for (let c = 0; c <= MC - sz.cols; c++) {
+      if (!hasConflict(existing, it, c, r) && c + sz.cols <= MC && r + sz.rows <= MR) {
+        it.col = c; it.row = r;
+        placed = true;
+        break outer;
+      }
+    }
+  }
+  if (!placed) { alert('本页无空间，请新建分页'); return; }
+  App.pages[pi].push(it);
   saveData(); renderAll();
 };
 

@@ -674,6 +674,10 @@ function doMerge(a, b, pi) {
 function add3D(el) {
   el.addEventListener('mousemove',e=>{
     if(drag) return;
+    // 动态判断，关掉后立即生效
+    if(typeof IconSettings!=='undefined' && !IconSettings.get().magic3d){
+      el.style.transform=''; return;
+    }
     const r=el.getBoundingClientRect();
     const dx=(e.clientX-r.left-r.width/2)/(r.width/2);
     const dy=(e.clientY-r.top-r.height/2)/(r.height/2);

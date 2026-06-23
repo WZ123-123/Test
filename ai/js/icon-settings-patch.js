@@ -57,6 +57,14 @@ const IconSettings = {
     root.style.setProperty('--icon-radius',      s.radius + 'px');
     root.style.setProperty('--icon-label-color', s.labelColor);
     root.style.setProperty('--icon-label-show',  s.showLabel ? 'block' : 'none');
+    // 文件夹展开图标 & 未展开预览格同步
+    const folderSize = Math.round(s.size * 0.6);   // 展开图标约为桌面图标的60%
+    const folderCellSize = Math.round(s.size * 0.22); // 未展开4格预览
+    root.style.setProperty('--folder-item-size',   folderSize + 'px');
+    root.style.setProperty('--folder-item-radius', s.radius + 'px');
+    root.style.setProperty('--folder-cell-radius', Math.round(s.radius * 0.4) + 'px');
+    root.style.setProperty('--folder-item-font',   Math.round(folderSize * 0.35) + 'px');
+    root.style.setProperty('--folder-cell-size',   folderCellSize + 'px');
   },
 
   init() {

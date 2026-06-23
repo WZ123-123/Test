@@ -388,38 +388,44 @@ function _renderFolderGridEl(gridEl, item, pi){
         `;
         const [btnMove, , btnDel]=menu.children;
 
-        // 移动到桌面（从文件夹删除，加到桌面，若文件夹只剩1个则解散）
+        // 移动到桌面（保留原始图标完整属性：size/bgClass/emoji/favicon等）
         btnMove.onclick=()=>{
-          Nav.addToDesktop(
-            it.label||it.name||'',
-            it._customBg||'rgba(200,210,230,0.3)',
-            (it.emoji||it.label||'?').slice(0,2),
-            it.url||'',
-            '1x1',
-            favicon
-          );
           // 从文件夹移除
           item.items.splice(idx,1);
-          // 若只剩1个图标，解散文件夹
-          if(item.items.length===1){
-            const last=item.items[0];
-            const pi=App.pages.findIndex(p=>p&&p.some(i=>i.id===item.id));
-            if(pi>=0){
-              const folderIdx=App.pages[pi].findIndex(i=>i.id===item.id);
-              if(folderIdx>=0){
-                // 用最后一个图标替换文件夹位置
-                const newIt={
-                  ...last,
-                  id: last.id||('ni'+Date.now()),
-                  col: item.col, row: item.row,
-                };
-                App.pages[pi].splice(folderIdx,1,newIt);
+
+          // 找当前页第一个空闲位置（保留原始 size）
+          const pi=App.curPage;
+          const sz=SIZES[it.size]||{cols:1,rows:1};
+          const MC=maxCols(), MR=maxRows(pi);
+          const existing=App.pages[pi]||[];
+          const placeholder={...it, id:'__check__'};
+          let placed=false;
+          outer: for(let r=0;r<MR;r++){
+            for(let c=0;c<=MC-sz.cols;c++){
+              if(!hasConflict(existing,placeholder,c,r)){
+                it.col=c; it.row=r; placed=true; break outer;
               }
             }
           }
+          if(!placed){ alert('本页无空间，请新建分页'); return; }
+          App.pages[pi].push(it);
+
+          // 若文件夹只剩1个图标，解散文件夹
+          const folderPi=App.pages.findIndex(p=>p&&p.some(i=>i.id===item.id));
+          if(item.items.length===1&&folderPi>=0){
+            const last=item.items[0];
+            const folderIdx=App.pages[folderPi].findIndex(i=>i.id===item.id);
+            if(folderIdx>=0){
+              const newIt={...last, id:last.id||('ni'+Date.now()), col:item.col, row:item.row};
+              App.pages[folderPi].splice(folderIdx,1,newIt);
+            }
+          } else if(item.items.length===0&&folderPi>=0){
+            // 文件夹空了，直接删除
+            App.pages[folderPi]=App.pages[folderPi].filter(i=>i.id!==item.id);
+          }
+
           saveData(); renderAll();
           hideCtxMenu&&hideCtxMenu();
-          // 关闭文件夹弹窗
           const ov=document.getElementById('folder-inst-'+item.id);
           if(ov) Modal.close('folder-inst-'+item.id);
         };

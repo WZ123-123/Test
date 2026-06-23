@@ -372,16 +372,24 @@ function _renderFolderGridEl(gridEl, item, pi){
       else if(it.url) window.open(it.url,'_blank');
     });
 
-    /* ── 移动端长按呼出添加到桌面菜单 ── */
+    /* ── 移动端长按呼出菜单（添加到桌面 / 删除） ── */
     let _lpTimer=null;
     el.addEventListener('touchstart', ev=>{
       const it=item.items[idx]; if(!it) return;
       _lpTimer=setTimeout(()=>{
         _lpTimer=null;
+        if(navigator.vibrate) navigator.vibrate(40);
         const menu=document.getElementById('ctx-menu');
         const favicon=it._favicon||'';
-        menu.innerHTML='<div class="ctx-item">➕ 添加到桌面</div>';
-        menu.querySelector('.ctx-item').onclick=()=>{
+        menu.innerHTML=`
+          <div class="ctx-item">➕ 移动到桌面</div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item" style="color:#e74c3c">🗑 删除图标</div>
+        `;
+        const [btnMove, , btnDel]=menu.children;
+
+        // 移动到桌面（从文件夹删除，加到桌面，若文件夹只剩1个则解散）
+        btnMove.onclick=()=>{
           Nav.addToDesktop(
             it.label||it.name||'',
             it._customBg||'rgba(200,210,230,0.3)',
@@ -390,10 +398,60 @@ function _renderFolderGridEl(gridEl, item, pi){
             '1x1',
             favicon
           );
+          // 从文件夹移除
+          item.items.splice(idx,1);
+          // 若只剩1个图标，解散文件夹
+          if(item.items.length===1){
+            const last=item.items[0];
+            const pi=App.pages.findIndex(p=>p&&p.some(i=>i.id===item.id));
+            if(pi>=0){
+              const folderIdx=App.pages[pi].findIndex(i=>i.id===item.id);
+              if(folderIdx>=0){
+                // 用最后一个图标替换文件夹位置
+                const newIt={
+                  ...last,
+                  id: last.id||('ni'+Date.now()),
+                  col: item.col, row: item.row,
+                };
+                App.pages[pi].splice(folderIdx,1,newIt);
+              }
+            }
+          }
+          saveData(); renderAll();
           hideCtxMenu&&hideCtxMenu();
+          // 关闭文件夹弹窗
+          const ov=document.getElementById('folder-inst-'+item.id);
+          if(ov) Modal.close('folder-inst-'+item.id);
         };
+
+        // 删除图标
+        btnDel.onclick=()=>{
+          if(!confirm(`删除「${it.label||'此图标'}」？`)) return;
+          item.items.splice(idx,1);
+          // 若只剩1个图标，解散文件夹
+          if(item.items.length===1){
+            const last=item.items[0];
+            const pi=App.pages.findIndex(p=>p&&p.some(i=>i.id===item.id));
+            if(pi>=0){
+              const folderIdx=App.pages[pi].findIndex(i=>i.id===item.id);
+              if(folderIdx>=0){
+                const newIt={
+                  ...last,
+                  id: last.id||('ni'+Date.now()),
+                  col: item.col, row: item.row,
+                };
+                App.pages[pi].splice(folderIdx,1,newIt);
+              }
+            }
+          }
+          saveData(); renderAll();
+          hideCtxMenu&&hideCtxMenu();
+          const ov=document.getElementById('folder-inst-'+item.id);
+          if(ov) Modal.close('folder-inst-'+item.id);
+        };
+
         const t=ev.touches[0];
-        menu.style.cssText=`display:block;left:${Math.min(t.clientX,innerWidth-180)}px;top:${Math.min(t.clientY,innerHeight-80)}px;`;
+        menu.style.cssText=`display:block;left:${Math.min(t.clientX,innerWidth-180)}px;top:${Math.min(t.clientY,innerHeight-120)}px;`;
       }, 550);
     },{passive:true});
     el.addEventListener('touchend',  ()=>{ clearTimeout(_lpTimer); _lpTimer=null; },{passive:true});

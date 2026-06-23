@@ -93,7 +93,7 @@ const App = {
         pages:     this.pages,
         pageCount: this.pageCount,
       }));
-      localStorage.setItem('aiNav_layoutVer', '16');
+      localStorage.setItem('aiNav_layoutVer', '17');
     } catch (e) {}
   },
 

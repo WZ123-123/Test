@@ -412,18 +412,18 @@ function _renderFolderGridEl(gridEl, item, pi){
         clone.style.left=(e2.clientX-ox)+'px';
         clone.style.top =(e2.clientY-oy)+'px';
 
+        // 边缘翻页：不管在不在文件夹内都检测（600ms 防抖）
+        const _now=Date.now();
+        if(_now-_folderDragLastFlip>600){
+          if(e2.clientX<40 && App.curPage>0){
+            goPage(App.curPage-1); _folderDragLastFlip=_now;
+          } else if(e2.clientX>innerWidth-40 && App.curPage<App.pageCount-1){
+            goPage(App.curPage+1); _folderDragLastFlip=_now;
+          }
+        }
+
         if(isOutsideFolder(e2.clientX,e2.clientY)){
           clone.style.opacity='0.7';
-
-          // 边缘翻页（与桌面拖拽一致，600ms 防抖）
-          const now=Date.now();
-          if(now-_folderDragLastFlip>600){
-            if(e2.clientX<40 && App.curPage>0){
-              goPage(App.curPage-1); _folderDragLastFlip=now;
-            } else if(e2.clientX>innerWidth-40 && App.curPage<App.pageCount-1){
-              goPage(App.curPage+1); _folderDragLastFlip=now;
-            }
-          }
 
           // 检查是否悬停在另一个文件夹上
           const tGrid=getTargetFolderGrid(e2.clientX,e2.clientY);

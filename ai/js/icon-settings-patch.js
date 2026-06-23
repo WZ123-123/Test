@@ -3,7 +3,7 @@
    ============================================================ */
 
 const ICON_SETTINGS_DEFAULTS = {
-  size:       88,
+  size:       innerWidth <= 768 ? 72 : 88,
   radius:     20,
   gap:        16,
   labelColor: '#ffffff',

@@ -65,6 +65,10 @@ const IconSettings = {
     root.style.setProperty('--folder-cell-radius', Math.round(s.radius * 0.4) + 'px');
     root.style.setProperty('--folder-item-font',   Math.round(folderSize * 0.35) + 'px');
     root.style.setProperty('--folder-cell-size',   folderCellSize + 'px');
+    // 网址导航图标（同文件夹展开图标，60%）
+    root.style.setProperty('--nav-icon-size',  folderSize + 'px');
+    root.style.setProperty('--nav-icon-font',  Math.round(folderSize * 0.35) + 'px');
+    root.style.setProperty('--nav-icon-wrap',  (folderSize + 16) + 'px');
   },
 
   init() {

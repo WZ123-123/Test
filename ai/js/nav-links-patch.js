@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
       font-size: 16px;
       font-weight: 700;
       color: #555;
-      border-radius: 12px !important;
+      border-radius: var(--folder-item-radius, 12px) !important;
     }
   `;
   document.head.appendChild(style);

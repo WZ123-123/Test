@@ -404,6 +404,7 @@ function _renderFolderGridEl(gridEl, item, pi){
         }
       }
 
+      let _folderDragLastFlip=0;
       function onMove(e2){
         const dx=e2.clientX-e.clientX, dy=e2.clientY-e.clientY;
         if(!moved && dx*dx+dy*dy<16) return;
@@ -413,6 +414,16 @@ function _renderFolderGridEl(gridEl, item, pi){
 
         if(isOutsideFolder(e2.clientX,e2.clientY)){
           clone.style.opacity='0.7';
+
+          // 边缘翻页（与桌面拖拽一致，600ms 防抖）
+          const now=Date.now();
+          if(now-_folderDragLastFlip>600){
+            if(e2.clientX<40 && App.curPage>0){
+              goPage(App.curPage-1); _folderDragLastFlip=now;
+            } else if(e2.clientX>innerWidth-40 && App.curPage<App.pageCount-1){
+              goPage(App.curPage+1); _folderDragLastFlip=now;
+            }
+          }
 
           // 检查是否悬停在另一个文件夹上
           const tGrid=getTargetFolderGrid(e2.clientX,e2.clientY);

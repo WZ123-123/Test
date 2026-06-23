@@ -224,7 +224,9 @@ function buildItemHTML(item) {
       if(em){
         return `<div class="folder-cell" style="${getBgStyle(s.bgClass,s._customBg)};display:flex;align-items:center;justify-content:center;font-size:13px;">${em}</div>`;
       }
-      return `<div class="folder-cell" style="${getBgStyle(s.bgClass,s._customBg)}"></div>`;
+      // widget 没有 emoji：用 action 映射一个默认 emoji 显示
+      const actionEmoji={'weather':'🌤','hotspot':'🔥','note':'📝','draw':'🎨','music':'🎵','calc':'🧮','settings':'⚙️','nav':'🧭','ai-search':'✨'}[s.action||'']||'';
+      return `<div class="folder-cell" style="${getBgStyle(s.bgClass,s._customBg)};display:flex;align-items:center;justify-content:center;font-size:13px;">${actionEmoji}</div>`;
     }).join('');
     return `<div class="item-body folder-body-wrap">${shine}
               <div class="folder-grid-inner">${cells}</div></div>

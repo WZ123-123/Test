@@ -345,18 +345,16 @@ const AISearchModal = {
 
   _resultCard(data, index) {
     const hasLink = data.link && data.link !== '#';
-    return `<div class="ai-sr-card">
+    const cardStyle = hasLink ? 'cursor:pointer;' : '';
+    const onclick   = hasLink ? `onclick="window.open('${data.link}','_blank')"` : '';
+    return `<div class="ai-sr-card" style="${cardStyle}" ${onclick}>
       <div class="ai-sr-card-top">
-        ${hasLink
-          ? `<a href="${data.link}" target="_blank" rel="noopener noreferrer" class="ai-sr-card-name">${data.siteName}</a>`
-          : `<span class="ai-sr-card-name no-link">${data.siteName}</span>`}
+        <span class="ai-sr-card-name${hasLink ? '' : ' no-link'}">${data.siteName}</span>
         <span class="ai-sr-card-fee">${data.fee}</span>
       </div>
       <p class="ai-sr-card-desc">${data.function}</p>
       <div class="ai-sr-card-url">
-        ${hasLink
-          ? `<a href="${data.link}" target="_blank" rel="noopener noreferrer">${data.link}</a>`
-          : `<span>暂无链接</span>`}
+        <span style="font-size:11px;color:#bbb;">${hasLink ? data.link : '暂无链接'}</span>
       </div>
     </div>`;
   },

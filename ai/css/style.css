@@ -250,7 +250,7 @@ body {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
   gap: 3px;
-  width: 68%; height: 68%;
+  width: 72%; height: 72%;
 }
 .folder-cell {
   border-radius: var(--folder-cell-radius,5px);

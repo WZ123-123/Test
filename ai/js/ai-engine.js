@@ -168,10 +168,7 @@ const AISearchModal = {
                    placeholder="例如：想要一个免费的、能一键生成3D动漫头像的网站...">
             <button id="ai-sr-go" onclick="AISearchModal.search()">AI 检索</button>
           </div>
-          <div class="ai-sr-model-bar">
-            <span class="ai-sr-model-label">模型</span>
-            <div id="ai-sr-model-container"></div>
-          </div>
+          <div id="ai-sr-model-container" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
         </div>
         <div id="ai-sr-body">
           <div id="ai-sr-results" class="hidden"></div>

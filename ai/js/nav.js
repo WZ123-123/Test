@@ -64,14 +64,25 @@ const Nav = {
   _bg(c){ return c.startsWith('linear')||c.startsWith('radial')?`background-image:${c}`:`background:${c}`; },
   onSearch(val){ this.renderContent(val); },
 
-  addToDesktop(name,color,letter,url,size){
+  addToDesktop(name,color,letter,url,size,favicon){
     size=size||'1x1';
     const it={id:'ni'+Date.now(),type:'icon',size,label:name,bgClass:'',
       _customBg:color,emoji:letter.slice(0,2),url,col:0,row:0};
-    const result=placeWithShift(App.curPage,it,0,0);
-    if(!result){alert('本页无空间，请新建分页');return;}
-    it.col=result.col;it.row=result.row;
-    App.pages[App.curPage].push(it);
+    if(favicon) it._favicon=favicon;
+    // 找第一个真正空闲的位置，避免挤走已有图标
+    const pi=App.curPage, MC=maxCols(), MR=maxRows(pi);
+    const sz=SIZES[size]||{cols:1,rows:1};
+    const existing=App.pages[pi]||[];
+    let placed=false;
+    outer: for(let r=0;r<MR;r++){
+      for(let c=0;c<=MC-sz.cols;c++){
+        if(!hasConflict(existing,it,c,r)&&c+sz.cols<=MC&&r+sz.rows<=MR){
+          it.col=c;it.row=r;placed=true;break outer;
+        }
+      }
+    }
+    if(!placed){alert('本页无空间，请新建分页');return;}
+    App.pages[pi].push(it);
     saveData();renderAll();
   },
 
@@ -360,6 +371,33 @@ function _renderFolderGridEl(gridEl, item, pi){
       if(it.action) handleItemClick(it,pi);
       else if(it.url) window.open(it.url,'_blank');
     });
+
+    /* ── 移动端长按呼出添加到桌面菜单 ── */
+    let _lpTimer=null;
+    el.addEventListener('touchstart', ev=>{
+      const it=item.items[idx]; if(!it) return;
+      _lpTimer=setTimeout(()=>{
+        _lpTimer=null;
+        const menu=document.getElementById('ctx-menu');
+        const favicon=it._favicon||'';
+        menu.innerHTML='<div class="ctx-item">➕ 添加到桌面</div>';
+        menu.querySelector('.ctx-item').onclick=()=>{
+          Nav.addToDesktop(
+            it.label||it.name||'',
+            it._customBg||'rgba(200,210,230,0.3)',
+            (it.emoji||it.label||'?').slice(0,2),
+            it.url||'',
+            '1x1',
+            favicon
+          );
+          hideCtxMenu&&hideCtxMenu();
+        };
+        const t=ev.touches[0];
+        menu.style.cssText=`display:block;left:${Math.min(t.clientX,innerWidth-180)}px;top:${Math.min(t.clientY,innerHeight-80)}px;`;
+      }, 550);
+    },{passive:true});
+    el.addEventListener('touchend',  ()=>{ clearTimeout(_lpTimer); _lpTimer=null; },{passive:true});
+    el.addEventListener('touchmove', ()=>{ clearTimeout(_lpTimer); _lpTimer=null; },{passive:true});
 
     /* ── 自定义 mousedown 拖拽（与桌面图标同一套） ── */
     el.addEventListener('mousedown', e=>{

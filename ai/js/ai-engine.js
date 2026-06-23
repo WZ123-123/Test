@@ -73,7 +73,7 @@ const AISearchModal = {
     document.getElementById('ai-sr-results').classList.add('hidden');
     document.getElementById('ai-sr-input').value = '';
     setTimeout(() => document.getElementById('ai-sr-input')?.focus(), 300);
-    this._renderModelBar();
+
   },
 
   _build() {
@@ -168,7 +168,7 @@ const AISearchModal = {
                    placeholder="例如：想要一个免费的、能一键生成3D动漫头像的网站...">
             <button id="ai-sr-go" onclick="AISearchModal.search()">AI 检索</button>
           </div>
-          <div id="ai-sr-model-container" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+
         </div>
         <div id="ai-sr-body">
           <div id="ai-sr-results" class="hidden"></div>
@@ -183,15 +183,7 @@ const AISearchModal = {
     });
   },
 
-  _renderModelBar() {
-    const c = document.getElementById('ai-sr-model-container');
-    if (!c) return;
-    c.innerHTML = AI_ENGINE.models.map(m => `
-      <label class="ai-sr-chip ${m.checked ? 'on' : 'off'}" onclick="AI_ENGINE.toggleModel('${m.id}'); AISearchModal._renderModelBar()">
-        <input type="checkbox" style="display:none"> ${m.name}
-      </label>
-    `).join('');
-  },
+
 
   search() {
     const query = document.getElementById('ai-sr-input')?.value.trim();

@@ -69,26 +69,56 @@ const Widgets = {
 
   bindCanvas() {
     const c = document.getElementById('draw-canvas');
-    const pos = e => {
+
+    const posFromClient = (clientX, clientY) => {
       const r = c.getBoundingClientRect();
-      return { x: e.clientX - r.left, y: e.clientY - r.top };
+      return { x: clientX - r.left, y: clientY - r.top };
     };
-    c.addEventListener('mousedown', e => {
+
+    const startDraw = (x, y) => {
       this._drawing = true;
-      const p = pos(e);
       this._dctx.beginPath();
-      this._dctx.moveTo(p.x, p.y);
+      this._dctx.moveTo(x, y);
       this._dctx.strokeStyle = this._tool === 'eraser' ? '#fff' : this._color;
       this._dctx.lineWidth   = this._tool === 'eraser' ? this._size * 4 : this._size;
+    };
+    const draw = (x, y) => {
+      if (!this._drawing) return;
+      this._dctx.lineTo(x, y);
+      this._dctx.stroke();
+    };
+    const endDraw = () => { this._drawing = false; };
+
+    // 鼠标事件
+    c.addEventListener('mousedown', e => {
+      const p = posFromClient(e.clientX, e.clientY);
+      startDraw(p.x, p.y);
     });
     c.addEventListener('mousemove', e => {
-      if (!this._drawing) return;
-      const p = pos(e);
-      this._dctx.lineTo(p.x, p.y);
-      this._dctx.stroke();
+      const p = posFromClient(e.clientX, e.clientY);
+      draw(p.x, p.y);
     });
-    c.addEventListener('mouseup',    () => this._drawing = false);
-    c.addEventListener('mouseleave', () => this._drawing = false);
+    c.addEventListener('mouseup',    endDraw);
+    c.addEventListener('mouseleave', endDraw);
+
+    // 触摸事件（移动端）
+    c.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const t = e.touches[0];
+      const p = posFromClient(t.clientX, t.clientY);
+      startDraw(p.x, p.y);
+    }, { passive: false });
+
+    c.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const t = e.touches[0];
+      const p = posFromClient(t.clientX, t.clientY);
+      draw(p.x, p.y);
+    }, { passive: false });
+
+    c.addEventListener('touchend',    e => { e.preventDefault(); endDraw(); }, { passive: false });
+    c.addEventListener('touchcancel', endDraw, { passive: true });
+
     document.getElementById('draw-sz')?.addEventListener('input', function () {
       Widgets._size = +this.value;
     });

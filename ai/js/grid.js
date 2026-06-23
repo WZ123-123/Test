@@ -720,9 +720,11 @@ function renderDots(){
   }
 }
 function goPage(idx){
-  /* 问题4修复：切换分页前关闭所有打开的弹窗（文件夹、设置、导航等） */
+  // 只关闭文件夹弹窗，其他弹窗（设置、导航、天气等）保持开启
   document.querySelectorAll('.modal-overlay.open').forEach(ov => {
-    Modal.close(ov.id);
+    if (ov.id && ov.id.startsWith('folder-inst-')) {
+      Modal.close(ov.id);
+    }
   });
   App.curPage=idx;applyPageTransform(idx,true);renderDots();
 }

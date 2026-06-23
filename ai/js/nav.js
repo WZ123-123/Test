@@ -378,7 +378,9 @@ function _renderFolderGridEl(gridEl, item, pi){
       /* 判断是否已离开文件夹弹窗范围 */
       function isOutsideFolder(cx,cy){
         if(!folderOverlay) return true;
-        const fr=folderOverlay.getBoundingClientRect();
+        // overlay 是全屏的，要检查实际面板 modal-panel 的边界
+        const panel=folderOverlay.querySelector('.modal-panel');
+        const fr=(panel||folderOverlay).getBoundingClientRect();
         return cx<fr.left||cx>fr.right||cy<fr.top||cy>fr.bottom;
       }
 
@@ -474,9 +476,19 @@ function _renderFolderGridEl(gridEl, item, pi){
 
         /* ── 落点判断 ── */
 
-        // 1. 落在另一个展开文件夹的 grid 里（问题2）
-        const underEl=document.elementFromPoint(e2.clientX,e2.clientY);
-        const targetFolderGrid=underEl?.closest('.folder-grid');
+        // 1. 落在另一个展开文件夹的 grid 里
+        // elementFromPoint 在 clone.remove() 之后调用，clone 不会遮挡
+        // 但目标文件夹弹窗的 overlay 背景可能遮住 folder-grid，需穿透查找
+        let targetFolderGrid=null;
+        {
+          const els=document.elementsFromPoint(e2.clientX,e2.clientY);
+          for(const el2 of els){
+            const fg=el2.closest('.folder-grid');
+            if(fg){ targetFolderGrid=fg; break; }
+            // 直接命中 folder-grid
+            if(el2.classList&&el2.classList.contains('folder-grid')){ targetFolderGrid=el2; break; }
+          }
+        }
         if(targetFolderGrid){
           const targetOverlay=targetFolderGrid.closest('.modal-overlay');
           if(targetOverlay){

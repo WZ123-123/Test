@@ -9,6 +9,9 @@ const Modal = {
     const ov    = document.getElementById(id); if (!ov) return;
     const panel = ov.querySelector('.modal-panel');
 
+    // 记录弹窗属于哪一页
+    ov.dataset.page = (typeof App !== 'undefined') ? App.curPage : '0';
+
     // 每次打开都重置最大化状态
     if (panel.dataset.maxed === '1') {
       panel.style.cssText = '';
